@@ -1,0 +1,128 @@
+/* Base styles */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212; /* Very dark grey background */
+    color: #e0e0e0; /* Slight white/tan text color */
+    padding: 20px; /* Add padding for mobile view */
+}
+
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.logo {
+    width: 100px; /* Adjust as needed */
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.8em; /* Larger font size for the title */
+    font-weight: 700; /* Bold font weight */
+    text-align: center; /* Center-align the title */
+    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient background for text */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none; /* Removed shadow for title */
+    letter-spacing: 0.1em; /* Slightly increased letter spacing */
+    text-transform: uppercase; /* Uppercase text for emphasis */
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 25px;
+    border-radius: 16px; /* More rounded button corners */
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
+    background: #333; /* Dark background for buttons */
+    color: white;
+    font-size: 1.1em;
+    box-shadow: none; /* Removed shadow for buttons */
+}
+
+.form-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd); /* Soft blue gradient for form buttons */
+}
+
+.form-button:hover {
+    background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker blue gradient for hover */
+}
+
+.spreadsheet-button {
+    background: linear-gradient(135deg, #50e3c2, #2c974b); /* Soft green gradient for spreadsheet buttons */
+}
+
+.spreadsheet-button:hover {
+    background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker green gradient for hover */
+}
+
+.pending-button {
+    background: #555; /* Grey background for pending button */
+    color: #b0b0b0; /* Light grey text color */
+    cursor: not-allowed; /* Indicate that the button is not clickable */
+}
+
+.pending-button .icon {
+    display: none; /* Hide icon for pending button */
+}
+
+.button .icon {
+    margin-right: 12px;
+    width: 24px;
+    height: 24px;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    .button-container {
+        max-width: 100%;
+        padding: 0 20px;
+    }
+
+    .button {
+        padding: 12px 20px;
+        border-radius: 20px; /* More rounded button corners for medium screens */
+    }
+
+    h1 {
+        font-size: 2.5em; /* Adjust title font size for medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8em; /* Adjust title font size for small screens */
+    }
+
+    .button {
+        padding: 10px 15px;
+        border-radius: 24px; /* More rounded button corners for small screens */
+    }
+
+    .button .icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    body {
+        padding: 30px; /* Increase padding for small screens */
+    }
+}
