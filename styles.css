@@ -36,6 +36,16 @@ h1 {
     text-transform: uppercase; /* Uppercase text for emphasis */
 }
 
+h3 {
+    text-align: center; /* Center-align the title */
+    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient background for text */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none; /* Removed shadow for title */
+    letter-spacing: 0.1em; /* Slightly increased letter spacing */
+    text-transform: uppercase; /* Uppercase text for emphasis */
+}
+
 .button-container {
     display: flex;
     flex-direction: column;
@@ -77,11 +87,7 @@ h1 {
 .pending-button {
     background: #555; /* Grey background for pending button */
     color: #b0b0b0; /* Light grey text color */
-    cursor: not-allowed; /* Indicate that the button is not clickable */
-}
-
-.pending-button .icon {
-    display: none; /* Hide icon for pending button */
+    /*cursor: not-allowed; Indicate that the button is not clickable */
 }
 
 .button .icon {
