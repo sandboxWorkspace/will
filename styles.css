@@ -1,22 +1,22 @@
-/* Base styles */
 body {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    height: 100vh;
-    margin: 0;
+    min-height: 100vh;
+    margin: 0 auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #121212; /* Very dark grey background */
     color: #e0e0e0; /* Slight white/tan text color */
     padding: 20px; /* Add padding for mobile view */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 header {
     display: flex;
+    justify-content: center;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 40px;
 }
 
 .logo {
@@ -87,17 +87,18 @@ h3 {
 .pending-button {
     background: #555; /* Grey background for pending button */
     color: #b0b0b0; /* Light grey text color */
-    /*cursor: not-allowed; Indicate that the button is not clickable */
+    /*cursor: not-allowed; /* Indicate that the button is not clickable */
 }
 
 .button .icon {
-    margin-right: 12px;
-    width: 24px;
-    height: 24px;
+    margin: 8px;
+    width: 18px;
+    height: 18px;
+    display: inline-block; /* Ensure the icon is treated as an inline element */
 }
 
 /* Media queries */
-@media (max-width: 768px) {
+@media (max-width: 780px) {
     .button-container {
         max-width: 100%;
         padding: 0 20px;
@@ -120,7 +121,7 @@ h3 {
 
     .button {
         padding: 10px 15px;
-        border-radius: 24px; /* More rounded button corners for small screens */
+        border-radius: 28px; /* More rounded button corners for small screens */
     }
 
     .button .icon {
@@ -129,6 +130,29 @@ h3 {
     }
 
     body {
-        padding: 30px; /* Increase padding for small screens */
+        padding: 20px; /* Increase padding for small screens */
     }
+    
+    header {
+        padding: 20px; /* Increase padding for small screens */
+    }
+
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Add padding for spacing */
+    margin: 0 auto; /* Center the footer horizontally */
+    text-align: center; /* Center the text */
+}
+
+.icon {
+    width: 24px; /* Set a fixed width for the icon */
+    height: auto; /* Maintain aspect ratio */
+    margin-left: 8px; /* Space between text and icon */
+    vertical-align: middle; /* Align the icon vertically with the text */
+    display: inline-block; /* Ensure the icon is treated as an inline element */
 }
