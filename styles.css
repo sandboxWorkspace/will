@@ -104,6 +104,11 @@ h3 {
         border-radius: 20px; /* More rounded corners */
     }
 
+    .collapse-button {
+        font-size: 1em; /* Smaller font size for mobile */
+        border-radius: 20px; /* More rounded corners */
+    }
+
     h1 {
         font-size: 2.5em; /* Smaller title for medium screens */
     }
@@ -116,6 +121,11 @@ h3 {
 
     .button {
         padding: 10px 15px; /* Even smaller padding */
+        border-radius: 28px; /* More rounded corners */
+    }
+
+    .collapse-button {
+        font-size: 0.9em; /* Further reduced font size for small screens */
         border-radius: 28px; /* More rounded corners */
     }
 
@@ -155,4 +165,89 @@ footer {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #686868; /* Color of the scrollbar thumb on hover */
+}
+
+.collapse-button {
+    background: #b71c1c; /* Background color for collapse button */
+    color: white; /* Text color */
+    padding: 15px 25px; /* Padding for the button */
+    border: none; /* Remove default border */
+    border-radius: 16px; /* Rounded corners */
+    font-size: 1.1em; /* Font size */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth background transition */
+    text-align: center; /* Center text */
+    width: 100%; /* Full width */
+    margin: 5px 0; /* Margin for spacing between buttons */
+    position: relative; /* Position for caret */
+}
+
+.collapse-button:hover {
+    background: #b71c1c8e; /* Darker background on hover */
+}
+
+.collapse-button::after {
+    content: ''; /* Create a pseudo-element for the caret */
+    position: absolute; /* Position it relative to the button */
+    right: 15px; /* Position it to the right */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Adjust for vertical centering */
+    border: solid white; /* White caret color */
+    border-width: 0 2px 2px 0; /* Create a right-pointing arrow */
+    display: inline-block; /* Display as inline block */
+    padding: 3px; /* Padding for the caret */
+    transition: transform 0.3s; /* Smooth transition for rotation */
+}
+
+.collapse-content {
+    display: none; /* Initially hidden */
+    padding: 5px 0; /* Small padding for the nested buttons */
+    margin: 5px; /* Space above the nested buttons */
+    text-align: center; /* Center align nested buttons */
+    border-radius: 8px; /* Rounded corners for the collapse container */
+}
+
+.collapse-content a {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+    padding: 10px 20px; /* Match original button padding */
+    border-radius: 16px; /* Match original button border radius */
+    text-decoration: none; /* Remove underline */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+    background: #333; /* Default button background */
+    color: white; /* Text color */
+    font-size: 1.1em; /* Font size */
+    margin: 10px 0; /* Space between nested buttons */
+}
+
+.collapse-content a.form-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient for form buttons */
+}
+
+.collapse-content a.form-button:hover {
+    background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker gradient on hover */
+}
+
+.collapse-content a.spreadsheet-button {
+    background: linear-gradient(135deg, #50e3c2, #2c974b); /* Gradient for spreadsheet buttons */
+}
+
+.collapse-content a.spreadsheet-button:hover {
+    background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker gradient on hover */
+}
+
+/* Optional: Add a transition effect for the collapse content */
+.collapse-content {
+    transition: max-height 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+/* Add styles for when the collapse content is visible */
+.collapse-content.show {
+    display: block; /* Show the content */
+}
+
+/* Rotate the caret when the content is visible */
+.collapse-content.show + .collapse-button::after {
+    transform: translateY(-50%) rotate(135deg); /* Rotate the caret to point up */
 }

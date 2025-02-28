@@ -138,6 +138,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dynamic-form').addEventListener('submit', handleSubmit);
 });
 
+function toggleCollapse(id) {
+    const content = document.getElementById(id);
+    if (content.style.display === "block") {
+        content.style.display = "none";
+    } else {
+        content.style.display = "block";
+    }
+}
+
 function renderSection() {
     const sectionContainer = document.getElementById('section-container');
     sectionContainer.innerHTML = '';
