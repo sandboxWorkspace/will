@@ -1,7 +1,7 @@
 {
   "name": "QRSiteSE",
   "short_name": "QRSite",
-  "start_url": "/",
+  "start_url": "/will",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "##121212",
