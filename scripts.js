@@ -1,3 +1,14 @@
+function toggleCollapse(id) {
+    const content = document.getElementById(id);
+    if (content.style.display === "block") {
+        content.style.display = "none";
+    } else {
+        content.style.display = "block";
+    }
+}
+
+/*
+
 const minimumStock = [
     ['Purple Alcohol Wipes', 4],
     ['Orange Bleach Wipes', 2],
@@ -137,15 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSection();
     document.getElementById('dynamic-form').addEventListener('submit', handleSubmit);
 });
-
-function toggleCollapse(id) {
-    const content = document.getElementById(id);
-    if (content.style.display === "block") {
-        content.style.display = "none";
-    } else {
-        content.style.display = "block";
-    }
-}
 
 function renderSection() {
     const sectionContainer = document.getElementById('section-container');
@@ -319,3 +321,4 @@ function handleSubmit(event) {
         alert('Form submitted successfully!');
     }
 }
+*/
