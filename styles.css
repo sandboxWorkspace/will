@@ -3,12 +3,12 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    min-height: 100vh;
-    margin: 0 auto;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121212; /* Very dark grey background */
-    color: #e0e0e0; /* Slight white/tan text color */
-    padding: 20px; /* Add padding for mobile view */
+    min-height: 100vh; /* Full height to cover the viewport */
+    margin: 0; /* Remove default margin */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font family */
+    background-color: #121212; /* Dark grey background */
+    color: #e0e0e0; /* Light text color for contrast */
+    padding: 20px; /* Padding for mobile view */
     overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
@@ -20,123 +20,112 @@ header {
 }
 
 .logo {
-    width: 100px; /* Adjust as needed */
-    margin-bottom: 20px;
+    width: 100px; /* Logo size */
+    margin-bottom: 20px; /* Space below the logo */
+}
+
+h1, h3 {
+    text-align: center; /* Center-align titles */
+    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient background for titles */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* Make text gradient visible */
+    letter-spacing: 0.1em; /* Increased letter spacing */
+    text-transform: uppercase; /* Uppercase for emphasis */
 }
 
 h1 {
-    font-size: 2.8em; /* Larger font size for the title */
+    font-size: 2.8em; /* Title font size */
     font-weight: 700; /* Bold font weight */
-    text-align: center; /* Center-align the title */
-    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient background for text */
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: none; /* Removed shadow for title */
-    letter-spacing: 0.1em; /* Slightly increased letter spacing */
-    text-transform: uppercase; /* Uppercase text for emphasis */
+    text-shadow: none; /* No shadow for cleaner look */
 }
 
 h3 {
-    text-align: center; /* Center-align the title */
-    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient background for text */
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: none; /* Removed shadow for title */
-    letter-spacing: 0.1em; /* Slightly increased letter spacing */
-    text-transform: uppercase; /* Uppercase text for emphasis */
+    /* No additional styles needed for h3; inherits from h1 */
 }
 
 .button-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    width: 100%;
-    max-width: 400px;
+    gap: 20px; /* Space between buttons */
+    width: 100%; /* Full width for the container */
+    max-width: 400px; /* Limit width for larger screens */
 }
 
 .button {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 15px 25px;
-    border-radius: 16px; /* More rounded button corners */
-    text-decoration: none;
-    transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
-    background: #333; /* Dark background for buttons */
-    color: white;
-    font-size: 1.1em;
-    box-shadow: none; /* Removed shadow for buttons */
+    padding: 15px 25px; /* Button padding */
+    border-radius: 16px; /* Rounded corners */
+    text-decoration: none; /* Remove underline */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+    background: #333; /* Default button background */
+    color: white; /* Text color */
+    font-size: 1.1em; /* Font size */
 }
 
 .form-button {
-    background: linear-gradient(135deg, #4a90e2, #357abd); /* Soft blue gradient for form buttons */
+    background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient for form buttons */
 }
 
 .form-button:hover {
-    background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker blue gradient for hover */
+    background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker gradient on hover */
 }
 
 .spreadsheet-button {
-    background: linear-gradient(135deg, #50e3c2, #2c974b); /* Soft green gradient for spreadsheet buttons */
+    background: linear-gradient(135deg, #50e3c2, #2c974b); /* Gradient for spreadsheet buttons */
 }
 
 .spreadsheet-button:hover {
-    background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker green gradient for hover */
+    background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker gradient on hover */
 }
 
 .pending-button {
-    background: #555; /* Grey background for pending button */
-    color: #b0b0b0; /* Light grey text color */
-    /*cursor: not-allowed; /* Indicate that the button is not clickable */
+    background: #555; /* Grey background for pending buttons */
+    color: #b0b0b0; /* Light grey text */
+    cursor: not-allowed; /* Indicate non-clickable state */
 }
 
 .button .icon {
-    margin: 8px;
-    width: 18px;
-    height: 18px;
-    display: inline-block; /* Ensure the icon is treated as an inline element */
+    margin: 8px; /* Space around the icon */
+    width: 18px; /* Icon width */
+    height: 18px; /* Icon height */
 }
 
-/* Media queries */
+/* Media queries for responsive design */
 @media (max-width: 780px) {
     .button-container {
-        max-width: 100%;
-        padding: 0 20px;
+        max-width: 100%; /* Full width on smaller screens */
+        padding: 0 20px; /* Padding for small screens */
     }
 
     .button {
-        padding: 12px 20px;
-        border-radius: 20px; /* More rounded button corners for medium screens */
+        padding: 12px 20px; /* Smaller padding for medium screens */
+        border-radius: 20px; /* More rounded corners */
     }
 
     h1 {
-        font-size: 2.5em; /* Adjust title font size for medium screens */
+        font-size: 2.5em; /* Smaller title for medium screens */
     }
 }
 
 @media (max-width: 480px) {
     h1 {
-        font-size: 1.8em; /* Adjust title font size for small screens */
+        font-size: 1.8em; /* Further reduced title size for small screens */
     }
 
     .button {
-        padding: 10px 15px;
-        border-radius: 28px; /* More rounded button corners for small screens */
-    }
-
-    .button .icon {
-        width: 18px;
-        height: 18px;
+        padding: 10px 15px; /* Even smaller padding */
+        border-radius: 28px; /* More rounded corners */
     }
 
     body {
-        padding: 20px; /* Increase padding for small screens */
+        padding: 20px; /* Maintain padding */
     }
     
     header {
-        padding: 20px; /* Increase padding for small screens */
+        padding: 20px; /* Maintain header padding */
     }
-
 }
 
 footer {
@@ -144,15 +133,26 @@ footer {
     justify-content: center;
     flex-direction: column;
     align-items: center;
-    padding: 20px; /* Add padding for spacing */
-    margin: 0 auto; /* Center the footer horizontally */
-    text-align: center; /* Center the text */
+    padding: 20px; /* Padding for footer spacing */
+    margin: 0; /* Center the footer */
+    text-align: center; /* Center footer text */
 }
 
-.icon {
-    width: 24px; /* Set a fixed width for the icon */
-    height: auto; /* Maintain aspect ratio */
-    margin-left: 8px; /* Space between text and icon */
-    vertical-align: middle; /* Align the icon vertically with the text */
-    display: inline-block; /* Ensure the icon is treated as an inline element */
+/* Minimalist scrollbar styles */
+::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+    background: #222222; /* Background of the scrollbar track */
+    border-radius: 10px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #383838; /* Color of the scrollbar thumb */
+    border-radius: 10px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #686868; /* Color of the scrollbar thumb on hover */
 }

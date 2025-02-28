@@ -1,0 +1,20 @@
+{
+  "name": "QRSiteSE",
+  "short_name": "QRSite",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "logo.svg",
+      "sizes": "500x500",
+      "type": "image/svg+xml"
+    }
+  ]
+}
