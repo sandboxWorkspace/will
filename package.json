@@ -1,0 +1,28 @@
+{
+  "name": "will",
+  "version": "1.0.0",
+  "description": "Digitizing paper documentations lorem ipsum",
+  "main": "scripts.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandboxWorkspace/will.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sandboxWorkspace/will/issues"
+  },
+  "homepage": "https://github.com/sandboxWorkspace/will#readme",
+  "dependencies": {
+    "firebase": "^11.4.0"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}

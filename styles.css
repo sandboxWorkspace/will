@@ -21,10 +21,10 @@ header {
 
 .logo {
     width: 100px; /* Logo size */
-    margin-bottom: 20px; /* Space below the logo */
+    margin-bottom: 10px; /* Space below the logo */
 }
 
-h1, h3 {
+h1, h2, h3 {
     text-align: center; /* Center-align titles */
     background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient background for titles */
     -webkit-background-clip: text;
@@ -39,14 +39,18 @@ h1 {
     text-shadow: none; /* No shadow for cleaner look */
 }
 
+h2 {
+    /* inherits styling from h1 */
+}
+
 h3 {
-    /* No additional styles needed for h3; inherits from h1 */
+    /* inherits styling from h1 */
 }
 
 .button-container {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Space between buttons */
+    gap: 10px; /* Space between buttons */
     width: 100%; /* Full width for the container */
     max-width: 400px; /* Limit width for larger screens */
 }
@@ -64,26 +68,26 @@ h3 {
     font-size: 1.1em; /* Font size */
 }
 
-.form-button {
+.button.form-button {
     background: linear-gradient(135deg, #4a90e2, #357abd); /* Gradient for form buttons */
 }
 
-.form-button:hover {
+.button.form-button:hover {
     background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker gradient on hover */
 }
 
-.spreadsheet-button {
+.button.spreadsheet-button {
     background: linear-gradient(135deg, #50e3c2, #2c974b); /* Gradient for spreadsheet buttons */
 }
 
-.spreadsheet-button:hover {
+.button.spreadsheet-button:hover {
     background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker gradient on hover */
 }
 
-.pending-button {
+.button.pending-button {
     background: #555; /* Grey background for pending buttons */
     color: #b0b0b0; /* Light grey text */
-    cursor: not-allowed; /* Indicate non-clickable state */
+    /* cursor: not-allowed; /* Indicate non-clickable state */
 }
 
 .button .icon {
@@ -92,98 +96,50 @@ h3 {
     height: 18px; /* Icon height */
 }
 
-/* Media queries for responsive design */
-@media (max-width: 780px) {
-    .button-container {
-        max-width: 100%; /* Full width on smaller screens */
-        padding: 0 20px; /* Padding for small screens */
-    }
-
-    .button {
-        padding: 12px 20px; /* Smaller padding for medium screens */
-        border-radius: 20px; /* More rounded corners */
-    }
-
-    .collapse-button {
-        font-size: 1em; /* Smaller font size for mobile */
-        border-radius: 20px; /* More rounded corners */
-    }
-
-    h1 {
-        font-size: 2.5em; /* Smaller title for medium screens */
-    }
-}
-
-@media (max-width: 480px) {
-    h1 {
-        font-size: 1.8em; /* Further reduced title size for small screens */
-    }
-
-    .button {
-        padding: 10px 15px; /* Even smaller padding */
-        border-radius: 28px; /* More rounded corners */
-    }
-
-    .collapse-button {
-        font-size: 0.9em; /* Further reduced font size for small screens */
-        border-radius: 28px; /* More rounded corners */
-    }
-
-    body {
-        padding: 20px; /* Maintain padding */
-    }
-    
-    header {
-        padding: 20px; /* Maintain header padding */
-    }
-}
-
-footer {
+.collapse-button-container {
     display: flex;
-    justify-content: center;
     flex-direction: column;
-    align-items: center;
-    padding: 20px; /* Padding for footer spacing */
-    margin: 0; /* Center the footer */
-    text-align: center; /* Center footer text */
-}
-
-/* Minimalist scrollbar styles */
-::-webkit-scrollbar {
-    width: 8px; /* Width of the scrollbar */
-}
-
-::-webkit-scrollbar-track {
-    background: #222222; /* Background of the scrollbar track */
-    border-radius: 10px; /* Rounded corners */
-}
-
-::-webkit-scrollbar-thumb {
-    background: #383838; /* Color of the scrollbar thumb */
-    border-radius: 10px; /* Rounded corners */
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #686868; /* Color of the scrollbar thumb on hover */
+    gap: 0px;
+    width: 100%; /* Full width for the container */
+    max-width: 400px; /* Limit width for larger screens */
 }
 
 .collapse-button {
-    background: #b71c1c; /* Background color for collapse button */
-    color: white; /* Text color */
     padding: 15px 25px; /* Padding for the button */
     border: none; /* Remove default border */
     border-radius: 16px; /* Rounded corners */
-    font-size: 1.1em; /* Font size */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s; /* Smooth background transition */
-    text-align: center; /* Center text */
-    width: 100%; /* Full width */
+    align-items: center; /* Center text */
     margin: 5px 0; /* Margin for spacing between buttons */
+    width: 100%; /* Full width */
     position: relative; /* Position for caret */
+    transition: background-color 0.3s; /* Smooth background transition */
+    background: #333; /* Default button background */
+    color: white; /* Text color */
+    font-size: 1.1em; /* Font size */
 }
 
-.collapse-button:hover {
-    background: #b71c1c8e; /* Darker background on hover */
+.collapse-button.reservation-button {
+    background: linear-gradient(135deg, #6f2c91, #8e44ad); /* Gradient for reservation buttons */
+}
+
+.collapse-button.reservation-button:hover {
+    background: linear-gradient(135deg, #8e44ad, #5e3370); /* Darker gradient for reservation on hover */
+}
+
+.collapse-button.inventory-and-maintenance-button {
+    background: linear-gradient(135deg, #d93838, #ff00008a); /* Gradient for inventory and maintenance buttons */
+}
+
+.collapse-button.inventory-and-maintenance-button:hover {
+    background: linear-gradient(135deg, #e138388e, #9615158e); /* Darker gradient for inventory and maintenance on hover */
+}
+
+.collapse-button.logs-button {
+    background: linear-gradient(135deg, #d35400, #e67e22); /* Gradient for reservation buttons */
+}
+
+.collapse-button.logs-button:hover {
+    background: linear-gradient(135deg, #e67e22, #c65d0e); /* Darker gradient for reservation on hover */
 }
 
 .collapse-button::after {
@@ -226,7 +182,7 @@ footer {
 }
 
 .collapse-content a.form-button:hover {
-    background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker gradient on hover */
+    background: linear-gradient(135deg, #357abd, #2a5b9d); /* Darker gradient for form on hover */
 }
 
 .collapse-content a.spreadsheet-button {
@@ -234,7 +190,7 @@ footer {
 }
 
 .collapse-content a.spreadsheet-button:hover {
-    background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker gradient on hover */
+    background: linear-gradient(135deg, #2c974b, #1b7a62); /* Darker gradient for spreadshee on hover */
 }
 
 /* Optional: Add a transition effect for the collapse content */
@@ -250,4 +206,392 @@ footer {
 /* Rotate the caret when the content is visible */
 .collapse-content.show + .collapse-button::after {
     transform: translateY(-50%) rotate(135deg); /* Rotate the caret to point up */
+}
+
+/* Style the table */
+#schedule-table {
+    width: 90%; /* Adjusted width for better responsiveness */
+    max-width: 800px; /* Set a maximum width */
+    margin: 20px auto;  /* Center the table */
+    border-collapse: collapse;
+    font-size: 16px;  /* Base font size */
+    background-color: #1e1e1e; /* Darker background for the table */
+    border-radius: 8px; /* Rounded corners */
+    overflow: hidden; /* To apply rounded corners to the table */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+}
+
+/* Style table headers */
+#schedule-table th {
+    padding: 10px; /* Reduced padding for headers */
+    border: 2px solid #4a90e2;
+    text-align: center;
+    background-color: #2c2c2c; /* Darker header background */
+    color: #ffffff; /* White text for headers */
+    font-weight: bold; /* Bold text for headers */
+}
+
+/* Style table cells */
+#schedule-table td {
+    border: 2px solid #34495e;
+    padding: 8px; /* Reduced padding for cells */
+    text-align: center;
+    background-color: #2c2c2c; /* Darker cell background */
+    color: #cccccc; /* Light gray text for better visibility */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+    height: 40px; /* Set a fixed height for rows */
+}
+
+/* Alternating row colors */
+#schedule-table tr:nth-child(even) td {
+    background-color: #3a3a3a; /* Slightly lighter for even rows */
+}
+
+/* Hover effect for table rows */
+#schedule-table tr:hover td {
+    background-color: #4a90e2; /* Highlight on hover */
+    color: #ffffff; /* Keep text white on hover */
+}
+
+/* Make editable cells more visible */
+#schedule-table td[contenteditable="true"] {
+    cursor: text;
+    font-family: 'Courier New', Courier, monospace; /* Aesthetic font for user input */
+    color: #cccccc; /* Light gray text for better visibility */
+}
+
+/* Highlight cells on focus */
+#schedule-table td[contenteditable="true"]:focus {
+    background-color: #d5e8f0;
+    outline: none;
+    border: 2px solid #2980b9;
+    color: #000000; /* Darker text color when focused for better readability */
+}
+
+/* Ensure equal column widths */
+#schedule-table th, #schedule-table td {
+    width: calc(100% / 6); /* Assuming 6 columns */
+}
+
+/* --- Carousel Styling --- */
+.carousel {
+    position: relative;
+    width: 80%;
+    margin: 0 auto;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Week Carousel Styling */
+.carousel.week-carousel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.carousel.week-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.carousel.week-btn:hover {
+    background-color: #0056b3;
+}
+
+.carousel-items {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-item {
+    flex: 0 0 80%;
+    opacity: 0.6;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    background-color: #f1f1f1;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(0.9);
+}
+
+.carousel-item.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 1;
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 12px;
+    border: none;
+    cursor: pointer;
+    z-index: 2;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.carousel-button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.prev { left: 10px; }
+.next { right: 10px; }
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+.carousel-indicator {
+    width: 12px;
+    height: 12px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.carousel-indicator.active {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* --- Modal Styling --- */
+.modal {
+    display: none; /* Initially hidden */
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* Dim background */
+    justify-content: center;
+    align-items: center;
+    display: flex; /* Ensure flex is always applied */
+}
+
+/* Initially hide the modal */
+#confirmModal {
+    display: none;
+}
+
+#changelogModal {
+    display: none;
+}
+
+.modal-content {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+    width: 50%;
+    max-width: 500px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.modal h4 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: white;
+}
+
+.modal button {
+    padding: 12px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 1.1em;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.yes-button { background-color: #4CAF50; }
+.yes-button:hover { background-color: #45a049; }
+
+.no-button { background-color: #f44336; }
+.no-button:hover { background-color: #e53935; }
+
+/* --- Changelog Styling --- */
+.changelog-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+    width: 100%;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.changelog-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    background-color: #ffffff;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+}
+
+.changelog-item:last-child {
+    border-bottom: none;
+}
+
+/* --- Improved Changelog Button --- */
+.changelog-button {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.changelog-button:hover {
+    background-color: #0056b3;
+}
+
+/* Animations for modals */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-30px);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Padding for footer spacing */
+    margin: 0; /* Center the footer */
+    text-align: center; /* Center footer text */
+}
+
+/* Minimalist scrollbar styles */
+::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+    background: #222222; /* Background of the scrollbar track */
+    border-radius: 10px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #383838; /* Color of the scrollbar thumb */
+    border-radius: 10px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #686868; /* Color of the scrollbar thumb on hover */
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .button-container {
+        max-width: 100%; /* Full width on smaller screens */
+        padding: 0 20px; /* Padding for small screens */
+    }
+
+    .button {
+        padding: 12px 20px; /* Smaller padding for medium screens */
+        border-radius: 20px; /* More rounded corners */
+    }
+
+    .collapse-button {
+        font-size: 1em; /* Smaller font size for mobile */
+        border-radius: 20px; /* More rounded corners */
+    }
+
+    h1 {
+        font-size: 2.5em; /* Smaller title for medium screens */
+    }
+
+    #schedule-table {
+        width: 95%; /* Full width on smaller screens */
+        font-size: 14px; /* Smaller font size for mobile */
+    }
+
+    #schedule-table th, #schedule-table td {
+        padding: 6px; /* Reduced padding for smaller screens */
+    }
+
+    #schedule-table td {
+        height: auto; /* Allow height to adjust based on content */
+    }
+
+    .modal-content {
+        width: 90%; /* Adjust width for smaller screens */
+        margin: 20% auto; /* Adjust margin for better centering */
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8em; /* Further reduced title size for small screens */
+    }
+
+    .button {
+        padding: 10px 15px; /* Even smaller padding */
+        border-radius: 28px; /* More rounded corners */
+    }
+
+    .collapse-button {
+        font-size: 0.9em; /* Further reduced font size for small screens */
+        border-radius: 28px; /* More rounded corners */
+    }
+
+    body {
+        padding: 20px; /* Maintain padding */
+    }
+    
+    header {
+        padding: 20px; /* Maintain header padding */
+    }
+
+    #schedule-table {
+        font-size: 12px; /* Even smaller font size for very small screens */
+    }
+
+    #schedule-table th, #schedule-table td {
+        padding: 4px; /* Further reduced padding */
+    }
 }

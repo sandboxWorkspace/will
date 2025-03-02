@@ -16,9 +16,21 @@
         </a>
         <h1>TIRR SE OP</h1>
     </header>
-
-    <div class="button-container">
-        <button class="collapse-button" onclick="toggleCollapse('requestForms')">Request Forms</button>
+    <div class="collapse-button-container">
+        <button class="collapse-button reservation-button" onclick="toggleCollapse('equiptmentSignUp')">Equipment Sign Up</button>
+        <div id="equiptmentSignUp" class="collapse-content">
+            <a href="fesBike.html" class="button spreadsheet-button">
+                <img src="assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                FES Bike
+            </a>
+            <a href="xCite.html" class="button spreadsheet-button">
+                <img src="assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                Xcite
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button inventory-and-maintenance-button" onclick="toggleCollapse('requestForms')">Request Forms</button>
         <div id="requestForms" class="collapse-content">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScILiXXKcw0l-hWi9jqsjAsG_NYDEbDhsaXrmF19nJagancGg/viewform" class="button form-button">
                 <img src="assets/formicon.svg" alt="Form Icon" class="icon">
@@ -30,9 +42,8 @@
             </a>
         </div>
     </div>
-
-    <div class="button-container">
-        <button class="collapse-button" onclick="toggleCollapse('viewRequests')">View Requests</button>
+    <div class="collapse-button-container">
+        <button class="collapse-button inventory-and-maintenance-button" onclick="toggleCollapse('viewRequests')">View Requests</button>
         <div id="viewRequests" class="collapse-content">
             <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
                 <img src="assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
@@ -44,19 +55,23 @@
             </a>
         </div>
     </div>
-
-    <script src="scripts.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
-    <script>
-        function toggleCollapse(id) {
-            const content = document.getElementById(id);
-            content.style.display = content.style.display === "block" ? "none" : "block";
-        }
-    </script>
-
+    <div class="collapse-button-container">
+        <button class="collapse-button logs-button" onclick="toggleCollapse('safetyLogs')">Safety Logs</button>
+        <div id="safetyLogs" class="collapse-content">
+            <a href="logs.html" class="button form-button">
+                <img src="assets/formicon.svg" alt="Form Icon" class="icon">
+                Submit Logs
+            </a>
+            <a href="logHistory.html" class="button spreadsheet-button">
+                <img src="assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                View Logs
+            </a>
+        </div>
+    </div>
+    <script src="animations.js"></script>
+    <script type="module" src="scripts.js"></script>
+    <script type="module" src="firebaseScripts.js"></script>
 </body>
-
 <div>
     <footer>
         <div class="button-container">
