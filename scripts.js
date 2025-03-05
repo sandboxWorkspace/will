@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Check if the table exists
     const tableBody = document.querySelector("#schedule-table tbody");
     if (tableBody) {
-        console.log("Table is present. Proceeding with schedule table operations.");
+        console.log("Scheduling table confirmed, running scheduling script.");
         
         // Define time slots (8 AM - 4 PM)
         const timeSlots = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM"];
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Load data from Firebase (if needed)
         await loadFromFirebase();
     } else {
-        console.log("Table not found on this page. Skipping schedule-related code.");
+        console.log("Scheduling table not found, skipping schedule-related code.");
     }
 
     // ---- Modals and Other Elements ----
@@ -59,16 +59,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (confirmModal && confirmBtn && cancelBtn) {
         confirmModal.style.display = "none";  // Hide the modal on page load
-        
+                
         // Show confirmation modal when editing a populated cell
         document.querySelector("#schedule-table tbody").addEventListener("click", (event) => {
             const cell = event.target;
             if (cell.contentEditable === "true" && cell.textContent.trim() !== "") {
                 targetCell = cell;
+                targetCell.contentEditable = "false"; // Disable editing
                 confirmModal.style.display = "block"; // Show the confirmation modal
             }
         });
-
+        
         // Confirm button logic (overwrite cell)
         confirmBtn.addEventListener("click", () => {
             if (targetCell) {
@@ -78,22 +79,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                 saveToFirebase(time, day, value); // Save to Firebase
                 confirmModal.style.display = "none"; // Close modal
                 targetCell.focus(); // Keep focus on the target cell
+                targetCell.contentEditable = "true"; // Re-enable editing
                 targetCell = null; // Clear targetCell after saving
             } else {
                 console.error("targetCell is not defined.");
             }
         });
-
+        
         // Cancel button logic (close modal without editing)
         cancelBtn.addEventListener("click", () => {
+            if (targetCell) {
+                targetCell.contentEditable = "true"; // Re-enable editing
+            }
             targetCell = null;
             confirmModal.style.display = "none"; // Close modal
-            if (targetCell) targetCell.focus(); // Keep focus on the target cell
         });
-
+        
         // Close modal if clicked outside of it
         window.addEventListener("click", (event) => {
             if (event.target === confirmModal) {
+                if (targetCell) {
+                    targetCell.contentEditable = "true"; // Re-enable editing
+                }
                 confirmModal.style.display = "none";
             }
         });
