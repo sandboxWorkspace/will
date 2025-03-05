@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Reserve equipment and access safety logs. More features to come.">
+    <title>Will_QRCode</title>
+    <link rel="icon" href="/will/assets/favicon-CYV5-in_.svg" type="image/svg+xml">
+    <link rel="manifest" href="/will/assets/manifest-CS8OIzQ5.json">
+    <link rel="apple-touch-icon" href="/will/assets/logo-PD1CMQEr.svg">
+  <script type="module" crossorigin src="/will/assets/scripts-C6X6fuJE.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-YObMZs3-.css">
+</head>
+<body>
+    <header>
+        <a href="index.html">
+            <img src="data:image/svg+xml,%3csvg%20width='500'%20height='500'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3e%3c!--%20Gradient%20Definitions%20--%3e%3cdefs%3e%3cradialGradient%20id='redGradient'%20cx='50%25'%20cy='50%25'%20r='50%25'%20fx='50%25'%20fy='50%25'%3e%3cstop%20offset='0%25'%20style='stop-color:%23b71c1c;%20stop-opacity:1'%20/%3e%3cstop%20offset='100%25'%20style='stop-color:%23f44336;%20stop-opacity:1'%20/%3e%3c/radialGradient%3e%3c/defs%3e%3c!--%20Rounded%20Square%20Base%20with%20Gradient%20--%3e%3crect%20x='10'%20y='10'%20width='80'%20height='80'%20rx='15'%20ry='15'%20fill='url(%23redGradient)'/%3e%3c!--%20Classic%20Healthcare%20Plus%20Sign%20--%3e%3crect%20x='45'%20y='25'%20width='10'%20height='50'%20fill='%23ffffff'/%3e%3crect%20x='25'%20y='45'%20width='50'%20height='10'%20fill='%23ffffff'/%3e%3c/svg%3e" alt="Primary Logo" class="logo">
+        </a>
+        <h1>TIRR SE OP</h1>
+    </header>
+    <div class="collapse-button-container">
+        <button class="collapse-button reservation-button" id="toggleEquipmentButton">Equipment Sign Up</button>
+        <div id="equiptmentSignUp" class="collapse-content">
+            <a href="fesBike.html" class="button spreadsheet-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM10%2017H7V15H10V17ZM17%2017H12V15H17V17ZM10%2013H7V11H10V13ZM17%2013H12V11H17V13ZM10%209H7V7H10V9ZM17%209H12V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Spreadsheet Icon" class="icon">
+                FES Bike
+            </a>
+            <a href="xCite.html" class="button spreadsheet-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM10%2017H7V15H10V17ZM17%2017H12V15H17V17ZM10%2013H7V11H10V13ZM17%2013H12V11H17V13ZM10%209H7V7H10V9ZM17%209H12V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Spreadsheet Icon" class="icon">
+                Xcite
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton">Request Forms</button>
+        <div id="requestForms" class="collapse-content">
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLScILiXXKcw0l-hWi9jqsjAsG_NYDEbDhsaXrmF19nJagancGg/viewform" class="button form-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM12%2017H7V15H12V17ZM17%2013H7V11H17V13ZM17%209H7V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Form Icon" class="icon">
+                Supplies
+            </a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfRPPmL4T1krAL-O0YjKH_8ThVATCgumJgSHzQhG9ySBDtFiw/viewform" class="button form-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM12%2017H7V15H12V17ZM17%2013H7V11H17V13ZM17%209H7V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Form Icon" class="icon">
+                Maintenance & Repair
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton">View Requests</button>
+        <div id="viewRequests" class="collapse-content">
+            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM10%2017H7V15H10V17ZM17%2017H12V15H17V17ZM10%2013H7V11H10V13ZM17%2013H12V11H17V13ZM10%209H7V7H10V9ZM17%209H12V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Spreadsheet Icon" class="icon">
+                Supplies
+            </a>
+            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRF0zsz1o8BPNHsue-3dCRM9M9OAHdM76deUq0ltpMSDvN-RtmXaWnKujGLDhWRGtdxUcQPQGpSav6m/pubhtml" class="button spreadsheet-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM10%2017H7V15H10V17ZM17%2017H12V15H17V17ZM10%2013H7V11H10V13ZM17%2013H12V11H17V13ZM10%209H7V7H10V9ZM17%209H12V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Spreadsheet Icon" class="icon">
+                Maintenance & Repair
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button logs-button" id="toggleSafetyLogsButton">Safety Logs</button>
+        <div id="safetyLogs" class="collapse-content">
+            <a href="logs.html" class="button form-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM12%2017H7V15H12V17ZM17%2013H7V11H17V13ZM17%209H7V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Form Icon" class="icon">
+                Submit Logs
+            </a>
+            <a href="logHistory.html" class="button spreadsheet-button">
+                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%3e%3cpath%20d='M19%203H5C3.89%203%203%203.9%203%205V19C3%2020.1%203.89%2021%205%2021H19C20.1%2021%2021%2020.1%2021%2019V5C21%203.9%2020.1%203%2019%203ZM10%2017H7V15H10V17ZM17%2017H12V15H17V17ZM10%2013H7V11H10V13ZM17%2013H12V11H17V13ZM10%209H7V7H10V9ZM17%209H12V7H17V9Z'%20fill='white'/%3e%3c/svg%3e" alt="Spreadsheet Icon" class="icon">
+                View Logs
+            </a>
+        </div>
+    </div>
+
+</body>
+<div>
+    <footer>
+        <div class="button-container">
+            <h3>Under Construction</h3>
+            <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                Contact Me
+            </a>
+            <a href="pending.html" class="button pending-button">
+                Pending Changes
+            </a>
+        </div>
+    </footer>
+</div>
+</html>

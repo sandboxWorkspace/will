@@ -126,7 +126,7 @@ async function loadChangeLog() {
                 changeItem.innerHTML = `
                     <strong>${new Date(change.timestamp).toLocaleString()}</strong><br>
                     Time: ${change.time}, Day: ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][change.dayIndex]}<br>
-                    From: "${change.oldValue}" To: "${change.newValue}"
+                    "${change.oldValue}" >> "${change.newValue}"
                 `;
                 changelogList.appendChild(changeItem);
             });

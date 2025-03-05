@@ -2,7 +2,7 @@
   "name": "will",
   "version": "1.0.0",
   "description": "Digitizing paper documentations lorem ipsum",
-  "main": "scripts.js",
+  "main": "src/js/firebaseScripts.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

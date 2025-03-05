@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Reserve equipment and access safety logs. More features to come.">
     <title>Will_QRCode</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -17,7 +18,7 @@
         <h1>TIRR SE OP</h1>
     </header>
     <div class="collapse-button-container">
-        <button class="collapse-button reservation-button" onclick="toggleCollapse('equiptmentSignUp')">Equipment Sign Up</button>
+        <button class="collapse-button reservation-button" id="toggleEquipmentButton">Equipment Sign Up</button>
         <div id="equiptmentSignUp" class="collapse-content">
             <a href="fesBike.html" class="button spreadsheet-button">
                 <img src="assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
@@ -30,7 +31,7 @@
         </div>
     </div>
     <div class="collapse-button-container">
-        <button class="collapse-button inventory-and-maintenance-button" onclick="toggleCollapse('requestForms')">Request Forms</button>
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton">Request Forms</button>
         <div id="requestForms" class="collapse-content">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScILiXXKcw0l-hWi9jqsjAsG_NYDEbDhsaXrmF19nJagancGg/viewform" class="button form-button">
                 <img src="assets/formicon.svg" alt="Form Icon" class="icon">
@@ -43,7 +44,7 @@
         </div>
     </div>
     <div class="collapse-button-container">
-        <button class="collapse-button inventory-and-maintenance-button" onclick="toggleCollapse('viewRequests')">View Requests</button>
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton">View Requests</button>
         <div id="viewRequests" class="collapse-content">
             <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
                 <img src="assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
@@ -56,7 +57,7 @@
         </div>
     </div>
     <div class="collapse-button-container">
-        <button class="collapse-button logs-button" onclick="toggleCollapse('safetyLogs')">Safety Logs</button>
+        <button class="collapse-button logs-button" id="toggleSafetyLogsButton">Safety Logs</button>
         <div id="safetyLogs" class="collapse-content">
             <a href="logs.html" class="button form-button">
                 <img src="assets/formicon.svg" alt="Form Icon" class="icon">
@@ -68,7 +69,7 @@
             </a>
         </div>
     </div>
-    <script src="animations.js"></script>
+
     <script type="module" src="scripts.js"></script>
     <script type="module" src="firebaseScripts.js"></script>
 </body>
