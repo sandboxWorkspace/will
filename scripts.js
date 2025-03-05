@@ -65,11 +65,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             const cell = event.target;
             if (cell.contentEditable === "true" && cell.textContent.trim() !== "") {
                 targetCell = cell;
-                targetCell.contentEditable = "false"; // Disable editing
+                targetCell.contentEditable = "false"; // Disable editing immediately
                 confirmModal.style.display = "block"; // Show the confirmation modal
             }
         });
-        
+
         // Confirm button logic (overwrite cell)
         confirmBtn.addEventListener("click", () => {
             if (targetCell) {
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.error("targetCell is not defined.");
             }
         });
-        
+
         // Cancel button logic (close modal without editing)
         cancelBtn.addEventListener("click", () => {
             if (targetCell) {
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             targetCell = null;
             confirmModal.style.display = "none"; // Close modal
         });
-        
+
         // Close modal if clicked outside of it
         window.addEventListener("click", (event) => {
             if (event.target === confirmModal) {
@@ -104,6 +104,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 confirmModal.style.display = "none";
             }
         });
+
+        // Handle Enter key to exit the cell edit mode (only if table exists)
+        if (tableBody) {
+            tableBody.addEventListener('keydown', (event) => {
+                const cell = event.target;
+                if (cell.contentEditable === "true" && event.key === "Enter") {
+                    event.preventDefault();  // Prevent the default Enter behavior (adding a new line)
+                    cell.blur();  // Trigger blur event to save the change and exit the edit mode
+                }
+            });
+        }
     }
 
     // Handle Changelog Modal
@@ -174,18 +185,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             const day = cell.dataset.day;
             const oldValue = cell.dataset.oldValue || ""; // Track last known value
             const newValue = cell.textContent.trim();
-
-            // Only save and log if the value actually changed
-            if (oldValue !== newValue) {
+    
+            // Save and log if the value actually changed or if the new value is blank
+            if (oldValue !== newValue || (newValue === "" && oldValue !== "")) {
                 await saveToFirebase(time, day, newValue);
                 await logChange(time, day, oldValue, newValue);  // Log only if changed
             }
-
+    
             // Update the cell's stored value
             cell.dataset.oldValue = newValue;
         }
     }, true) : null; // If tableBody is null, it won't attempt to add the event listener
-
+    
     // Handle Enter key to exit the cell edit mode (only if table exists)
     if (tableBody) {
         tableBody.addEventListener('keydown', (event) => {
