@@ -78,8 +78,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const value = targetCell.textContent.trim();
                 saveToFirebase(time, day, value); // Save to Firebase
                 confirmModal.style.display = "none"; // Close modal
-                targetCell.focus(); // Keep focus on the target cell
                 targetCell.contentEditable = "true"; // Re-enable editing
+                targetCell.focus(); // Keep focus on the target cell
                 targetCell = null; // Clear targetCell after saving
             } else {
                 console.error("targetCell is not defined.");

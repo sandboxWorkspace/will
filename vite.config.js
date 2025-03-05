@@ -6,7 +6,7 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '@assets': path.resolve(__dirname, 'assets'), // Set alias for easier asset importing
+      //'@assets': path.resolve(__dirname, 'assets'), // Set alias for easier asset importing
       '@html': path.resolve(__dirname, ''),
       '@css': path.resolve(__dirname, ''),
       '@js': path.resolve(__dirname, ''),
@@ -21,7 +21,6 @@ export default defineConfig({
         fesBike: path.resolve(__dirname, 'fesBike.html'), // fesBike HTML file
         xCite: path.resolve(__dirname, 'xCite.html'), // xCite HTML file
         clinicMap: path.resolve(__dirname, 'clinicMap.html'), // xCite HTML file
-        // Add other HTML files if needed
         // other: path.resolve(__dirname, 'other.html'),
       },
     },
