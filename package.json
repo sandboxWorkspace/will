@@ -1,7 +1,7 @@
 {
   "name": "will",
   "version": "1.0.0",
-  "description": "Digitizing paper documentations lorem ipsum",
+  "description": "QR accessible mobile-friendly site serving as a centralized platform to streamline operations and digitize workflows",
   "main": "src/js/firebaseScripts.js",
   "scripts": {
     "dev": "vite",
@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/sandboxWorkspace/will#readme",
   "dependencies": {
-    "firebase": "^11.4.0"
+    "firebase": "^11.5.0"
   },
   "devDependencies": {
     "vite": "^6.2.0"

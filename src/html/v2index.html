@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Reserve equipment and access safety logs. More features to come.">
+    <title>Will_QRCode</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../../manifest.json">
+    <link rel="apple-touch-icon" href="../../assets/logo.svg">
+</head>
+<body>
+    <header>
+        <a href="../../index.html">
+            <img src="../../assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+        <h1>TIRR SE OP</h1>
+    </header>
+    <div class="collapse-button-container">
+        <button class="collapse-button reservation-button" id="toggleEquipmentButton">Equipment Sign Up</button>
+        <div id="equiptmentSignUp" class="collapse-content">
+            <a href="fesBike.html" class="button spreadsheet-button">
+                <img src="../../assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                FES Bike
+            </a>
+            <a href="xCite.html" class="button spreadsheet-button">
+                <img src="../../assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                Xcite
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton">Request Forms</button>
+        <div id="requestForms" class="collapse-content">
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLScILiXXKcw0l-hWi9jqsjAsG_NYDEbDhsaXrmF19nJagancGg/viewform" class="button form-button">
+                <img src="../../assets/formicon.svg" alt="Form Icon" class="icon">
+                Supplies
+            </a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfRPPmL4T1krAL-O0YjKH_8ThVATCgumJgSHzQhG9ySBDtFiw/viewform" class="button form-button">
+                <img src="../../assets/formicon.svg" alt="Form Icon" class="icon">
+                Maintenance & Repair
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton">View Requests</button>
+        <div id="viewRequests" class="collapse-content">
+            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
+                <img src="../../assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                Supplies
+            </a>
+            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRF0zsz1o8BPNHsue-3dCRM9M9OAHdM76deUq0ltpMSDvN-RtmXaWnKujGLDhWRGtdxUcQPQGpSav6m/pubhtml" class="button spreadsheet-button">
+                <img src="../../assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                Maintenance & Repair
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button logs-button" id="toggleSafetyLogsButton">Safety Logs</button>
+        <div id="safetyLogs" class="collapse-content">
+            <a href="logs.html" class="button form-button">
+                <img src="../../assets/formicon.svg" alt="Form Icon" class="icon">
+                Submit Logs
+            </a>
+            <a href="logHistory.html" class="button spreadsheet-button">
+                <img src="../../assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                View Logs
+            </a>
+        </div>
+    </div>
+
+    <script type="module" src="../scripts.js"></script>
+</body>
+<div>
+    <footer>
+        <div class="button-container">
+            <h3>Under Construction</h3>
+                <a href="v2index.html" class="button pending-button">
+                    <!-- <img src="sheeticon.svg" alt="Spreadsheet Icon" class="icon"> -->
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+</div>
+</html>

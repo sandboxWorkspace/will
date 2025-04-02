@@ -1,0 +1,153 @@
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 25px;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.2s;
+    background: #333;
+    color: white;
+    font-size: 1.1em;
+}
+
+.button.form-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+}
+
+.button.form-button:hover {
+    background: linear-gradient(135deg, #357abd, #2a5b9d);
+}
+
+.button.spreadsheet-button {
+    background: linear-gradient(135deg, #50e3c2, #2c974b);
+}
+
+.button.spreadsheet-button:hover {
+    background: linear-gradient(135deg, #2c974b, #1b7a62);
+}
+
+.button.pending-button {
+    background: #555;
+    color: #b0b0b0;
+}
+
+.button .icon {
+    margin: 8px;
+    width: 18px;
+    height: 18px;
+}
+
+.collapse-button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.collapse-button {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 16px;
+    align-items: center;
+    margin: 5px 0;
+    width: 100%;
+    position: relative;
+    transition: background-color 0.3s;
+    background: #333;
+    color: white;
+    font-size: 1.1em;
+}
+
+.collapse-button.reservation-button {
+    background: linear-gradient(135deg, #6f2c91, #8e44ad);
+}
+
+.collapse-button.reservation-button:hover {
+    background: linear-gradient(135deg, #8e44ad, #5e3370);
+}
+
+.collapse-button.inventory-and-maintenance-button {
+    background: linear-gradient(135deg, #d93838, #ff00008a);
+}
+
+.collapse-button.inventory-and-maintenance-button:hover {
+    background: linear-gradient(135deg, #e138388e, #9615158e);
+}
+
+.collapse-button.logs-button {
+    background: linear-gradient(135deg, #d35400, #e67e22);
+}
+
+.collapse-button.logs-button:hover {
+    background: linear-gradient(135deg, #e67e22, #c65d0e);
+}
+
+.collapse-button::after {
+    content: '';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+    transition: transform 0.3s;
+}
+
+.collapse-content {
+    display: none;
+    padding: 5px 0;
+    margin: 5px;
+    text-align: center;
+    border-radius: 8px;
+    transition: max-height 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.collapse-content a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.2s;
+    background: #333;
+    color: white;
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+
+.collapse-content a.form-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+}
+
+.collapse-content a.form-button:hover {
+    background: linear-gradient(135deg, #357abd, #2a5b9d);
+}
+
+.collapse-content a.spreadsheet-button {
+    background: linear-gradient(135deg, #50e3c2, #2c974b);
+}
+
+.collapse-content a.spreadsheet-button:hover {
+    background: linear-gradient(135deg, #2c974b, #1b7a62);
+}
+
+.collapse-content.show {
+    display: block;
+}
+
+.collapse-content.show + .collapse-button::after {
+    transform: translateY(-50%) rotate(135deg);
+}

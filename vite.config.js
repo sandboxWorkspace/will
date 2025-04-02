@@ -2,27 +2,25 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 export default defineConfig({
-  base: '/will/', // Correct base URL for GitHub Pages deployment
+  base: '/will/',
+  publicDir: 'public',
 
   resolve: {
     alias: {
-      //'@assets': path.resolve(__dirname, 'assets'), // Set alias for easier asset importing
-      '@html': path.resolve(__dirname, ''),
-      '@css': path.resolve(__dirname, ''),
-      '@js': path.resolve(__dirname, ''),
+      '@': path.resolve(__dirname, './'), // Alias for root directory
+      '@ui': path.resolve(__dirname, 'ui'),
+      '@utils': path.resolve(__dirname, 'utils'),
+      '@data': path.resolve(__dirname, 'data'),
+      '@database': path.resolve(__dirname, 'database'),
     },
   },
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'), // Draft Main HTML file
-        index2: path.resolve(__dirname, 'index2.html'), // Draft Main HTML file
-        pending: path.resolve(__dirname, 'pending.html'), // pending HTML file
-        fesBike: path.resolve(__dirname, 'fesBike.html'), // fesBike HTML file
-        xCite: path.resolve(__dirname, 'xCite.html'), // xCite HTML file
-        clinicMap: path.resolve(__dirname, 'clinicMap.html'), // xCite HTML file
-        // other: path.resolve(__dirname, 'other.html'),
+        main: path.resolve(__dirname, 'index.html'),
+        v2index: path.resolve(__dirname, 'src/html/v2index.html'),
+        fesBike: path.resolve(__dirname, 'src/html/fesBike.html')
       },
     },
-  }
+  },
 });
