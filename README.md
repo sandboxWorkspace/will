@@ -68,3 +68,21 @@ npm run dev
 npm run build
 npm run serve
 ```
+
+
+Push instructions
+
+```
+git checkout main
+npm run build
+mkdir ../temp_gh_pages
+cp -r dist/* ../temp_gh_pages/
+git checkout gh-pages
+rm -rf *
+cp -r ../temp_gh_pages/* .
+git add .
+git commit -m "Deploy to gh-pages"
+git push origin gh-pages
+rm -rf ../temp_gh_pages
+git checkout main
+```

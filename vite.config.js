@@ -21,9 +21,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        v2index: path.resolve(__dirname, 'src/html/v2index.html'),
-        fesBike: path.resolve(__dirname, 'src/html/fesBike.html')
+        main: path.resolve(__dirname, 'index.html'), // Changed path
+        v2index: path.resolve(__dirname, 'v2index.html'), // Changed path
+        fesBike: path.resolve(__dirname, 'fesBike.html') // Changed path
       },
     },
   },
