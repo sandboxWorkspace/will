@@ -2,8 +2,8 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 export default defineConfig({
-  base: '/will/',
-  //publicDir: 'public',
+  base: '/will/', 
+  // publicDir: 'public',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'), // Alias for root directory
@@ -12,15 +12,15 @@ export default defineConfig({
       '@data': path.resolve(__dirname, './data'),
       '@database': path.resolve(__dirname, './database'),
       '@src': path.resolve(__dirname, './src'),
-      '@css': path.resolve(__dirname, './src/css')
+      '@css': path.resolve(__dirname, './src/css'),
     },
   },
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'), // Changed path
-        v2index: path.resolve(__dirname, 'v2index.html'), // Changed path
-        fesBike: path.resolve(__dirname, 'fesBike.html') // Changed path
+        main: path.resolve(__dirname, 'index.html'),
+        v2index: path.resolve(__dirname, 'v2index.html'),
+        fesBike: path.resolve(__dirname, 'fesBike.html'),
       },
     },
   },

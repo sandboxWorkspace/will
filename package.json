@@ -1,8 +1,8 @@
 {
-  "name": "will",
+  "name": "qrsite",
   "version": "1.0.0",
   "description": "QR accessible mobile-friendly site serving as a centralized platform to streamline operations and digitize workflows",
-  "main": "src/js/firebaseScripts.js",
+  "main": "src/js/scrips.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
