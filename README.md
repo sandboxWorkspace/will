@@ -70,7 +70,7 @@ npm run serve
 ```
 
 
-Push instructions
+Publish instructions
 
 ```
 git checkout main

@@ -1,12 +1,9 @@
 import { defineConfig } from 'vite';
 import path from 'path';
-import { fileURLToPath, URL } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   base: '/will/',
-  publicDir: 'public',
+  //publicDir: 'public',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'), // Alias for root directory
