@@ -30,10 +30,12 @@ export class DataManager {
         }
     }
 
-    async loadData(time, day) {
-        const path = `${this.currentPath}/${time}/${day}`;
+    async loadData(path) {
+        // console.log("DataManager: Attempting to load data from path:", path);
         try {
-            return await this.databaseAdapter.loadData(path);
+            const data = await this.databaseAdapter.loadData(path);
+            // console.log("DataManager: Data loaded from path", path, ":", data);
+            return data;
         } catch (error) {
             console.error("DataManager loadData error:", error);
             throw new Error("Failed to load data.");

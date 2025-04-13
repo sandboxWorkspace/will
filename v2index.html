@@ -13,6 +13,9 @@
 
     <link rel="stylesheet" href="/src/css/responsive.css">
     
+    <!--
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    -->
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/logo-180.png">
@@ -25,7 +28,20 @@
         <h1>TIRR SE OP</h1>
     </header>
     <div class="collapse-button-container">
-        <button class="collapse-button reservation-button" id="toggleEquipmentButton">Equipment Sign Up</button>
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton" data-target="requestForms">v2Reqest Forms</button>
+        <div id="requestForms" class="collapse-content">
+            <a href="supplyRequest.html" class="button form-button">
+                <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
+                Supplies
+            </a>
+            <a href="maintenanceRequest.html" class="button form-button">
+                <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
+                Maintenance & Repair
+            </a>
+        </div>
+    </div>
+    <div class="collapse-button-container">
+        <button class="collapse-button reservation-button" id="toggleEquipmentButton" data-target="equiptmentSignUp">Equipment Sign Up</button>
         <div id="equiptmentSignUp" class="collapse-content">
             <a href="fesBike.html" class="button spreadsheet-button">
                 <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
@@ -38,20 +54,7 @@
         </div>
     </div>
     <div class="collapse-button-container">
-        <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton">Request Forms</button>
-        <div id="requestForms" class="collapse-content">
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScILiXXKcw0l-hWi9jqsjAsG_NYDEbDhsaXrmF19nJagancGg/viewform" class="button form-button">
-                <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
-                Supplies
-            </a>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfRPPmL4T1krAL-O0YjKH_8ThVATCgumJgSHzQhG9ySBDtFiw/viewform" class="button form-button">
-                <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
-                Maintenance & Repair
-            </a>
-        </div>
-    </div>
-    <div class="collapse-button-container">
-        <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton">View Requests</button>
+        <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton" data-target="viewRequests">View Requests</button>
         <div id="viewRequests" class="collapse-content">
             <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
                 <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
@@ -64,7 +67,7 @@
         </div>
     </div>
     <div class="collapse-button-container">
-        <button class="collapse-button logs-button" id="toggleSafetyLogsButton">Safety Logs</button>
+        <button class="collapse-button logs-button" id="toggleSafetyLogsButton" data-target="safetyLogs">Safety Logs</button>
         <div id="safetyLogs" class="collapse-content">
             <a href="logs.html" class="button form-button">
                 <img src="/assets/formicon.svg" alt="Form Icon" class="icon">

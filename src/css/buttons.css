@@ -20,19 +20,19 @@
 }
 
 .button.form-button {
-    background: linear-gradient(135deg, #4a90e2, #357abd);
+    background: linear-gradient(138deg, #4a90e2, #357abd);
 }
 
 .button.form-button:hover {
-    background: linear-gradient(135deg, #357abd, #2a5b9d);
+    background: linear-gradient(138deg, #357abd, #2a5b9d);
 }
 
 .button.spreadsheet-button {
-    background: linear-gradient(135deg, #50e3c2, #2c974b);
+    background: linear-gradient(138deg, #50e3c2, #2c974b);
 }
 
 .button.spreadsheet-button:hover {
-    background: linear-gradient(135deg, #2c974b, #1b7a62);
+    background: linear-gradient(138deg, #2c974b, #1b7a62);
 }
 
 .button.pending-button {
@@ -69,27 +69,27 @@
 }
 
 .collapse-button.reservation-button {
-    background: linear-gradient(135deg, #6f2c91, #8e44ad);
+    background: linear-gradient(138deg, #9e3fc7, #712e8e);
 }
 
 .collapse-button.reservation-button:hover {
-    background: linear-gradient(135deg, #8e44ad, #5e3370);
+    background: linear-gradient(138deg, #712e8e, #5e3370);
 }
 
 .collapse-button.inventory-and-maintenance-button {
-    background: linear-gradient(135deg, #d93838, #ff00008a);
+    background: linear-gradient(138deg, #c63636, #be1b1b);
 }
 
 .collapse-button.inventory-and-maintenance-button:hover {
-    background: linear-gradient(135deg, #e138388e, #9615158e);
+    background: linear-gradient(138deg, #c03030, #690808);
 }
 
 .collapse-button.logs-button {
-    background: linear-gradient(135deg, #d35400, #e67e22);
+    background: linear-gradient(138deg, #df7a3c, #cb5d19);
 }
 
 .collapse-button.logs-button:hover {
-    background: linear-gradient(135deg, #e67e22, #c65d0e);
+    background: linear-gradient(138deg, #cb5d19, #cb5106);
 }
 
 .collapse-button::after {
@@ -129,19 +129,19 @@
 }
 
 .collapse-content a.form-button {
-    background: linear-gradient(135deg, #4a90e2, #357abd);
+    background: linear-gradient(138deg, #4a90e2, #357abd);
 }
 
 .collapse-content a.form-button:hover {
-    background: linear-gradient(135deg, #357abd, #2a5b9d);
+    background: linear-gradient(138deg, #357abd, #2a5b9d);
 }
 
 .collapse-content a.spreadsheet-button {
-    background: linear-gradient(135deg, #50e3c2, #2c974b);
+    background: linear-gradient(138deg, #50e3c2, #2c974b);
 }
 
 .collapse-content a.spreadsheet-button:hover {
-    background: linear-gradient(135deg, #2c974b, #1b7a62);
+    background: linear-gradient(138deg, #2c974b, #1b7a62);
 }
 
 .collapse-content.show {
@@ -149,5 +149,5 @@
 }
 
 .collapse-content.show + .collapse-button::after {
-    transform: translateY(-50%) rotate(135deg);
+    transform: translateY(-50%) rotate(138deg);
 }

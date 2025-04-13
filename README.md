@@ -16,10 +16,18 @@ Migrating away from google forms/sheets
 
 ## Pending Ideas and ToDo List
 
-Create:
-- Pitchdeck
+Future Ideas:
+- Pitchdeck & PPTX
 - Visual User Guide
 - FAQ and suggestion(s) form
+
+Quick List:
+- Add QR Code generator function
+- Add Quick Access Tab ()
+- Add OCR grader
+- Add *optional* urgency option (e.g. concern, can wait, immediate, etc...)
+- Reconvert logo.svg to ico and resize png sizes properly
+- Rewrite package.json
 
 Migrate to firebase (refactor for any database):
 - Inventory, Maintenance, both Trackers 
@@ -36,13 +44,6 @@ Inventory:
     - 
 - Submissions: data collection, analysis, and prediction
 - Migrate from google apps script email function
-
-Refractor Todo list:
-- Refactor code to allow transitioning away from Google firebase realtime database (general SQL database e.g. Mongo) 
-- Refractor javascript files so that functions are modular and seprate services instead of jumbled all together
-
-Maintenance:
-- Add *optional* urgency option (e.g. concern, can wait, immediate, etc...)
 
 Reservation System:
 - Equipment reservation table (FES Bike & Xcite)

@@ -35,7 +35,9 @@ class FirebaseAdapter extends DatabaseInterface {
         try {
             const dbRef = ref(this.database, path);
             const snapshot = await get(dbRef);
-            return snapshot.val();
+            const data = snapshot.val();
+            // console.log("Firebase: Data loaded from path", path, ":", data);
+            return data;
         } catch (error) {
             console.error("Firebase loadData error:", error);
             throw new Error("Failed to load data from Firebase.");
