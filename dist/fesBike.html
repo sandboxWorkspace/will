@@ -6,16 +6,12 @@
     <title>Will SEOP QRSite</title>
     
 
-
     
-    <!--
-    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    -->
-    <link rel="icon" href="/will/assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon.png" type="image/png">
     <link rel="manifest" href="/will/assets/manifest-Ob-BzPub.json">
-    <link rel="apple-touch-icon" href="/will/assets/logo-180.png">
-  <script type="module" crossorigin src="/will/assets/scripts-Df0xoJSX.js"></script>
-  <link rel="stylesheet" crossorigin href="/will/assets/scripts-VZ6VMMbg.css">
+    <link rel="apple-touch-icon" href="/will/assets/logo-CWXfw6Fn.png">
+  <script type="module" crossorigin src="/will/assets/scripts-CySoAYIL.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-Dv8id1W2.css">
   <link rel="stylesheet" crossorigin href="/will/assets/fesBike-DUJqz4DP.css">
 </head>
 <body>
@@ -26,51 +22,50 @@
         <h2>FES Bike Sign Up</h2>
     </header>
 
-    <!-- Button to trigger changelog modal -->
-    <button id="openChangelogBtn" class="changelog-button">Change Log</button>
+    <main>
+        <!-- Button to trigger changelog modal -->
+        <button id="openChangelogBtn" class="changelog-button">Change Log</button>
 
-    <!-- Table for displaying the schedule (This will be dynamically populated) -->
-    <table id="schedule-table">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Mon</th>
-                <th>Tue</th>
-                <th>Wed</th>
-                <th>Thu</th>
-                <th>Fri</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Table rows will be generated dynamically here -->
-        </tbody>
-    </table>
+        <!-- Table for displaying the schedule (This will be dynamically populated) -->
+        <table id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be generated dynamically here -->
+            </tbody>
+        </table>
 
-    <!-- Confirmation Modal for editing a cell -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h4>Change this sign up?</h4>
-            <div class="modal-buttons">
-                <button id="confirmBtn" class="yes-button">Yes</button>
-                <button id="cancelBtn" class="no-button">No</button>
+        <!-- Confirmation Modal for editing a cell -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <h4>Change this sign up?</h4>
+                <div class="modal-buttons">
+                    <button id="confirmBtn" class="yes-button">Yes</button>
+                    <button id="cancelBtn" class="no-button">No</button>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Changelog Modal -->
-    <div id="changelogModal" class="modal">
-        <div class="modal-content">
-            <h4>Change Log</h4>
-            <div id="changelogList" class="changelog-list">
-                <!-- Changelog items will be dynamically populated here -->
+
+        <!-- Changelog Modal -->
+        <div id="changelogModal" class="modal">
+            <div class="modal-content">
+                <h4>Change Log</h4>
+                <div id="changelogList" class="changelog-list">
+                    <!-- Changelog items will be dynamically populated here -->
+                </div>
+                <button id="closeChangelogBtn" class="changelog-button">Close</button>
             </div>
-            <button id="closeChangelogBtn" class="changelog-button">Close</button>
         </div>
-    </div>
+    </main>
 
-</body>
-
-<div>
     <footer>
         <div class="button-container">
             <h3>Under Construction</h3>
@@ -83,5 +78,6 @@
                 </a>
         </div>
     </footer>
-</div>
+
+</body>
 </html>

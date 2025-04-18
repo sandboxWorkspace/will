@@ -3,8 +3,9 @@ export class ScheduleTable {
         this.dataManager = dataManager;
         this.confirmationModal = confirmationModal; // Store the modal instance
         this.tableBody = document.querySelector("#schedule-table tbody");
-        this.timeSlots = ["8a", "9a", "10a", "11a", "12p", "1p", "2p", "3p", "4p"];
+        this.timeSlots = ["8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm"];
         this.daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+        this.scheduleData = null; // Add property to store loaded data
     }
 
     async initialize() {
@@ -20,59 +21,63 @@ export class ScheduleTable {
         console.log("Initializing schedule table...");
         // Clear the table body first
         this.tableBody.innerHTML = '';
-        // Populate the table structure and load data concurrently
-        await this.populateAndLoadTable();
-        // Setup listeners after table is ready
-        this.setupEventListeners();
-        console.log("Schedule table initialized and listeners set up.");
+
+        try {
+            // --- Load the entire schedule data first ---
+            console.log("Loading schedule data...");
+            this.scheduleData = await this.dataManager.loadScheduleData();
+            console.log("Schedule data loaded:", this.scheduleData);
+            // Handle case where data might be null/empty from the database
+            if (!this.scheduleData) {
+                this.scheduleData = {}; // Ensure it's an object for safe access later
+                console.log("No existing schedule data found, initialized as empty.");
+            }
+
+            // --- Populate the table using the loaded data ---
+            this.populateTableFromData();
+
+            // Setup listeners after table is ready
+            this.setupEventListeners();
+            console.log("Schedule table initialized and listeners set up.");
+
+        } catch (error) {
+            console.error("Failed to initialize schedule table:", error);
+            // Optionally display an error message to the user in the table area
+            this.tableBody.innerHTML = `<tr><td colspan="${this.daysOfWeek.length + 1}" style="color: red; text-align: center;">Error loading schedule data. Please try again later.</td></tr>`;
+        }
     }
 
-    async populateAndLoadTable() {
-        const loadPromises = this.timeSlots.map(async (time) => {
+    // Renamed and simplified: Populates table from this.scheduleData
+    populateTableFromData() {
+        this.timeSlots.forEach(time => {
             const row = document.createElement("tr");
             const timeCell = document.createElement("td");
             timeCell.textContent = time;
             row.appendChild(timeCell); // Add time cell first
 
-            // Create promises for loading data for each day cell in this row
-            const cellPromises = this.daysOfWeek.map(async (day, index) => {
+            this.daysOfWeek.forEach((day, index) => {
                 const cell = document.createElement("td");
                 cell.contentEditable = "true";
                 cell.dataset.time = time;
                 cell.dataset.day = index; // Use index (0-4) for data consistency
-                cell.dataset.valueBeforeEdit = ""; // Initialize dataset property
 
-                // Construct path (ensure dataManager uses this format)
-                const path = `${this.dataManager.currentPath}/${time}/${index}`;
-                let value = ""; // Default to empty string
+                // --- Get value from the pre-loaded scheduleData ---
+                // Use optional chaining (?.) for safety in case time or index doesn't exist
+                const value = this.scheduleData?.[time]?.[index] || "";
 
-                try {
-                    value = await this.dataManager.loadData(path) || "";
-                } catch (error) {
-                    console.error(`Error loading data for ${time}, Day ${index} (${day}) at path ${path}:`, error);
-                    // Keep value as "" on error
-                } finally {
-                    cell.textContent = value;
-                    cell.dataset.valueBeforeEdit = value; // Set initial state based on loaded data
-                }
-                return cell; // Return the created and populated cell
+                cell.textContent = value;
+                cell.dataset.valueBeforeEdit = value; // Set initial state
+
+                row.appendChild(cell);
             });
 
-            // Wait for all cells in this row to be created and data loaded
-            const cells = await Promise.all(cellPromises);
-            cells.forEach(cell => row.appendChild(cell)); // Append cells in correct order
-
-            return row; // Return the fully populated row
+            this.tableBody.appendChild(row); // Append the fully populated row
         });
 
-        // Wait for all row promises to complete
-        const rows = await Promise.all(loadPromises);
-        // Append rows to the table body
-        rows.forEach(row => this.tableBody.appendChild(row));
-
-        console.log("Schedule table populated and data loaded.");
+        console.log("Schedule table populated from loaded data.");
     }
 
+    // Remove the old populateAndLoadTable method entirely as it's replaced by populateTableFromData
 
     setupEventListeners() {
         // --- Add 'focusin' listener to store value before editing ---
@@ -118,19 +123,8 @@ export class ScheduleTable {
         });
     }
 
-    // Optional: Add a method to remove listeners if the table component can be destroyed/recreated
+    // Note to self: maybe add a method to remove listeners if the table component can be destroyed/recreated
     destroy() {
-        // A more robust way to remove listeners if needed:
-        // Clone the node and replace it, which removes all listeners
-        // const old_tbody = this.tableBody;
-        // const new_tbody = old_tbody.cloneNode(false); // false = don't clone children/content
-        // // You might need to repopulate new_tbody here if you need the content
-        // old_tbody.parentNode.replaceChild(new_tbody, old_tbody);
-        // this.tableBody = new_tbody; // Update reference if needed elsewhere
-        // console.log("ScheduleTable listeners removed by node replacement.");
-
-        // Or, if you store references to the bound listeners, you can remove them specifically.
-        // For this setup, letting them be garbage collected if the table is removed from DOM is often sufficient.
         console.log("ScheduleTable listeners potentially active if element persists.");
     }
 }

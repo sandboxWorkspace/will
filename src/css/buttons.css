@@ -11,22 +11,29 @@
     align-items: center;
     justify-content: center;
     padding: 15px 25px;
-    border-radius: 16px;
+    border-radius: var(--border-radius-large); /* Use variable */
     text-decoration: none;
-    transition: background-color 0.3s, transform 0.2s;
-    background: #333;
-    color: white;
+    transition: background-color 0.3s, transform 0.2s, background 0.3s; /* Added background transition */
+    background: var(--background-alt); /* Use variable for base background */
+    color: var(--text-emphasis); /* Use variable for text */
     font-size: 1.1em;
+    border: none; /* Ensure no default border */
+    cursor: pointer; /* Add cursor pointer for button elements */
 }
 
+/* --- Form Button --- */
 .button.form-button {
-    background: linear-gradient(138deg, #4a90e2, #357abd);
+    /* Use variables for the gradient */
+    background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
+    color: var(--text-on-primary); /* Ensure text is readable on primary */
 }
 
 .button.form-button:hover {
-    background: linear-gradient(138deg, #357abd, #2a5b9d);
+    /* Use variables for the hover gradient */
+    background: linear-gradient(138deg, var(--primary-color-dark), #2a5b9d); /* Slightly darker second stop */
 }
 
+/* --- Other Button Styles (kept original gradients for now) --- */
 .button.spreadsheet-button {
     background: linear-gradient(138deg, #50e3c2, #2c974b);
 }
@@ -41,15 +48,17 @@
 }
 
 .button .icon {
-    margin: 8px;
+    margin-right: 8px; /* Adjusted margin */
     width: 18px;
     height: 18px;
+    fill: currentColor; /* Use button's text color for SVG icon */
 }
 
+/* --- Collapse Button Styles --- */
 .collapse-button-container {
     display: flex;
     flex-direction: column;
-    gap: 0px;
+    gap: 0px; /* Keep original gap */
     width: 100%;
     max-width: 400px;
 }
@@ -57,97 +66,118 @@
 .collapse-button {
     padding: 15px 25px;
     border: none;
-    border-radius: 16px;
+    border-radius: var(--border-radius-large); /* Use variable */
+    display: flex; /* Ensure flex properties apply */
     align-items: center;
+    justify-content: center; /* Center text */
     margin: 5px 0;
     width: 100%;
     position: relative;
-    transition: background-color 0.3s;
-    background: #333;
-    color: white;
+    transition: background-color 0.3s, background 0.3s; /* Added background transition */
+    background: var(--background-alt); /* Use variable */
+    color: var(--text-emphasis); /* Use variable */
     font-size: 1.1em;
+    cursor: pointer;
+    text-align: left; /* Align text to the left */
+    padding-left: 25px; /* Ensure consistent padding */
 }
 
+/* Specific collapse button gradients (kept original) */
 .collapse-button.reservation-button {
     background: linear-gradient(138deg, #9e3fc7, #712e8e);
 }
-
 .collapse-button.reservation-button:hover {
     background: linear-gradient(138deg, #712e8e, #5e3370);
 }
-
 .collapse-button.inventory-and-maintenance-button {
     background: linear-gradient(138deg, #c63636, #be1b1b);
 }
-
 .collapse-button.inventory-and-maintenance-button:hover {
     background: linear-gradient(138deg, #c03030, #690808);
 }
-
+.collapse-button.viewReq-button {
+    background: linear-gradient(138deg, #4a90e2, #1e63a8);
+}
+.collapse-button.viewReq-button:hover {
+    background: linear-gradient(138deg, #2672bf, #08325b);
+}
 .collapse-button.logs-button {
     background: linear-gradient(138deg, #df7a3c, #cb5d19);
 }
-
 .collapse-button.logs-button:hover {
     background: linear-gradient(138deg, #cb5d19, #cb5106);
 }
 
+/* Collapse arrow */
 .collapse-button::after {
     content: '';
     position: absolute;
-    right: 15px;
+    right: 25px; /* Adjusted position */
     top: 50%;
-    transform: translateY(-50%);
-    border: solid white;
+    transform: translateY(-50%) rotate(45deg); /* Pointing down initially */
+    border: solid var(--text-emphasis); /* Use variable */
     border-width: 0 2px 2px 0;
     display: inline-block;
     padding: 3px;
-    transition: transform 0.3s;
+    transition: transform 0.3s ease; /* Smooth rotation */
 }
 
+/* --- Collapse Content --- */
 .collapse-content {
     display: none;
     padding: 5px 0;
-    margin: 5px;
+    margin: 0 5px 5px 5px; /* Adjusted margin */
     text-align: center;
-    border-radius: 8px;
-    transition: max-height 0.2s ease-out, opacity 0.2s ease-out;
+    border-radius: var(--border-radius); /* Use variable */
+    overflow: hidden; /* Needed for smooth transition */
+    max-height: 0; /* Start collapsed */
+    opacity: 0; /* Start hidden */
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out; /* Smooth transitions */
 }
 
 .collapse-content a {
+    /* Inherit base .button styles */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 10px 20px;
-    border-radius: 16px;
+    border-radius: var(--border-radius-large); /* Use variable */
     text-decoration: none;
-    transition: background-color 0.3s, transform 0.2s;
-    background: #333;
-    color: white;
-    font-size: 1.1em;
+    transition: background-color 0.3s, transform 0.2s, background 0.3s;
+    background: var(--background-alt); /* Use variable */
+    color: var(--text-emphasis); /* Use variable */
+    font-size: 1em; /* Slightly smaller than main buttons */
     margin: 10px 0;
 }
 
+/* Specific link styles within collapse content */
 .collapse-content a.form-button {
-    background: linear-gradient(138deg, #4a90e2, #357abd);
+    background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
+    color: var(--text-on-primary);
 }
-
 .collapse-content a.form-button:hover {
-    background: linear-gradient(138deg, #357abd, #2a5b9d);
+    background: linear-gradient(138deg, var(--primary-color-dark), #2a5b9d);
 }
-
 .collapse-content a.spreadsheet-button {
     background: linear-gradient(138deg, #50e3c2, #2c974b);
 }
-
 .collapse-content a.spreadsheet-button:hover {
     background: linear-gradient(138deg, #2c974b, #1b7a62);
 }
 
+/* --- Collapse Logic --- */
 .collapse-content.show {
-    display: block;
+    display: block; /* Or flex/grid depending on content */
+    max-height: 500px; /* Adjust as needed, large enough for content */
+    opacity: 1;
+    padding: 10px 0; /* Add padding back */
 }
 
-.collapse-content.show + .collapse-button::after {
-    transform: translateY(-50%) rotate(138deg);
+/* Rotate arrow when content is shown */
+/* Use adjacent sibling selector (+) if .collapse-content immediately follows .collapse-button */
+.collapse-button.active::after {
+    transform: translateY(-50%) rotate(-135deg); /* Pointing up */
+}
+.collapse-button-container.active .collapse-button::after {
+    transform: translateY(-50%) rotate(-135deg);
 }

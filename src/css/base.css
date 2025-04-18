@@ -1,28 +1,104 @@
+:root {
+    /* Text Colors */
+    --text-primary: #e0e0e0;       /* Main text color */
+    --text-secondary: #aaa;       /* Lighter text for labels, placeholders */
+    --text-emphasis: #ffffff;     /* For strong elements or highlights */
+    --text-on-primary: #ffffff;   /* Text color on primary backgrounds */
+
+    /* Background Colors */
+    --background-color: #121212;  /* Main background */
+    --background-alt: #2c2c2c;    /* Slightly lighter bg for inputs, cards */
+    --background-surface: #1e1e1e; /* Alternative surface color */
+
+    /* Border Colors */
+    --border-color: #333;         /* Standard border */
+    --border-color-light: #444;   /* Lighter border for dividers */
+
+    /* Primary/Accent Color */
+    --primary-color: #4a90e2;     /* Main accent color (links, focus) */
+    --primary-color-dark: #357abd; /* Darker shade for gradients/hovers */
+
+    /* Utility */
+    --border-radius: 8px;         /* Standard border radius */
+    --border-radius-large: 16px;  /* Larger radius (e.g., for buttons) */
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Base font */
+
+    /* Status Colors (from forms.css) */
+    --success-bg: #2f4d37;
+    --success-border: #388e3c;
+    --success-text: #e6ffed;
+    --error-bg: #5d2f2f;
+    --error-border: #d32f2f;
+    --error-text: #ffebee;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
 body {
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: column;
     min-height: 100vh;
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
-    padding: 20px; /* Padding for mobile view */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    font-family: var(--font-family); /* Use variable */
+    background-color: var(--background-color); /* Use variable */
+    color: var(--text-primary); /* Use variable */
+    padding: 20px;
+    overflow-x: hidden;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    flex-grow: 1;
 }
 
 h1, h2, h3 {
     text-align: center;
-    background: linear-gradient(135deg, #4a90e2, #357abd);
+    /* Use variables for the gradient */
+    background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
     background-clip: text;
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: 0.1em;
-    text-transform: uppercase;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
 }
 
 h1 {
     font-size: 2.8em;
     font-weight: 700;
     text-shadow: none;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 20px;
+}
+
+.logo {
+    width: 100px;
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    text-align: center;
 }

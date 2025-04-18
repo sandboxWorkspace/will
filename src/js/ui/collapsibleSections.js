@@ -9,22 +9,26 @@ export class CollapsibleSections {
     initialize() {
         if (!this.collapseButtons.length) {
             console.warn("No collapsible buttons with data-target found.");
-            return; // Exit if no buttons found
+            return;
+            // Exit if no buttons found
         }
 
         this.collapseButtons.forEach(button => {
             // Retrieve the target ID from the button's data-target attribute
-            const targetId = button.dataset.target; // Access data-target attribute
+            const targetId = button.dataset.target;
+            // Access data-target attribute
 
-            if (targetId) { // Ensure targetId is not empty
+            if (targetId) {
+                // Ensure targetId is not empty
                 button.addEventListener("click", () => {
                     // Call toggleCollapse with the dynamically retrieved ID
-                    toggleCollapse(targetId);
+                    toggleCollapse(button, targetId);
                 });
             } else {
                 // Optional: Warn if a button has the class but an empty data-target
                 console.warn(`Button with ID "${button.id || 'N/A'}" has an empty data-target attribute.`);
             }
-        });
+        }
+        );
     }
 }

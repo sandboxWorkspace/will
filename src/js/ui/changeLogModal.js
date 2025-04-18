@@ -51,7 +51,7 @@ export class ChangeLogModal {
                 const changeEntries = Object.values(changes).sort((a, b) => b.timestamp - a.timestamp);
                 this.changelogList.innerHTML = ''; // Clear loading message
 
-                const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']; // Define day names
+                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; // Define day names
 
                 changeEntries.forEach(change => {
                     const changeItem = document.createElement("div");
@@ -74,8 +74,7 @@ export class ChangeLogModal {
 
                     changeItem.innerHTML = `
                         <strong class="changelog-timestamp">${timestamp}</strong><br>
-                        <span class="changelog-details">Time: ${this.escapeHtml(change.time)}, Day: ${dayName}</span><br>
-                        <span class="changelog-change">"${sanitizedOldValue}" &rarr; "${sanitizedNewValue}"</span>
+                        <span class="changelog-details">${dayName} ${this.escapeHtml(change.time)}: " ${sanitizedOldValue}" &rarr; "${sanitizedNewValue}"</span>
                     `;
                     this.changelogList.appendChild(changeItem);
                 });

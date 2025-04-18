@@ -6,16 +6,12 @@
     <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Reserve equipment and access safety logs. More features to come.">
     <title>Will SEOP QRSite</title>
     
-
     
-    <!--
-    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    -->
-    <link rel="icon" href="/will/assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon.png" type="image/png">
     <link rel="manifest" href="/will/assets/manifest-Ob-BzPub.json">
-    <link rel="apple-touch-icon" href="/will/assets/logo-180.png">
-  <script type="module" crossorigin src="/will/assets/scripts-Df0xoJSX.js"></script>
-  <link rel="stylesheet" crossorigin href="/will/assets/scripts-VZ6VMMbg.css">
+    <link rel="apple-touch-icon" href="/will/assets/logo-CWXfw6Fn.png">
+  <script type="module" crossorigin src="/will/assets/scripts-CySoAYIL.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-Dv8id1W2.css">
 </head>
 <body>
     <header>
@@ -24,61 +20,78 @@
         </a>
         <h1>TIRR SE OP</h1>
     </header>
-    <div class="collapse-button-container">
-        <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton" data-target="requestForms">v2Reqest Forms</button>
-        <div id="requestForms" class="collapse-content">
-            <a href="supplyRequest.html" class="button form-button">
-                <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
-                Supplies
-            </a>
-            <a href="maintenanceRequest.html" class="button form-button">
-                <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
-                Maintenance & Repair
-            </a>
-        </div>
-    </div>
-    <div class="collapse-button-container">
-        <button class="collapse-button reservation-button" id="toggleEquipmentButton" data-target="equiptmentSignUp">Equipment Sign Up</button>
-        <div id="equiptmentSignUp" class="collapse-content">
-            <a href="fesBike.html" class="button spreadsheet-button">
-                <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                FES Bike
-            </a>
-            <a href="xCite.html" class="button spreadsheet-button">
-                <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                Xcite
-            </a>
-        </div>
-    </div>
-    <div class="collapse-button-container">
-        <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton" data-target="viewRequests">View Requests</button>
-        <div id="viewRequests" class="collapse-content">
-            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
-                <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                Supplies
-            </a>
-            <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRF0zsz1o8BPNHsue-3dCRM9M9OAHdM76deUq0ltpMSDvN-RtmXaWnKujGLDhWRGtdxUcQPQGpSav6m/pubhtml" class="button spreadsheet-button">
-                <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                Maintenance & Repair
-            </a>
-        </div>
-    </div>
-    <div class="collapse-button-container">
-        <button class="collapse-button logs-button" id="toggleSafetyLogsButton" data-target="safetyLogs">Safety Logs</button>
-        <div id="safetyLogs" class="collapse-content">
-            <a href="logs.html" class="button form-button">
-                <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
-                Submit Logs
-            </a>
-            <a href="logHistory.html" class="button spreadsheet-button">
-                <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                View Logs
-            </a>
-        </div>
-    </div>
 
-</body>
-<div>
+    <main>
+        <div class="collapse-button-container">
+            <button class="collapse-button inventory-and-maintenance-button" id="toggleRequestButton" data-target="requestForms">
+                v2Reqest Forms
+            </button>
+            <div id="requestForms" class="collapse-content">
+                <a href="supplyRequest.html" class="button form-button">
+                    <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
+                    Supplies
+                </a>
+                <a href="equipmentWishlist.html" class="button form-button">
+                    <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
+                    Equipment Wishlist
+                </a>
+                <a href="maintenanceRequest.html" class="button form-button">
+                    <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
+                    Maintenance & Repair
+                </a>
+            </div>
+        </div>
+        <div class="collapse-button-container">
+            <button class="collapse-button reservation-button" id="toggleEquipmentButton" data-target="equiptmentSignUp">
+                Equipment Sign Up
+            </button>
+            <div id="equiptmentSignUp" class="collapse-content">
+                <a href="tech.html" class="button spreadsheet-button">
+                    <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                    Tech
+                </a>
+                <a href="xCite.html" class="button spreadsheet-button">
+                    <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                    Xcite
+                </a>
+                <a href="fesBike.html" class="button spreadsheet-button">
+                    <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                    FES Bike
+                </a>
+            </div>
+        </div>
+        <div class="collapse-button-container">
+            <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton" data-target="viewRequests">
+                View Requests
+            </button>
+            <div id="viewRequests" class="collapse-content">
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
+                    <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                    Supplies
+                </a>
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRF0zsz1o8BPNHsue-3dCRM9M9OAHdM76deUq0ltpMSDvN-RtmXaWnKujGLDhWRGtdxUcQPQGpSav6m/pubhtml" class="button spreadsheet-button">
+                    <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                    Maintenance & Repair
+                </a>
+            </div>
+        </div>
+        <div class="collapse-button-container">
+            <button class="collapse-button logs-button" id="toggleSafetyLogsButton" data-target="safetyLogs">
+                Safety Logs
+            </button>
+            <div id="safetyLogs" class="collapse-content">
+                <a href="logs.html" class="button form-button">
+                    <img src="/will/assets/formicon.svg" alt="Form Icon" class="icon">
+                    Submit Logs
+                </a>
+                <a href="logHistory.html" class="button spreadsheet-button">
+                    <img src="/will/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                    View Logs
+                </a>
+            </div>
+        </div>
+    </main>
+
     <footer>
         <div class="button-container">
             <h3>Under Construction</h3>
@@ -91,5 +104,6 @@
                 </a>
         </div>
     </footer>
-</div>
+
+</body>
 </html>

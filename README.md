@@ -72,10 +72,16 @@ npm run serve
 
 
 Publish instructions
+MAKE SURE TO PUSH CHANGES TO MAIN FIRST
+Also add new pages and import js modules if needed to vite.config file
 
 ```
 git checkout main
 npm run build
+npm run serve
+git add .
+git commit -m ""
+git push origin main
 mkdir ../temp_gh_pages
 cp -r dist/* ../temp_gh_pages/
 git checkout gh-pages

@@ -6,23 +6,18 @@
     <title>Will SEOP QRSite</title>
     
     <link rel="stylesheet" href="/src/css/base.css">
-    <link rel="stylesheet" href="/src/css/headerFooter.css">
     <link rel="stylesheet" href="/src/css/buttons.css">
     <link rel="stylesheet" href="/src/css/scrollbar.css">
+    <link rel="stylesheet" href="/src/css/responsive.css">
 
     <link rel="stylesheet" href="/src/css/carousel.css">
     <link rel="stylesheet" href="/src/css/modal.css">
     <link rel="stylesheet" href="/src/css/changelog.css">
     <link rel="stylesheet" href="/src/css/table.css">
-
-    <link rel="stylesheet" href="/src/css/responsive.css">
     
-    <!--
-    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    -->
-    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/assets/favicon.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/assets/logo-180.png">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
 </head>
 <body>
     <header>
@@ -32,52 +27,50 @@
         <h2>FES Bike Sign Up</h2>
     </header>
 
-    <!-- Button to trigger changelog modal -->
-    <button id="openChangelogBtn" class="changelog-button">Change Log</button>
+    <main>
+        <!-- Button to trigger changelog modal -->
+        <button id="openChangelogBtn" class="changelog-button">Change Log</button>
 
-    <!-- Table for displaying the schedule (This will be dynamically populated) -->
-    <table id="schedule-table">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Mon</th>
-                <th>Tue</th>
-                <th>Wed</th>
-                <th>Thu</th>
-                <th>Fri</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Table rows will be generated dynamically here -->
-        </tbody>
-    </table>
+        <!-- Table for displaying the schedule (This will be dynamically populated) -->
+        <table id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be generated dynamically here -->
+            </tbody>
+        </table>
 
-    <!-- Confirmation Modal for editing a cell -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h4>Change this sign up?</h4>
-            <div class="modal-buttons">
-                <button id="confirmBtn" class="yes-button">Yes</button>
-                <button id="cancelBtn" class="no-button">No</button>
+        <!-- Confirmation Modal for editing a cell -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <h4>Change this sign up?</h4>
+                <div class="modal-buttons">
+                    <button id="confirmBtn" class="yes-button">Yes</button>
+                    <button id="cancelBtn" class="no-button">No</button>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Changelog Modal -->
-    <div id="changelogModal" class="modal">
-        <div class="modal-content">
-            <h4>Change Log</h4>
-            <div id="changelogList" class="changelog-list">
-                <!-- Changelog items will be dynamically populated here -->
+
+        <!-- Changelog Modal -->
+        <div id="changelogModal" class="modal">
+            <div class="modal-content">
+                <h4>Change Log</h4>
+                <div id="changelogList" class="changelog-list">
+                    <!-- Changelog items will be dynamically populated here -->
+                </div>
+                <button id="closeChangelogBtn" class="changelog-button">Close</button>
             </div>
-            <button id="closeChangelogBtn" class="changelog-button">Close</button>
         </div>
-    </div>
+    </main>
 
-    <script type="module" src="/src/scripts.js"></script>
-</body>
-
-<div>
     <footer>
         <div class="button-container">
             <h3>Under Construction</h3>
@@ -90,5 +83,7 @@
                 </a>
         </div>
     </footer>
-</div>
+
+    <script type="module" src="/src/scripts.js"></script>
+</body>
 </html>

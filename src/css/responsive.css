@@ -37,6 +37,17 @@
     }
 }
 
+@media (max-width: 600px) {
+    .recent-requests-list {
+        max-height: 200px; /* Adjust height for smaller screens */
+    }
+    .request-item .request-meta {
+        flex-direction: column; /* Stack meta items vertically */
+        align-items: flex-start;
+        gap: 2px;
+    }
+}
+
 @media (max-width: 480px) {
     h1 {
         font-size: 1.8em;
@@ -55,7 +66,7 @@
     body {
         padding: 20px;
     }
-    
+
     header {
         padding: 20px;
     }

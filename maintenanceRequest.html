@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Submit a maintenance or repair request.">
+    <title>Maintenance and Repair</title>
+
+    <link rel="stylesheet" href="/src/css/base.css">
+    <link rel="stylesheet" href="/src/css/buttons.css">
+    <link rel="stylesheet" href="/src/css/scrollbar.css">
+    <link rel="stylesheet" href="/src/css/responsive.css">
+
+
+    <link rel="stylesheet" href="/src/css/forms.css">
+    <link rel="stylesheet" href="/src/css/maintenanceRequest.css">
+
+    <link rel="icon" href="/assets/favicon.png" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+    </header>
+
+    <main>
+        <section class="recent-requests-section">
+            <h2>Recent Maintenance Requests</h2>
+            <!--
+            <p>Check if your issue has already been reported.</p>
+            -->
+            <div id="recentRequestsList" class="recent-requests-list changelog-list">
+                <p>Loading recent requests...</p>
+            </div>
+        </section>
+
+        <section class="request-form-section">
+            <h2>Submit New Request</h2>
+            <form id="maintenanceRequestForm" class="styled-form">
+                <div class="form-group">
+                    <label for="submitterName">Your Name:</label>
+                    <input type="text" id="submitterName" name="submitterName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="requestType">Request Type:</label>
+                    <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
+                     <!-- Consider using a <select> dropdown here for better consistency -->
+                     <!-- <select id="requestType" name="requestType" required>
+                            <option value="">--Select Type--</option>
+                            <option value="Repair">Repair</option>
+                            <option value="Replace">Replace</option>
+                            <option value="Other">Other (Specify in Details)</option>
+                         </select> -->
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentName">Name of Equipment or Area:</label>
+                    <input type="text" id="equipmentName" name="equipmentName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="requestDetails">Details:</label>
+                    <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
+                </div>
+
+                <button type="submit" class="button form-button submit-button">Submit Request</button>
+                <p id="formStatus" class="form-status-message" aria-live="polite"></p> <!-- For success/error messages -->
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="button-container">
+            <h3>Under Construction</h3>
+                <a href="v2index.html" class="button pending-button">
+                    <!-- <img src="sheeticon.svg" alt="Spreadsheet Icon" class="icon"> -->
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/scripts.js"></script>
+</body>
+</html>
