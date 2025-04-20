@@ -1,38 +1,61 @@
+import { escapeHtml } from '../utils/utils.js';
+
 export class ChangeLogModal {
-    constructor(dataManager) {
+    // Accept an options object for configuration
+    constructor(dataManager, options = {}) {
         this.dataManager = dataManager;
-        this.changelogModal = document.getElementById("changelogModal");
-        this.closeChangelogBtn = document.getElementById("closeChangelogBtn");
-        this.changelogList = document.getElementById("changelogList");
-        this.openChangelogBtn = document.getElementById("openChangelogBtn"); // Get open button reference
+
+        // Use provided IDs or defaults
+        const defaultIds = {
+            modalId: "changelogModal",
+            closeBtnId: "closeChangelogBtn",
+            listId: "changelogList",
+            openBtnId: "openChangelogBtn"
+        };
+        this.options = { ...defaultIds, ...options }; // Merge defaults with provided options
+
+        // Get elements using configured IDs
+        this.changelogModal = document.getElementById(this.options.modalId);
+        this.closeChangelogBtn = document.getElementById(this.options.closeBtnId);
+        this.changelogList = document.getElementById(this.options.listId);
+        this.openChangelogBtn = document.getElementById(this.options.openBtnId);
 
         // Bind methods
         this.showModal = this.showModal.bind(this);
         this.hideModal = this.hideModal.bind(this);
         this.handleWindowClick = this.handleWindowClick.bind(this);
-        this.loadChangeLog = this.loadChangeLog.bind(this); // Bind loadChangeLog
+        this.loadChangeLog = this.loadChangeLog.bind(this);
     }
 
     initialize() {
-        if (!this.changelogModal || !this.closeChangelogBtn || !this.changelogList || !this.openChangelogBtn) {
-            console.error("Changelog elements not found in the DOM");
+        // Check if essential elements were found using the configured IDs
+        if (!this.changelogModal || !this.closeChangelogBtn || !this.changelogList) {
+            console.error(`Changelog modal elements (modal: ${this.options.modalId}, close: ${this.options.closeBtnId}, list: ${this.options.listId}) not found in the DOM.`);
             return;
         }
+        // Open button is optional for initialization, might be triggered programmatically
+        if (!this.openChangelogBtn) {
+             console.warn(`Changelog open button (id: ${this.options.openBtnId}) not found. Modal must be opened programmatically.`);
+        } else {
+            this.openChangelogBtn.addEventListener("click", this.showModal);
+        }
 
-        this.openChangelogBtn.addEventListener("click", this.showModal);
         this.closeChangelogBtn.addEventListener("click", this.hideModal);
         window.addEventListener("click", this.handleWindowClick);
+        console.log("ChangeLogModal initialized.");
     }
 
     showModal() {
+        if (!this.changelogModal) return;
         this.changelogModal.classList.add('is-visible');
         this.loadChangeLog(); // Load content when showing
     }
 
     hideModal() {
+        if (!this.changelogModal) return;
         this.changelogModal.classList.remove('is-visible');
         // Optional: Clear list content when hiding to save memory?
-        // this.changelogList.innerHTML = '';
+        // if (this.changelogList) this.changelogList.innerHTML = '';
     }
 
     handleWindowClick(event) {
@@ -42,39 +65,40 @@ export class ChangeLogModal {
     }
 
     async loadChangeLog() {
+        if (!this.changelogList) return;
         this.changelogList.innerHTML = '<p>Loading changes...</p>'; // Indicate loading
         try {
+            // Assuming dataManager.loadChangeLog() is generic enough or
+            // you might pass a specific loader function via options if needed
             const changes = await this.dataManager.loadChangeLog();
 
             if (changes && Object.keys(changes).length > 0) {
-                // Sort entries by timestamp descending
-                const changeEntries = Object.values(changes).sort((a, b) => b.timestamp - a.timestamp);
+                const changeEntries = Object.values(changes).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Safer sort
                 this.changelogList.innerHTML = ''; // Clear loading message
 
                 const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; // Define day names
 
                 changeEntries.forEach(change => {
                     const changeItem = document.createElement("div");
-                    changeItem.classList.add("changelog-item"); // Add class for potential styling
+                    changeItem.classList.add("changelog-item"); // Keep class for styling
 
-                    // Format timestamp
-                    const timestamp = new Date(change.timestamp).toLocaleString(undefined, {
-                        dateStyle: 'short',
-                        timeStyle: 'short'
-                    });
+                    const timestamp = change.timestamp
+                        ? new Date(change.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+                        : 'Unknown Time';
 
-                    // Get day name, handle potential undefined index
-                    const dayName = change.dayIndex >= 0 && change.dayIndex < dayNames.length
+                    const dayName = (typeof change.dayIndex === 'number' && change.dayIndex >= 0 && change.dayIndex < dayNames.length)
                         ? dayNames[change.dayIndex]
-                        : 'Unknown Day';
+                        : ''; // Default to empty if no valid dayIndex
 
-                    // Sanitize values before inserting into innerHTML to prevent XSS
-                    const sanitizedOldValue = this.escapeHtml(change.oldValue || "");
-                    const sanitizedNewValue = this.escapeHtml(change.newValue || "");
+                    // Use imported escapeHtml
+                    const sanitizedOldValue = escapeHtml(change.oldValue || "");
+                    const sanitizedNewValue = escapeHtml(change.newValue || "");
+                    const timeStr = escapeHtml(change.time || "");
+                    const dayAndTime = dayName && timeStr ? `${dayName} ${timeStr}: ` : '';
 
                     changeItem.innerHTML = `
                         <strong class="changelog-timestamp">${timestamp}</strong><br>
-                        <span class="changelog-details">${dayName} ${this.escapeHtml(change.time)}: " ${sanitizedOldValue}" &rarr; "${sanitizedNewValue}"</span>
+                        <span class="changelog-details">${dayAndTime}"${sanitizedOldValue}" &rarr; "${sanitizedNewValue}"</span>
                     `;
                     this.changelogList.appendChild(changeItem);
                 });
@@ -86,17 +110,6 @@ export class ChangeLogModal {
             this.changelogList.innerHTML = '<p>Error loading changes. Please try again later.</p>';
         }
     }
-
-    // Helper function to escape HTML special characters
-    escapeHtml(unsafe) {
-        if (typeof unsafe !== 'string') return unsafe; // Return non-strings as is
-        return unsafe
-             .replace(/&/g, "&amp;")
-             .replace(/</g, "&lt;")
-             .replace(/>/g, "&gt;")
-             .replace(/"/g, "&quot;")
-             .replace(/'/g, "&#039;");
-     }
 
     // Optional: Add destroy method
     destroy() {

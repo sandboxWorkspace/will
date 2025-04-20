@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import path from 'path';
 import { MaintenanceRequestHandler } from './src/js/maintenanceRequest';
+import { SupplyRequestHandler } from './src/js/supplyRequest.js';
 
 export default defineConfig({
   base: '/will/', 
@@ -22,6 +23,7 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
         v2index: path.resolve(__dirname, 'v2index.html'),
         maintenance: path.resolve(__dirname, 'maintenanceRequest.html'),
+        supplies: path.resolve(__dirname, 'supplyRequest.html'),
         fesBike: path.resolve(__dirname, 'fesBike.html'),
       },
     },

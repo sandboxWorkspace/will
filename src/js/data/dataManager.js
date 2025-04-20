@@ -6,38 +6,34 @@ export class DataManager {
             throw new Error("databaseAdapter must be an instance of DatabaseInterface");
         }
         this.databaseAdapter = databaseAdapter;
-        // Define available page types
-        this.pageTypes = {
-            fesBike: "fesBike",
-            // xCite: "xCite",
-            // tech: "tech",
-        };
+        // Define available page types (less relevant now with page detection in scripts.js)
+        // this.pageTypes = { ... };
+        // this.pageType = ...; // Determining page type here might be less flexible
 
-        // Determine the current page type (default to fesBike if not found)
-        // This might need adjustment if maintenance page doesn't fit this pattern
-        this.pageType = Object.values(this.pageTypes).find(type => window.location.pathname.includes(type)) || this.pageTypes.fesBike;
+        // Define base paths - let adapter handle specifics if needed
+        // Or determine path based on context when method is called
+        this.scheduleBasePath = "schedule"; // Example base path
+        this.maintenanceRequestPath = 'maintenanceRequests'; // Top-level path
+        this.supplyRequestPath = 'supplyRequests'; // Top-level path for supply requests
 
-        // Define paths
-        this.schedulePath = `${this.pageType}/currentSchedule`;
-        this.changeLogPath = `${this.pageType}/changeLog`;
-        this.maintenanceRequestPath = 'maintenanceRequests'; // Top-level path for all requests
-
-        console.log("DataManager Initialized. Schedule Path:", this.schedulePath, "Maintenance Path:", this.maintenanceRequestPath);
+        console.log("DataManager Initialized. Paths configured.");
     }
 
     // --- Schedule Methods ---
-    async saveScheduleData(time, day, value) {
-        const path = `${this.schedulePath}/${time}/${day}`;
+    // Determine full path here based on context (e.g., specific schedule like 'fesBike')
+    // Or pass context (like 'fesBike') from UI component
+    async saveScheduleData(scheduleType, time, day, value) {
+        const path = `${scheduleType}/currentSchedule/${time}/${day}`;
         try {
             await this.databaseAdapter.saveData(path, value);
         } catch (error) {
             console.error("DataManager saveScheduleData error:", error);
-            throw new Error("Failed to save schedule data."); // Re-throw specific error
+            throw new Error("Failed to save schedule data.");
         }
     }
 
-    async loadScheduleData() {
-        const path = this.schedulePath;
+    async loadScheduleData(scheduleType) {
+        const path = `${scheduleType}/currentSchedule`;
         try {
             const data = await this.databaseAdapter.loadData(path);
             return data;
@@ -47,18 +43,21 @@ export class DataManager {
         }
     }
 
-    async logChange(time, dayIndex, oldValue, newValue) {
+    async logChange(scheduleType, time, dayIndex, oldValue, newValue) {
+        const path = `${scheduleType}/changeLog`; // Path specific to the schedule type
         try {
-            await this.databaseAdapter.logChange(this.changeLogPath, time, dayIndex, oldValue, newValue);
+            await this.databaseAdapter.logChange(path, time, dayIndex, oldValue, newValue);
         } catch (error) {
             console.error("DataManager logChange error:", error);
             throw new Error("Failed to log change.");
         }
     }
 
-    async loadChangeLog() {
+    async loadChangeLog(scheduleType = 'fesBike') { // Default or pass type
+        const path = `${scheduleType}/changeLog`;
         try {
-            return await this.databaseAdapter.loadChangeLog(this.changeLogPath);
+            // Pass the specific path to the adapter
+            return await this.databaseAdapter.loadChangeLog(path);
         } catch (error) {
             console.error("DataManager loadChangeLog error:", error);
             throw new Error("Failed to load change log.");
@@ -68,12 +67,12 @@ export class DataManager {
     // --- Maintenance Request Methods ---
     async saveMaintenanceRequest(requestData) {
         try {
-            // Add client timestamp if not already present (useful fallback)
             const dataToSave = {
                 clientTimestamp: Date.now(),
                 ...requestData,
-                status: requestData.status || "Submitted" // Ensure default status
+                status: requestData.status || "Submitted"
             };
+            // Pass the predefined path
             return await this.databaseAdapter.saveMaintenanceRequest(this.maintenanceRequestPath, dataToSave);
         } catch (error) {
             console.error("DataManager saveMaintenanceRequest error:", error);
@@ -81,12 +80,39 @@ export class DataManager {
         }
     }
 
-    async loadMaintenanceRequests(limit = 15) { // Pass limit down
+    async loadMaintenanceRequests(limit = 15) {
         try {
+            // Pass the predefined path and limit
             return await this.databaseAdapter.loadMaintenanceRequests(this.maintenanceRequestPath, limit);
         } catch (error) {
             console.error("DataManager loadMaintenanceRequests error:", error);
             throw new Error("Failed to load maintenance requests.");
+        }
+    }
+
+    // --- NEW: Supply Request Methods ---
+    async saveSupplyRequest(requestData) {
+        try {
+            const dataToSave = {
+                clientTimestamp: Date.now(),
+                ...requestData, // includes submitterName, items array, details
+                status: requestData.status || "Submitted"
+            };
+            // Pass the predefined path for supply requests
+            return await this.databaseAdapter.saveSupplyRequest(this.supplyRequestPath, dataToSave);
+        } catch (error) {
+            console.error("DataManager saveSupplyRequest error:", error);
+            throw new Error("Failed to save supply request.");
+        }
+    }
+
+    async loadSupplyRequests(limit = 15) {
+        try {
+            // Pass the predefined path and limit
+            return await this.databaseAdapter.loadSupplyRequests(this.supplyRequestPath, limit);
+        } catch (error) {
+            console.error("DataManager loadSupplyRequests error:", error);
+            throw new Error("Failed to load supply requests.");
         }
     }
 }

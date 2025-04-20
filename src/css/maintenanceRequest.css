@@ -1,3 +1,85 @@
+/* Ensure this class matches the container in HTML */
+.recent-items-list-container { /* Renamed for clarity, update HTML class too */
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: var(--background-alt, #2c2c2c); /* Use theme variable */
+    border: 1px solid var(--border-color, #333); /* Use theme variable */
+    border-radius: var(--border-radius, 8px); /* Use theme variable */
+    padding: 10px;
+    margin-top: 0.5rem;
+}
+
+/* Use the generic class name from recentItemsList.js */
+.recent-item {
+    padding: 12px 15px; /* Slightly more padding */
+    border-bottom: 1px solid var(--border-color-light, #444); /* Use theme variable */
+    background-color: var(--background-color, #1e1e1e); /* Use theme variable */
+    border-radius: 4px;
+    margin-bottom: 8px; /* Increased spacing */
+    color: var(--text-primary, #e0e0e0); /* Use theme variable */
+    font-size: 14px;
+}
+
+.recent-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+/* --- End of list styles --- */
+
+/* Target elements within the generic item */
+.recent-item strong {
+    display: block;
+    margin-bottom: 0.4rem; /* Adjusted space */
+    color: var(--text-emphasis, #ffffff); /* Use theme variable */
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+/* Use generic meta class name */
+.recent-item .item-meta {
+    font-size: 0.85em;
+    color: var(--text-secondary, #aaa); /* Use theme variable */
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 0.6rem; /* Adjusted space */
+    /* Responsive stacking handled in responsive.css */
+}
+
+/* Use generic details preview class name */
+.recent-item .item-details-preview {
+    font-size: 0.9em;
+    color: var(--text-primary, #ccc); /* Use theme variable (or a slightly dimmer one if defined) */
+    margin-top: 0.5rem; /* Adjusted space */
+    display: block;
+    white-space: normal; /* Allow wrapping */
+    overflow: hidden;
+    max-width: 100%;
+    line-height: 1.45; /* Slightly increased line-height */
+    /* Consider limiting lines if needed (uncomment):
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    */
+}
+
+/* Specific overrides for maintenance request items if needed */
+.maintenance-request-item {
+    /* Example: border-left: 3px solid var(--primary-color); */
+}
+
+
+.styled-form .submit-button {
+    /* Inherits base .button styles */
+    /* Inherits .form-button gradient */
+    width: 100%;
+    margin-top: 1.5rem;
+    /* Add specific overrides if needed, e.g., font-weight */
+    font-weight: bold;
+}
+
+/* Keep section styles */
 .recent-requests-section,
 .request-form-section {
     width: 100%;
@@ -21,80 +103,9 @@
      margin-bottom: 1.5rem; /* More space below form heading */
 }
 
-.recent-requests-section p {
+.recent-requests-section p { /* Style for loading/no items message */
     margin-bottom: 1rem;
     font-size: 0.9em;
     color: var(--text-secondary, #aaa); /* Use theme variable */
     text-align: center;
-}
-
-/* --- Styles for recent requests list (using theme variables) --- */
-.recent-requests-list {
-    max-height: 300px;
-    overflow-y: auto;
-    background-color: var(--background-alt, #2c2c2c); /* Use theme variable */
-    border: 1px solid var(--border-color, #333); /* Use theme variable */
-    border-radius: var(--border-radius, 8px); /* Use theme variable */
-    padding: 10px;
-    margin-top: 0.5rem;
-}
-
-.request-item {
-    padding: 12px 15px; /* Slightly more padding */
-    border-bottom: 1px solid var(--border-color-light, #444); /* Use theme variable */
-    background-color: var(--background-color, #1e1e1e); /* Use theme variable */
-    border-radius: 4px;
-    margin-bottom: 8px; /* Increased spacing */
-    color: var(--text-primary, #e0e0e0); /* Use theme variable */
-    font-size: 14px;
-}
-
-.request-item:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-}
-/* --- End of list styles --- */
-
-.request-item strong {
-    display: block;
-    margin-bottom: 0.4rem; /* Adjusted space */
-    color: var(--text-emphasis, #ffffff); /* Use theme variable */
-    font-weight: 600;
-    font-size: 1.1em;
-}
-
-.request-item .request-meta {
-    font-size: 0.85em;
-    color: var(--text-secondary, #aaa); /* Use theme variable */
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 0.6rem; /* Adjusted space */
-    /* Responsive stacking handled in responsive.css */
-}
-
-.request-item .request-details-preview {
-    font-size: 0.9em;
-    color: var(--text-primary, #ccc); /* Use theme variable (or a slightly dimmer one if defined) */
-    margin-top: 0.5rem; /* Adjusted space */
-    display: block;
-    white-space: normal; /* Allow wrapping */
-    overflow: hidden;
-    max-width: 100%;
-    line-height: 1.45; /* Slightly increased line-height */
-    /* Consider limiting lines if needed (uncomment):
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    */
-}
-
-.styled-form .submit-button {
-    /* Inherits base .button styles */
-    /* Inherits .form-button gradient */
-    width: 100%;
-    margin-top: 1.5rem;
-    /* Add specific overrides if needed, e.g., font-weight */
-    font-weight: bold;
 }

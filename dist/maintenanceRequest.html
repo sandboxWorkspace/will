@@ -8,26 +8,25 @@
 
 
 
-
     <link rel="icon" href="/will/assets/logo-CWXfw6Fn.png" type="image/png">
     <link rel="manifest" href="/will/assets/manifest-DQDg6Fj5.json">
     <link rel="apple-touch-icon" href="/will/assets/logo-CWXfw6Fn.png">
-  <script type="module" crossorigin src="/will/assets/scripts-CHoPJ-nC.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-BD3D_HJ2.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-CxutVWH3.css">
-  <link rel="stylesheet" crossorigin href="/will/assets/maintenance-DzcEPS26.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/maintenanceRequest-cbbq0Uze.css">
 </head>
 <body>
     <header>
         <a href="/will/">
             <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-    </header>
+   </header>
 
     <main>
         <section class="recent-requests-section">
-            <h2>Recent Requests</h2>
-            <div id="recentRequestsList" class="recent-requests-list changelog-list">
-                <p>Loading recent requests...</p>
+            <h2>Recent Maintenance Requests</h2>
+            <div id="recentRequestsList" class="recent-items-list-container">
+                <p>Loading recent requests...</p> <!-- Initial message -->
             </div>
         </section>
 
@@ -42,12 +41,12 @@
                             <label for="submitterName">Your Name:</label>
                             <input type="text" id="submitterName" name="submitterName" required>
                         </div>
-        
+
                         <div class="form-group">
                             <label for="requestType">Request Type:</label>
                             <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
                         </div>
-        
+
                         <div class="form-group">
                             <label for="equipmentName">Name of Equipment or Area:</label>
                             <input type="text" id="equipmentName" name="equipmentName" required maxlength ="28">
@@ -57,7 +56,7 @@
                             <label for="requestDetails">Details:</label>
                             <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
                         </div>
-        
+
                         <button type="submit" class="button form-button submit-button">Submit Request</button>
                         <p id="formStatus" class="form-status-message" aria-live="polite"></p> <!-- For success/error messages -->
                     </form>

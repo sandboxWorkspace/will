@@ -22,10 +22,19 @@ export class DatabaseInterface {
     }
 
     // Maintenance Request methods
+    // Path parameter might be optional if adapter determines it, but keep for consistency for now
     async saveMaintenanceRequest(path, requestData) {
         throw new Error("Method 'saveMaintenanceRequest()' must be implemented.");
     }
-    async loadMaintenanceRequests(path) {
+    async loadMaintenanceRequests(path, limit) { // Added limit
         throw new Error("Method 'loadMaintenanceRequests()' must be implemented.");
+    }
+
+    // --- NEW: Supply Request methods ---
+    async saveSupplyRequest(path, requestData) {
+        throw new Error("Method 'saveSupplyRequest()' must be implemented.");
+    }
+    async loadSupplyRequests(path, limit) {
+        throw new Error("Method 'loadSupplyRequests()' must be implemented.");
     }
 }

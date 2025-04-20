@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="/src/css/scrollbar.css">
     <link rel="stylesheet" href="/src/css/responsive.css">
 
-
     <link rel="stylesheet" href="/src/css/forms.css">
     <link rel="stylesheet" href="/src/css/maintenanceRequest.css">
 
@@ -24,13 +23,13 @@
         <a href="/will/">
             <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-    </header>
+   </header>
 
     <main>
         <section class="recent-requests-section">
-            <h2>Recent Requests</h2>
-            <div id="recentRequestsList" class="recent-requests-list changelog-list">
-                <p>Loading recent requests...</p>
+            <h2>Recent Maintenance Requests</h2>
+            <div id="recentRequestsList" class="recent-items-list-container">
+                <p>Loading recent requests...</p> <!-- Initial message -->
             </div>
         </section>
 
@@ -45,12 +44,12 @@
                             <label for="submitterName">Your Name:</label>
                             <input type="text" id="submitterName" name="submitterName" required>
                         </div>
-        
+
                         <div class="form-group">
                             <label for="requestType">Request Type:</label>
                             <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
                         </div>
-        
+
                         <div class="form-group">
                             <label for="equipmentName">Name of Equipment or Area:</label>
                             <input type="text" id="equipmentName" name="equipmentName" required maxlength ="28">
@@ -60,7 +59,7 @@
                             <label for="requestDetails">Details:</label>
                             <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
                         </div>
-        
+
                         <button type="submit" class="button form-button submit-button">Submit Request</button>
                         <p id="formStatus" class="form-status-message" aria-live="polite"></p> <!-- For success/error messages -->
                     </form>

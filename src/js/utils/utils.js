@@ -27,3 +27,13 @@ export function toggleCollapse(button, targetId) {
     button.setAttribute('aria-expanded', isExpanded);
     targetElement.setAttribute('aria-hidden', !isExpanded);
 }
+
+export function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return unsafe; // Return non-strings as is
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
