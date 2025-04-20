@@ -1,14 +1,6 @@
 import { RecentItemsList } from './ui/recentItemsList.js';
 import { escapeHtml } from './utils/utils.js';
 
-// --- Sample Supply Item Data (Replace with actual data loading if needed) ---
-const SAMPLE_SUPPLY_ITEMS = [
-    "Gloves (Box)", "Sanitizer Wipes", "Paper Towels", "AAA Batteries",
-    "AA Batteries", "Masks (Box)", "Gowns (Pack)", "Sharps Container",
-    "Biohazard Bags", "Alcohol Prep Pads"
-];
-// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
 // --- Renderer for Supply Request Items ---
 function renderSupplyRequestItem(request) {
     const itemElement = document.createElement("div");
@@ -52,7 +44,7 @@ export class SupplyRequestHandler {
             throw new Error("DataManager instance is required for SupplyRequestHandler.");
         }
         this.dataManager = dataManager;
-        this.supplyItemData = []; // To store autocomplete data
+        this.supplyItemData = []; // Initialize as empty, will be loaded from JSON
         this.itemCounter = 0; // To give unique IDs to dynamic items
 
         // --- Get DOM Elements ---
@@ -69,19 +61,47 @@ export class SupplyRequestHandler {
     }
 
     async initialize() {
-        // Check for form elements
+        // Check for form elements first
         if (!this.form || !this.submitterNameInput || !this.supplyItemsContainer || !this.addSupplyItemBtn || !this.requestDetailsInput || !this.formStatus || !this.submitButton) {
             console.error("Required DOM elements for Supply Request form not found.");
             if(this.formStatus) this.showStatus("Page initialization failed. Required form elements missing.", true);
             this.elementsReady = false;
-            return;
+            return; // Stop initialization if elements are missing
         }
         this.elementsReady = true;
         console.log("SupplyRequestHandler Form DOM elements found.");
 
+        // --- Load Autocomplete Data from JSON ---
+        let dataLoadedSuccessfully = false;
+        try {
+            // *** Use the corrected path ***
+            const response = await fetch('./src/data/supplyItems.json');
+            if (!response.ok) {
+                 // Log the specific HTTP error status
+                throw new Error(`Failed to fetch supply items: ${response.status} ${response.statusText}`);
+            }
+             // Ensure response is JSON before parsing
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new TypeError("Received non-JSON response for supply items");
+            }
+
+            this.supplyItemData = await response.json();
+            console.log("Supply item data loaded from JSON:", this.supplyItemData);
+            this.createOrUpdateDatalist(); // Create/update datalist *after* successful load
+            dataLoadedSuccessfully = true;
+
+        } catch (error) {
+            console.error("Failed to load or process supply items from JSON:", error);
+            this.showStatus(`Error: Could not load supply item list. ${error.message}`, true);
+            this.supplyItemData = []; // Ensure it's an empty array on failure
+            // Create an empty datalist to prevent errors later
+            this.createOrUpdateDatalist();
+        }
+
         // --- Initialize RecentItemsList for Supply Requests ---
         this.recentSupplyRequestsListComponent = new RecentItemsList(this.dataManager, {
-            listElementId: "recentSupplyRequestsList", // Use a different ID for the list container
+            listElementId: "recentSupplyRequestsList",
             loadDataFunction: this.dataManager.loadSupplyRequests.bind(this.dataManager),
             renderItemFunction: renderSupplyRequestItem,
             loadingMessage: '<p>Loading recent supply requests...</p>',
@@ -94,19 +114,16 @@ export class SupplyRequestHandler {
              console.error("Failed to initialize the recent supply requests list component.");
         }
 
-        // --- Load Autocomplete Data (Example: using sample data) ---
-        // In a real app, fetch this from dataManager or a static source
-        this.supplyItemData = SAMPLE_SUPPLY_ITEMS;
-        console.log("Supply item data for autocomplete:", this.supplyItemData);
-
         // --- Bind Methods ---
         this.handleFormSubmit = this.handleFormSubmit.bind(this);
         this.addSupplyItemInput = this.addSupplyItemInput.bind(this);
         this.setupAutocomplete = this.setupAutocomplete.bind(this);
         this.showStatus = this.showStatus.bind(this);
         this.clearStatus = this.clearStatus.bind(this);
+        this.updateItemLabels = this.updateItemLabels.bind(this); // <-- Bind the new method
 
         // --- Add Initial Item Input ---
+        // This runs after attempting to load data and create the datalist
         this.addSupplyItemInput(); // Start with one item input
 
         // --- Add Event Listeners ---
@@ -116,56 +133,88 @@ export class SupplyRequestHandler {
         this.supplyItemsContainer.addEventListener('click', (event) => {
             if (event.target.classList.contains('remove-item-btn')) {
                 event.target.closest('.supply-item-group').remove();
-                // Optional: Re-evaluate if minimum items exist, etc.
+                this.updateItemLabels(); // <-- Update labels after removing
             }
         });
 
-
         console.log("SupplyRequestHandler initialized successfully.");
+         // Optionally show a different status if data loading failed but form is usable
+        if (!dataLoadedSuccessfully && this.elementsReady) {
+             console.warn("Supply item autocomplete suggestions may not be available.");
+             // Optionally inform user via showStatus, but avoid error state if form is still functional
+             // this.showStatus("Warning: Autocomplete list unavailable.", false); // Example
+        }
     }
 
     addSupplyItemInput() {
-        this.itemCounter++;
+        if (!this.elementsReady) return; // Don't add if elements aren't ready
+
+        this.itemCounter++; // Still useful for unique IDs
         const newItemId = `supplyName_${this.itemCounter}`;
         const itemGroup = document.createElement('div');
         itemGroup.className = 'form-group supply-item-group'; // Group label, input, remove btn
 
+        // Use a placeholder label text initially
         itemGroup.innerHTML = `
-            <label for="${newItemId}">Supply Item #${this.itemCounter}:</label>
+            <label for="${newItemId}">Supply Item:</label> <!-- Placeholder -->
             <div class="input-with-button">
                 <input type="text" id="${newItemId}" name="supplyName[]" class="supply-name-input" required placeholder="Type or select supply item">
                 <button type="button" class="button remove-item-btn" title="Remove Item">&times;</button>
             </div>
-            <!-- Datalist will be associated via 'list' attribute -->
         `;
 
         this.supplyItemsContainer.appendChild(itemGroup);
         const newInput = itemGroup.querySelector(`#${newItemId}`);
         this.setupAutocomplete(newInput); // Setup autocomplete for the new input
+
+        this.updateItemLabels(); // <-- Update all labels after adding
     }
 
-    // --- Basic Datalist Autocomplete Implementation ---
-    setupAutocomplete(inputElement) {
-        const listId = "supplyItemsDatalist"; // Use one shared datalist
+    // --- New Method to Update Labels ---
+    updateItemLabels() {
+        if (!this.supplyItemsContainer) return;
+
+        const itemGroups = this.supplyItemsContainer.querySelectorAll('.supply-item-group');
+        itemGroups.forEach((group, index) => {
+            const label = group.querySelector('label');
+            if (label) {
+                // Update the label text to be sequential
+                label.textContent = `Supply Item #${index + 1}:`;
+            }
+        });
+    }
+
+    // --- Creates or Updates the Shared Datalist ---
+    createOrUpdateDatalist() {
+        const listId = "supplyItemsDatalist";
         let datalist = document.getElementById(listId);
 
-        // Create and populate datalist only if it doesn't exist
         if (!datalist) {
             datalist = document.createElement('datalist');
             datalist.id = listId;
-            this.supplyItemData.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item;
-                datalist.appendChild(option);
-            });
-            // Append the datalist to the body or form, somewhere persistent
-            document.body.appendChild(datalist);
+            document.body.appendChild(datalist); // Append only once
         }
 
+        // Clear existing options before adding new ones (in case of updates)
+        datalist.innerHTML = '';
+
+        // Populate with current data
+        this.supplyItemData.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item;
+            datalist.appendChild(option);
+        });
+        console.log(`Datalist #${listId} created/updated with ${this.supplyItemData.length} items.`);
+    }
+
+    // --- Applies the Datalist to a Specific Input ---
+    setupAutocomplete(inputElement) {
+        const listId = "supplyItemsDatalist";
+        // Just associate the input with the existing/created datalist
         inputElement.setAttribute('list', listId);
         inputElement.setAttribute('autocomplete', 'off'); // Turn off browser default
     }
-    // --- End Basic Datalist Autocomplete ---
+    // --- End Autocomplete ---
 
     async handleFormSubmit(event) {
         event.preventDefault();
@@ -202,8 +251,10 @@ export class SupplyRequestHandler {
              this.showStatus("Please add at least one supply item.", true);
              this.submitButton.disabled = false;
              this.submitButton.textContent = 'Submit Request';
+             // Try to focus the first input if it exists
              const firstInput = this.supplyItemsContainer.querySelector('.supply-name-input');
              if (firstInput) firstInput.focus();
+             else this.addSupplyItemInput(); // Add one if none exist at all
              return;
         }
          if (hasEmptyItem) {
@@ -229,13 +280,15 @@ export class SupplyRequestHandler {
             await this.dataManager.saveSupplyRequest(requestData);
             this.showStatus("Supply request submitted successfully!", false);
             this.form.reset(); // Clear name and details
-            // Clear dynamic items and add back one empty input
+            // Clear dynamic items
             this.supplyItemsContainer.innerHTML = '';
+            // Reset counter for unique IDs if desired for next submission cycle
             this.itemCounter = 0;
+            // Add back one empty input (which will call updateItemLabels)
             this.addSupplyItemInput();
 
             // Refresh the list
-            this.recentSupplyRequestsListComponent.refresh();
+            this.recentSupplyRequestsListComponent?.refresh(); // Add safe navigation
 
             setTimeout(() => this.clearStatus(), 5000);
 
@@ -264,11 +317,19 @@ export class SupplyRequestHandler {
     destroy() {
         this.form?.removeEventListener("submit", this.handleFormSubmit);
         this.addSupplyItemBtn?.removeEventListener("click", this.addSupplyItemInput);
-        // Remove delegated listener if needed
+        // Remove delegated listener
+        this.supplyItemsContainer?.removeEventListener('click', (event) => {
+             if (event.target.classList.contains('remove-item-btn')) {
+                // No need to define the logic here again, just remove the listener
+             }
+        }); // Note: Removing delegated listeners precisely can be tricky, often okay to leave if element is removed
+
         this.recentSupplyRequestsListComponent?.destroy();
-        // Remove shared datalist if created by this instance (might be better to manage globally)
-        // const datalist = document.getElementById('supplyItemsDatalist');
-        // datalist?.remove();
+
+        // Remove the shared datalist if this component was responsible for it
+        const datalist = document.getElementById('supplyItemsDatalist');
+        datalist?.remove();
+
         console.log("SupplyRequestHandler listeners removed and components destroyed.");
     }
 }
