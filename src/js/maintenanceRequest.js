@@ -37,7 +37,7 @@ class MaintenanceRequestHandler {
         // --- Initialize the RecentItemsList ---
         this.recentRequestsListComponent = new RecentItemsList(this.dataManager, {
             listElementId: "recentRequestsList", // ID of the list container in HTML
-            loadDataFunction: this.dataManager.loadMaintenanceRequests.bind(this.dataManager), // Pass the bound function
+            loadDataFunction: this.dataManager.getRecentMaintenanceRequests.bind(this.dataManager), // Pass the bound function
             renderItemFunction: renderMaintenanceRequestItem, // Pass the specific renderer
             loadingMessage: '<p>Loading recent maintenance requests...</p>',
             noItemsMessage: '<p>No recent maintenance requests found.</p>',

@@ -28,6 +28,11 @@ export function toggleCollapse(button, targetId) {
     targetElement.setAttribute('aria-hidden', !isExpanded);
 }
 
+/**
+ * Escapes HTML special characters in a string.
+ * @param {*} unsafe The input value. If not a string, it's returned as is.
+ * @returns {string} The escaped string or the original value if not a string.
+ */
 export function escapeHtml(unsafe) {
     if (typeof unsafe !== 'string') return unsafe; // Return non-strings as is
     return unsafe
@@ -36,4 +41,27 @@ export function escapeHtml(unsafe) {
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
+ }
+
+ /**
+  * Creates a debounced function that delays invoking func until after wait milliseconds
+  * have elapsed since the last time the debounced function was invoked.
+  * @param {Function} func The function to debounce.
+  * @param {number} wait The number of milliseconds to delay.
+  * @returns {Function} Returns the new debounced function.
+  */
+ export function debounce(func, wait) {
+   let timeout;
+   return function executedFunction(...args) {
+     // The function to be executed after the debounce time
+     const later = () => {
+       clearTimeout(timeout);
+       // Call the original function with the correct 'this' context and arguments
+       func.apply(this, args);
+     };
+     // Clear the previous timeout timer
+     clearTimeout(timeout);
+     // Set a new timeout timer
+     timeout = setTimeout(later, wait);
+   };
  }
