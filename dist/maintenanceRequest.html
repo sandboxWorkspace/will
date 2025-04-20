@@ -12,9 +12,9 @@
     <link rel="icon" href="/will/assets/logo-CWXfw6Fn.png" type="image/png">
     <link rel="manifest" href="/will/assets/manifest-DQDg6Fj5.json">
     <link rel="apple-touch-icon" href="/will/assets/logo-CWXfw6Fn.png">
-  <script type="module" crossorigin src="/will/assets/scripts-CySoAYIL.js"></script>
-  <link rel="stylesheet" crossorigin href="/will/assets/scripts-Dv8id1W2.css">
-  <link rel="stylesheet" crossorigin href="/will/assets/maintenance-wQwhDN8F.css">
+  <script type="module" crossorigin src="/will/assets/scripts-CHoPJ-nC.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-CxutVWH3.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/maintenance-DzcEPS26.css">
 </head>
 <body>
     <header>
@@ -25,48 +25,44 @@
 
     <main>
         <section class="recent-requests-section">
-            <h2>Recent Maintenance Requests</h2>
-            <!--
-            <p>Check if your issue has already been reported.</p>
-            -->
+            <h2>Recent Requests</h2>
             <div id="recentRequestsList" class="recent-requests-list changelog-list">
                 <p>Loading recent requests...</p>
             </div>
         </section>
 
         <section class="request-form-section">
-            <h2>Submit New Request</h2>
-            <form id="maintenanceRequestForm" class="styled-form">
-                <div class="form-group">
-                    <label for="submitterName">Your Name:</label>
-                    <input type="text" id="submitterName" name="submitterName" required>
-                </div>
+            <div class="collapse-button-container">
+                <button class="collapse-button open-form-button" id="toggleOpenFormButton" data-target="openForm">
+                    Start Maintenance Request
+                </button>
+                <div id="openForm" class="collapse-content">
+                    <form id="maintenanceRequestForm" class="styled-form">
+                        <div class="form-group">
+                            <label for="submitterName">Your Name:</label>
+                            <input type="text" id="submitterName" name="submitterName" required>
+                        </div>
+        
+                        <div class="form-group">
+                            <label for="requestType">Request Type:</label>
+                            <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
+                        </div>
+        
+                        <div class="form-group">
+                            <label for="equipmentName">Name of Equipment or Area:</label>
+                            <input type="text" id="equipmentName" name="equipmentName" required maxlength ="28">
+                        </div>
 
-                <div class="form-group">
-                    <label for="requestType">Request Type:</label>
-                    <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
-                     <!-- Consider using a <select> dropdown here for better consistency -->
-                     <!-- <select id="requestType" name="requestType" required>
-                            <option value="">--Select Type--</option>
-                            <option value="Repair">Repair</option>
-                            <option value="Replace">Replace</option>
-                            <option value="Other">Other (Specify in Details)</option>
-                         </select> -->
+                        <div class="form-group">
+                            <label for="requestDetails">Details:</label>
+                            <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
+                        </div>
+        
+                        <button type="submit" class="button form-button submit-button">Submit Request</button>
+                        <p id="formStatus" class="form-status-message" aria-live="polite"></p> <!-- For success/error messages -->
+                    </form>
                 </div>
-
-                <div class="form-group">
-                    <label for="equipmentName">Name of Equipment or Area:</label>
-                    <input type="text" id="equipmentName" name="equipmentName" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="requestDetails">Details:</label>
-                    <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
-                </div>
-
-                <button type="submit" class="button form-button submit-button">Submit Request</button>
-                <p id="formStatus" class="form-status-message" aria-live="polite"></p> <!-- For success/error messages -->
-            </form>
+            </div>
         </section>
     </main>
 
@@ -83,5 +79,14 @@
         </div>
     </footer>
 
+    <!--
+    scripts.js
+    maintenanceRequest.js
+    firebaseAdapter.js
+    dataManager.js
+    databaseInterface.js
+    collapsibleSections.js
+    utils.js
+    -->
 </body>
 </html>

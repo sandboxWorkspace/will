@@ -124,13 +124,24 @@ class MaintenanceRequestHandler {
         const equipmentName = this.equipmentNameInput.value.trim();
         const requestDetails = this.requestDetailsInput.value.trim();
 
-        // Basic Validation
+        // Basic Validation - Check for empty fields first
         if (!submitterName || !requestType || !equipmentName || !requestDetails) {
             this.showStatus("Please fill out all fields.", true);
             this.submitButton.disabled = false; // Re-enable button
             this.submitButton.textContent = 'Submit Request';
             return;
         }
+
+        // --- Add Length Validation for equipmentName ---
+        if (equipmentName.length > 38) {
+            this.showStatus("Equipment Name must be 38 characters or less.", true);
+            this.submitButton.disabled = false; // Re-enable button
+            this.submitButton.textContent = 'Submit Request';
+            this.equipmentNameInput.focus(); // Optional: Focus the field with the error
+            return; // Stop submission
+        }
+        // --- End of Length Validation ---
+
 
         const requestData = {
             submitterName,
@@ -162,7 +173,6 @@ class MaintenanceRequestHandler {
              this.submitButton.textContent = 'Submit Request';
         }
     }
-
     showStatus(message, isError = false) {
         if (!this.formStatus) return; // Check if element exists
         this.formStatus.textContent = message;

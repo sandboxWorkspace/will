@@ -90,8 +90,6 @@
     */
 }
 
-/* --- Submit Button --- */
-/* Assumes HTML: <button type="submit" class="button form-button submit-button"> */
 .styled-form .submit-button {
     /* Inherits base .button styles */
     /* Inherits .form-button gradient */
@@ -99,13 +97,4 @@
     margin-top: 1.5rem;
     /* Add specific overrides if needed, e.g., font-weight */
     font-weight: bold;
-}
-
-/* --- Section Divider --- */
-.section-divider {
-    border: none;
-    border-top: 1px solid var(--border-color-light, #444); /* Use theme variable */
-    margin: 2.5rem auto;
-    width: 80%;
-    max-width: 600px;
 }

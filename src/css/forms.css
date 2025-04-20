@@ -43,6 +43,13 @@
      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.35); /* Keep specific focus ring */
 }
 
+.styled-form .form-group label {
+    display: block; /* Ensures the label takes its own line */
+    text-align: left; /* Aligns the text within the label to the left */
+    margin-bottom: 5px; /* Optional: Adds a little space between the label and the input */
+    /* You can adjust font-weight, color, etc. here too if needed */
+}
+
 .styled-form textarea {
     resize: vertical;
     min-height: 80px;
@@ -75,4 +82,9 @@
     color: var(--error-text);           /* Use variable */
     background-color: var(--error-bg);   /* Use variable */
     border: 1px solid var(--error-border); /* Use variable */
+}
+
+.styled-form .form-group input,
+.styled-form .form-group textarea {
+    text-align: left;
 }

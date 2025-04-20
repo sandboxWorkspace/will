@@ -17,6 +17,7 @@ Migrating away from google forms/sheets
 ## Pending Ideas and ToDo List
 
 Future Ideas:
+- Sync database with more user friendly interface
 - Pitchdeck & PPTX
 - Visual User Guide
 - FAQ and suggestion(s) form
@@ -75,7 +76,12 @@ Publish instructions
 MAKE SURE TO PUSH CHANGES TO MAIN FIRST
 Also add new pages and import js modules if needed to vite.config file
 
+
 ```
+chmod +x deploy.sh
+./deploy.sh
+
+
 git checkout main
 npm run build
 npm run serve

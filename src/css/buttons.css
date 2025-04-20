@@ -30,7 +30,7 @@
 
 .button.form-button:hover {
     /* Use variables for the hover gradient */
-    background: linear-gradient(138deg, var(--primary-color-dark), #2a5b9d); /* Slightly darker second stop */
+    background: linear-gradient(138deg, var(--primary-color-dark),var(--primary-color-dark) ); /* Slightly darker second stop */
 }
 
 /* --- Other Button Styles (kept original gradients for now) --- */
@@ -60,7 +60,7 @@
     flex-direction: column;
     gap: 0px; /* Keep original gap */
     width: 100%;
-    max-width: 400px;
+    max-width: 600px;
 }
 
 .collapse-button {
@@ -83,23 +83,35 @@
 }
 
 /* Specific collapse button gradients (kept original) */
+.collapse-button.inventory-and-maintenance-button {
+    background: linear-gradient(138deg, #c63636, #a61212);
+}
+.collapse-button.inventory-and-maintenance-button:hover {
+    background: linear-gradient(138deg, #c03030, #690808);
+}
+.collapse-button.placeholder-button {
+    background: linear-gradient(138deg, #4a90e2, #165798);
+}
+.collapse-button.placeholder-button:hover {
+    background: linear-gradient(138deg, #2672bf, #08325b);
+}
+.collapse-button.quick-tools-button {
+    background: linear-gradient(138deg, #3cb851, #21c83d);
+}
+.collapse-button.quick-tools-button:hover {
+    background: linear-gradient(138deg, #19cb37, #089b21);
+}
+.collapse-button.open-form-button {
+    background: linear-gradient(138deg, #50e3c2, #2c974b);
+}
+.collapse-button.open-form-button:hover {
+    background: linear-gradient(138deg, #2c974b, #0d7158);
+}
 .collapse-button.reservation-button {
     background: linear-gradient(138deg, #9e3fc7, #712e8e);
 }
 .collapse-button.reservation-button:hover {
     background: linear-gradient(138deg, #712e8e, #5e3370);
-}
-.collapse-button.inventory-and-maintenance-button {
-    background: linear-gradient(138deg, #c63636, #be1b1b);
-}
-.collapse-button.inventory-and-maintenance-button:hover {
-    background: linear-gradient(138deg, #c03030, #690808);
-}
-.collapse-button.viewReq-button {
-    background: linear-gradient(138deg, #4a90e2, #1e63a8);
-}
-.collapse-button.viewReq-button:hover {
-    background: linear-gradient(138deg, #2672bf, #08325b);
 }
 .collapse-button.logs-button {
     background: linear-gradient(138deg, #df7a3c, #cb5d19);
@@ -156,7 +168,7 @@
     color: var(--text-on-primary);
 }
 .collapse-content a.form-button:hover {
-    background: linear-gradient(138deg, var(--primary-color-dark), #2a5b9d);
+    background: linear-gradient(138deg, var(--primary-color-dark),var(--primary-color-dark));
 }
 .collapse-content a.spreadsheet-button {
     background: linear-gradient(138deg, #50e3c2, #2c974b);

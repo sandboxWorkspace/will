@@ -63,17 +63,40 @@
             </div>
         </div>
         <div class="collapse-button-container">
-            <button class="collapse-button inventory-and-maintenance-button" id="toggleViewReqButton" data-target="viewRequests">
-                View Requests
+            <button class="collapse-button quick-tools-button" id="toggleQuickToolsButton" data-target="quickTools">
+                Quick Tools
             </button>
-            <div id="viewRequests" class="collapse-content">
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
+            <div id="quickTools" class="collapse-content">
+                <a href="" class="button spreadsheet-button">
+                <!--
                     <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                    Supplies
+                -->
+                    QR Code Maker
                 </a>
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRF0zsz1o8BPNHsue-3dCRM9M9OAHdM76deUq0ltpMSDvN-RtmXaWnKujGLDhWRGtdxUcQPQGpSav6m/pubhtml" class="button spreadsheet-button">
+                <a href="" class="button spreadsheet-button">
+                <!--
                     <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                    Maintenance & Repair
+                -->
+                    HEP quick access
+                </a>
+            </div>
+        </div>
+        <div class="collapse-button-container">
+            <button class="collapse-button placeholder-button" id="togglePlaceholderButton" data-target="placeholder">
+                Placeholder
+            </button>
+            <div id="placeholder" class="collapse-content">
+                <a href="" class="button spreadsheet-button">
+                <!--
+                    <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                -->
+                    Feature A
+                </a>
+                <a href="" class="button spreadsheet-button">
+                <!--
+                    <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
+                -->
+                    Feature B
                 </a>
             </div>
         </div>
@@ -108,5 +131,10 @@
     </footer>
 
     <script type="module" src="/src/scripts.js"></script>
+    <!--
+    scripts.js
+    collapsibleSections.js
+    utils.js
+    -->
 </body>
 </html>
