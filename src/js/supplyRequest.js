@@ -139,11 +139,15 @@ export class SupplyRequestHandler {
         // --- Load Autocomplete Data ---
         console.log("SupplyRequestHandler: Loading autocomplete data...");
         try {
-            // Ensure the path is correct relative to the HTML file's location on the server
-            const response = await fetch('./src/data/supplyItems.json');
-            if (!response.ok) {
+            const response = await fetch('./data/supplyItems.json');
+        if (!response.ok) {
+            // Check if the response status indicates a "Not Found" error specifically
+            if (response.status === 404) {
+                throw new Error(`HTTP error! File not found at /will/data/supplyItems.json. Status: ${response.status}`);
+            } else {
                 throw new Error(`HTTP error fetching supply items! Status: ${response.status}`);
             }
+        }
              const contentType = response.headers.get("content-type");
              if (!contentType || !contentType.includes("application/json")) {
                  // Log the actual content type for debugging
