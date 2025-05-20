@@ -12,6 +12,8 @@ Live Feature List:
 Currently working on:
 ``
 Migrating away from google forms/sheets
+Adding admin console/view and status permissions (pending to complete)
+Adding user roles and authentification via anonymous auth
 ``
 
 ## Pending Ideas and ToDo List
@@ -19,40 +21,31 @@ Migrating away from google forms/sheets
 Future Ideas:
 - Sync database with more user friendly interface
 - Pitchdeck & PPTX
-- Visual User Guide
+- User Guide with visuals
+- Styling Guide for elements (buttons forms etc)
+- Add transportation kiosk QR validation and agreement
+- Add QR Code generator function (Dark Mode as well) - email to print
 - FAQ and suggestion(s) form
 
 Quick List:
-- Add QR Code generator function
+- Add feature wishlist
+- Add handoff vitals (pt. transfer method)
 - Add Quick Access Tab ()
 - Add OCR grader
 - Add *optional* urgency option (e.g. concern, can wait, immediate, etc...)
-- Reconvert logo.svg to ico and resize png sizes properly
 - Rewrite package.json
 
-Migrate to firebase (refactor for any database):
-- Inventory, Maintenance, both Trackers 
-
 Inventory:
-- Autocomplete livesearch typeahead with default add ins (requester name, item name, location, etc...)
 - Database tag items and sort (PerformanceHealth minimum order quantity)
 - Complete form logic overhaul for dynamic table:
-    - Allow multiple items to be requested async
-    - Request location (e.g. gym, eval room, backstock, etc...)
     - Add thresholds for minimum quantity
-    - Differentiate room restock vs reorder options
-    - Option for new item requests
+    - Option for new supply request to supplyItems.json
     - 
 - Submissions: data collection, analysis, and prediction
 - Migrate from google apps script email function
 
 Reservation System:
 - Equipment reservation table (FES Bike & Xcite)
-- Tech reservation
-
-Submission Trackers:
-- Increase visibility
-- Add logic to prevent repeated requests
 
 ## Setup instructions
 

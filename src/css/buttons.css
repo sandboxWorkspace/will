@@ -13,7 +13,7 @@
     padding: 15px 25px;
     border-radius: var(--border-radius-large); /* Use variable */
     text-decoration: none;
-    transition: background-color 0.3s, transform 0.2s, background 0.3s; /* Added background transition */
+    transition: background-color 0.3s, transform 0.3s, background 0.5s; /* Added background transition */
     background: var(--background-alt); /* Use variable for base background */
     color: var(--text-emphasis); /* Use variable for text */
     font-size: 1.1em;
@@ -180,7 +180,7 @@
 /* --- Collapse Logic --- */
 .collapse-content.show {
     display: block; /* Or flex/grid depending on content */
-    max-height: 500px; /* Adjust as needed, large enough for content */
+    max-height: none; /* Adjust as needed, large enough for content */
     opacity: 1;
     padding: 10px 0; /* Add padding back */
 }
