@@ -650,7 +650,7 @@ export class SupplyRequestHandler {
         const requestData = {
             submitterName,
             items, // Array of {name: string} objects
-            requestDetails,
+            requestDetails, // Keep this for Firebase
             status: "Submitted", // Set initial status
             clientTimestamp: new Date().toISOString() // Add timestamp from client browser
             // The backend (Firebase function via dataManager) should add serverTimestamp
@@ -662,6 +662,38 @@ export class SupplyRequestHandler {
         try {
             await this.dataManager.saveSupplyRequest(requestData);
             this.showStatus("Supply request submitted successfully!", false);
+
+            // --- Google Forms Submission (NEW) ---
+            try {
+                // Join supply items with commas for Google Forms
+                const supplyList = items.map(item => item.name).join(', ');
+
+                const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfvS8kIubBTil6RBy1BLHfDlpT18FZ7S0LAb31WnNF7kMltDg/formResponse?&submit=Submit?usp=pp_url' +
+                    `&entry.1179758086=${encodeURIComponent(submitterName)}` +
+                    `&entry.920261675=${encodeURIComponent(supplyList)}` +
+                    `&entry.1507415069=${encodeURIComponent(requestDetails)}`;
+
+                // Log the constructed URL to the console for debugging
+                console.log("Google Forms URL for Supply Request:", formUrl);
+
+                const googleFormsResponse = await fetch(formUrl, {
+                    method: 'POST',
+                    // Include an empty FormData object in the body.
+                    body: new FormData(),
+                    mode: 'no-cors', // Use no-cors to prevent CORS issues
+                });
+
+                // Note: With 'no-cors', we cannot check the response status.
+                // We assume success if no error is thrown.
+                console.log('Supply Request Data successfully submitted to Google Forms (no-cors).');
+
+            } catch (googleFormsError) {
+                console.error('Error submitting Supply Request Data to Google Forms:', googleFormsError);
+                // Consider whether a Google Forms failure should be considered
+                // a critical error. You might want to inform the user or retry.
+                // For now, we'll just log the error.
+            }
+            // --- End Google Forms Submission ---
 
             // --- Reset Form on Success ---
             this.form.reset(); // Clears standard inputs like name, details

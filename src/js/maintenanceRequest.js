@@ -111,6 +111,36 @@ class MaintenanceRequestHandler {
             this.form.reset();
             // Refresh the list using the component's method
             this.recentRequestsListComponent.refresh();
+            
+            // --- Google Forms Submission ---
+            try {
+                const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdpFHLlkSwx0BckmGcwRcJ2tKDg1GyLmq3BHtyFfvVXdcEuMQ/formResponse?&submit=Submit?usp=pp_url' +
+                    `&entry.1873077433=${encodeURIComponent(submitterName)}` +
+                    `&entry.2025085608=${encodeURIComponent(requestType)}` +
+                    `&entry.1368078064=${encodeURIComponent(equipmentName)}` +
+                    `&entry.1582753521=${encodeURIComponent(requestDetails)}`;
+
+                const googleFormsResponse = await fetch(formUrl, {
+                    method: 'POST',
+                    // Include an empty FormData object in the body.
+                    body: new FormData(),
+                    mode: 'no-cors', // Use no-cors to prevent CORS issues
+                });
+
+                // Note: With 'no-cors', we cannot check the response status.
+                // We assume success if no error is thrown.
+                console.log('Data successfully submitted to Google Forms (no-cors).');
+                // If you want to be extra cautious, consider setting up a 
+                // server-side proxy to handle the Google Forms submission and 
+                // provide a reliable success/failure response.
+
+            } catch (googleFormsError) {
+                console.error('Error submitting to Google Forms:', googleFormsError);
+                // Consider whether a Google Forms failure should be considered
+                // a critical error. You might want to inform the user or retry.
+                // For now, we'll just log the error.
+            }
+            // --- End Google Forms Submission ---
 
             setTimeout(() => this.clearStatus(), 5000);
 
