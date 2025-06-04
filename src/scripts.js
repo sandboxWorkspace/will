@@ -5,8 +5,8 @@ import { ScheduleTable } from './js/ui/scheduleTable.js';
 import { ChangeLogModal } from './js/ui/changeLogModal.js';
 import { ConfirmationModal } from './js/ui/confirmationModal.js';
 import { CollapsibleSections } from './js/ui/collapsibleSections.js'; 
-import { MaintenanceRequestHandler } from './js/maintenanceRequest.js';
-import { SupplyRequestHandler } from './js/supplyRequest.js';
+import { MaintenanceRequestHandler } from './js/requestMaintenance.js';
+import { SupplyRequestHandler } from './js/requestSupply.js';
 
 async function initializeApp() {
     console.log("Initializing application...");

@@ -11,9 +11,9 @@ export class DataManager {
         this.databaseAdapter = databaseAdapter;
 
         // Define base paths for different data types
-        this.scheduleBasePath = "schedule";
-        this.maintenanceRequestPath = 'maintenanceRequests';
-        this.supplyRequestPath = 'supplyRequests';
+        this.scheduleBasePath = "schedule"; // Note: This path isn't actually used in the methods below, they use scheduleType directly.
+        this.maintenanceRequestPath = 'requestMaintenance';
+        this.supplyRequestPath = 'requestSupply';
 
         console.log("DataManager Initialized. Paths configured.");
     }
