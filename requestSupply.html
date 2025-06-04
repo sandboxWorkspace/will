@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Submit a maintenance or repair request.">
-    <title>Maintenance and Repair</title>
+    <meta name="description" content="Submit a request for supplies.">
+    <title>Supply Request</title>
 
 
 
     <link rel="icon" href="/will/assets/logo.png" type="image/png">
     <link rel="manifest" href="/will/assets/manifest-DQDg6Fj5.json">
     <link rel="apple-touch-icon" href="/will/assets/logo.png">
-  <script type="module" crossorigin src="/will/assets/scripts-vDNTcRPk.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-PTgFWPRC.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-DgMWaM1d.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/reqSupplies-BzDiXUi0.css">
   <link rel="stylesheet" crossorigin href="/will/assets/recentItemsList-cbbq0Uze.css">
 </head>
 <body>
@@ -20,45 +21,44 @@
         <a href="/will/">
             <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-   </header>
+        <h2>Supply Request</h2>
+    </header>
 
     <main>
         <section class="recent-requests-section">
-            <h2>Recent Maintenance Requests</h2>
-            <div id="recentRequestsList" class="recent-items-list-container">
-                <p>Loading recent requests...</p> <!-- Initial message -->
+            <h2>Recent Supply Requests</h2>
+            <!-- Use the specific ID for this list -->
+            <div id="recentSupplyRequestsList" class="recent-items-list-container">
+                <p>Loading recent supply requests...</p>
             </div>
         </section>
 
         <section class="request-form-section">
             <div class="collapse-button-container">
                 <button class="collapse-button open-form-button" id="toggleOpenFormButton" data-target="openForm">
-                    Start Maintenance Request
+                    Open Supply Request
                 </button>
                 <div id="openForm" class="collapse-content">
-                    <form id="maintenanceRequestForm" class="styled-form">
+                    <form id="supplyRequestForm" class="styled-form">
                         <div class="form-group">
                             <label for="submitterName">Your Name:</label>
                             <input type="text" id="submitterName" name="submitterName" required>
                         </div>
 
-                        <div class="form-group">
-                            <label for="requestType">Request Type:</label>
-                            <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
+                        <!-- Container for dynamic supply item inputs -->
+                        <div id="supplyItemsContainer">
+                            <!-- Item inputs will be added here by JS -->
                         </div>
 
-                        <div class="form-group">
-                            <label for="equipmentName">Name of Equipment or Area:</label>
-                            <input type="text" id="equipmentName" name="equipmentName" required maxlength ="28">
-                        </div>
+                        <button type="button" id="addSupplyItemBtn" class="button secondary-button add-item-button">Add Another Item</button>
 
                         <div class="form-group">
-                            <label for="requestDetails">Details:</label>
-                            <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
+                            <label for="requestDetails">Optional Details:</label>
+                            <textarea id="requestDetails" name="requestDetails" rows="3" placeholder="Add any notes (e.g., urgency, location)"></textarea>
                         </div>
 
                         <button type="submit" class="button form-button submit-button">Submit Request</button>
-                        <p id="formStatus" class="form-status-message" aria-live="polite"></p> <!-- For success/error messages -->
+                        <p id="formStatus" class="form-status-message" aria-live="polite"></p>
                     </form>
                 </div>
             </div>
@@ -79,13 +79,13 @@
     </footer>
 
     <!--
-    scripts.js
-    maintenanceRequest.js
-    firebaseAdapter.js
-    dataManager.js
-    databaseInterface.js
-    collapsibleSections.js
-    utils.js
+    supplyRequest.js
+    ui/recentItemsList.js
+    utils/utils.js
+    database/firebase/firebaseAdapter.js
+    data/dataManager.js
+    database/databaseInterface.js
+    ui/collapsibleSections.js
     -->
 </body>
 </html>
