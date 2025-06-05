@@ -47,6 +47,14 @@ Inventory:
 Reservation System:
 - Equipment reservation table (FES Bike & Xcite)
 
+
+How complex would it be to consolidate the code and logic for requestMaintenance.js requestWishlist.js and requestSupply.js into a single 'requestForm.js' file?
+
+Maybe I can create a BaseRequestHandler class that contains the truly common methods (like showStatus, clearStatus, basic constructor setup), and then have MaintenanceRequestHandler, SupplyRequestHandler, and WishlistRequestHandler inherit from this base class, overriding or extending methods as needed. This would achieve some code reuse without the full complexity of a single, monolithic handler.
+
+I should really take the time to refactor the code so it's simplier
+I should also document edge cases for submissions
+Then I should work on making a scribe/follow along guide with screenshots or gifs for how to use
 ## Setup instructions
 
 Note to self: refer to ``code ~/.bash_history ``

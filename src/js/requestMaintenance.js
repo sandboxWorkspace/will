@@ -156,14 +156,15 @@ class MaintenanceRequestHandler {
     showStatus(message, isError = false) {
         if (!this.formStatus) return;
         this.formStatus.textContent = message;
-        this.formStatus.classList.remove('success', 'error');
-        this.formStatus.classList.add(isError ? 'error' : 'success');
+        this.formStatus.className = `form-status-message ${isError ? 'error' : 'success'}`;
+        this.formStatus.setAttribute('aria-live', isError ? 'assertive' : 'polite');
     }
 
     clearStatus() {
          if (!this.formStatus) return;
         this.formStatus.textContent = '';
-        this.formStatus.classList.remove('success', 'error');
+        this.formStatus.className = 'form-status-message';
+        this.formStatus.removeAttribute('aria-live');
     }
 
     destroy() {

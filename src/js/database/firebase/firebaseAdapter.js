@@ -197,6 +197,29 @@ class FirebaseAdapter extends DatabaseInterface {
         }
     }
 
+    /**
+     * Saves a wishlist request to the specified path.
+     * @param {string} path - The base path for wishlist requests.
+     * @param {object} requestData - The request data object.
+     * @returns {Promise<string>} A promise resolving to the unique key of the saved request.
+     */
+    async saveWishlistRequest(path, requestData) {
+        if (!this.database) throw new Error("Firebase not initialized. Call initialize() first.");
+        try {
+            const requestsRef = ref(this.database, path);
+            const newRequestRef = push(requestsRef); // Generate unique ID
+            const dataToSave = {
+                ...requestData,
+                firebaseTimestamp: serverTimestamp() // Add server-side timestamp
+            };
+            await set(newRequestRef, dataToSave);
+            console.log("Wishlist request saved with ID:", newRequestRef.key);
+            return newRequestRef.key;
+        } catch (error) {
+            console.error(`Firebase saveWishlistRequest error at path ${path}:`, error);
+            throw new Error("Failed to save wishlist request to Firebase.");
+        }
+    }
 }
 
 export default FirebaseAdapter;

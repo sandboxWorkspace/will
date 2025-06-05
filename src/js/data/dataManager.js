@@ -14,6 +14,7 @@ export class DataManager {
         this.scheduleBasePath = "schedule"; // Note: This path isn't actually used in the methods below, they use scheduleType directly.
         this.maintenanceRequestPath = 'requestMaintenance';
         this.supplyRequestPath = 'requestSupply';
+        this.wishlistRequestPath = 'requestWishlist'; // Added for wishlist
 
         console.log("DataManager Initialized. Paths configured.");
     }
@@ -162,6 +163,45 @@ export class DataManager {
         } catch (error) {
             console.error("DataManager getRecentSupplyRequests error:", error);
             throw new Error("Failed to load recent supply requests.");
+        }
+    }
+
+    // --- Wishlist Request Methods ---
+    async saveWishlistRequest(requestData) {
+        try {
+            const dataToSave = {
+                clientTimestamp: Date.now(),
+                ...requestData,
+                status: requestData.status || "Submitted"
+            };
+            // Assuming adapter has a specific saveWishlistRequest method or a generic one
+            if (typeof this.databaseAdapter.saveWishlistRequest !== 'function') {
+                // Potentially fallback to a generic saveListItem if that's your adapter's pattern
+                // For now, let's assume a specific method is preferred for clarity
+                throw new Error("Database adapter is missing the 'saveWishlistRequest' method.");
+            }
+            return await this.databaseAdapter.saveWishlistRequest(this.wishlistRequestPath, dataToSave);
+        } catch (error) {
+            console.error("DataManager saveWishlistRequest error:", error);
+            throw new Error("Failed to save wishlist request.");
+        }
+    }
+
+    async getRecentWishlistRequests(limit = 10) {
+        try {
+            // Prefer using a generic 'getRecentItems' if available and implemented in adapter
+            if (typeof this.databaseAdapter.getRecentItems !== 'function') {
+                 // Fallback or error if generic method is not available
+                 if (typeof this.databaseAdapter.loadWishlistRequests === 'function') { // Example specific fallback
+                     console.warn("Database adapter missing 'getRecentItems', using 'loadWishlistRequests'.");
+                     return await this.databaseAdapter.loadWishlistRequests(this.wishlistRequestPath, limit);
+                 }
+                throw new Error("Database adapter is missing a method to fetch recent wishlist requests.");
+            }
+            return await this.databaseAdapter.getRecentItems(this.wishlistRequestPath, limit);
+        } catch (error) {
+            console.error("DataManager getRecentWishlistRequests error:", error);
+            throw new Error("Failed to load recent wishlist requests.");
         }
     }
 }

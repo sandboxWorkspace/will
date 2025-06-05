@@ -37,4 +37,13 @@ export class DatabaseInterface {
     async loadSupplyRequests(path, limit) {
         throw new Error("Method 'loadSupplyRequests()' must be implemented.");
     }
+
+    // --- Wishlist Request methods ---
+    async saveWishlistRequest(path, requestData) {
+        throw new Error("Method 'saveWishlistRequest()' must be implemented.");
+    }
+    // loadWishlistRequests can be covered by a generic getRecentItems if implemented
+    // async loadWishlistRequests(path, limit) {
+    //     throw new Error("Method 'loadWishlistRequests()' must be implemented.");
+    // }
 }

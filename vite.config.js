@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import path from 'path';
 import { MaintenanceRequestHandler } from './src/js/requestMaintenance';
 import { SupplyRequestHandler } from './src/js/requestSupply.js';
+import { WishlistRequestHandler } from './src/js/requestWishlist.js';
 
 export default defineConfig({
   base: '/will/', 
@@ -24,7 +25,7 @@ export default defineConfig({
         v2index: path.resolve(__dirname, 'v2index.html'),
         reqMaintenance: path.resolve(__dirname, 'requestMaintenance.html'),
         reqSupplies: path.resolve(__dirname, 'requestSupply.html'),
-        // reqEquipment: path.resolve(__dirname, 'requestEquipment.html'),
+        reqWishlist: path.resolve(__dirname, 'requestWishlist.html'),
         fesBike: path.resolve(__dirname, 'fesBike.html'),
       },
     },

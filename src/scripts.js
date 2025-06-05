@@ -7,6 +7,7 @@ import { ConfirmationModal } from './js/ui/confirmationModal.js';
 import { CollapsibleSections } from './js/ui/collapsibleSections.js'; 
 import { MaintenanceRequestHandler } from './js/requestMaintenance.js';
 import { SupplyRequestHandler } from './js/requestSupply.js';
+import { WishlistRequestHandler } from './js/requestWishlist.js';
 
 async function initializeApp() {
     console.log("Initializing application...");
@@ -52,8 +53,14 @@ async function initializeApp() {
             supplyRequestHandler.initialize();
             console.log("Supply Request Handler initialized.");
         }
-        // Add other 'else if' blocks for different pages
-
+        // Wishlist Request Page
+        else if (document.getElementById('wishlistRequestForm')) { // Check for wishlist form
+            console.log("Initializing Wishlist Request Handler...");
+            const wishlistRequestHandler = new WishlistRequestHandler(dataManager);
+            wishlistRequestHandler.initialize();
+            console.log("Wishlist Request Handler initialized.");
+        }
+        
         // --- Initialize Common Components ---
         // Initialize Collapsible Sections if the container exists on the current page
         if (document.querySelector('.collapse-button-container')) {
