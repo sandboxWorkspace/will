@@ -23,6 +23,7 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         v2index: path.resolve(__dirname, 'v2index.html'),
+        reqDashboard: path.resolve(__dirname, 'requestDashboard.html'),
         reqMaintenance: path.resolve(__dirname, 'requestMaintenance.html'),
         reqSupplies: path.resolve(__dirname, 'requestSupply.html'),
         reqWishlist: path.resolve(__dirname, 'requestWishlist.html'),
