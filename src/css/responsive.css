@@ -39,10 +39,10 @@
 
 @media (max-width: 600px) {
     .recent-requests-list {
-        max-height: 200px; /* Adjust height for smaller screens */
+        max-height: 200px;
     }
     .request-item .request-meta {
-        flex-direction: column; /* Stack meta items vertically */
+        flex-direction: column;
         align-items: flex-start;
         gap: 2px;
     }

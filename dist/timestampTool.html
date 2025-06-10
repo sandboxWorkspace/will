@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timestamp Converter</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+
+  <link rel="stylesheet" crossorigin href="/will/assets/responsive-BnT6M67Y.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/forms-Cw21zwpd.css">
+</head>
+
+<body>
+  <main>
+    <div class="styled-form">
+      <div class="form-group">
+        <input id="input" class="form-input" type="text" placeholder="Enter date/time"/>
+      </div>
+      <button class="button" onclick="convert()">
+        Convert
+      </button>
+    </div>
+    <div id="out" style="margin-top:10px;"></div>
+  </main>
+  <script>
+    const input = document.getElementById("input");
+    const out = document.getElementById("out");
+
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") convert();
+    });
+
+    function convert() {
+      const date = new Date(input.value.trim());
+      if (isNaN(date)) return out.textContent = "Invalid date";
+      const ts = firebase.firestore.Timestamp.fromDate(date);
+      out.textContent = `${ts.seconds}`;
+    }
+  </script>
+</body>
+</html>

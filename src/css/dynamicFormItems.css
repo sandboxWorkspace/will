@@ -1,22 +1,19 @@
-/* Styles for form groups containing dynamically added/removed items */
-.dynamic-item-group { /* Renamed from supply-item-group for generality */
+.dynamic-item-group {
     margin-bottom: 1rem;
-    position: relative; /* Crucial for positioning suggestions */
+    position: relative;
 }
 
-/* Styles for an input paired with a remove button */
-.input-with-remove-button { /* Renamed for generality */
+.input-with-remove-button {
     display: flex;
     gap: 5px;
     align-items: center;
 }
 
 .input-with-remove-button input[type="text"],
-.input-with-remove-button input[type="search"] { /* Allow for different input types */
+.input-with-remove-button input[type="search"] {
     flex-grow: 1;
 }
 
-/* Specific styling for the remove button in this context */
 .remove-item-btn {
     padding: 5px 10px;
     line-height: 1;
@@ -25,8 +22,7 @@
     color: var(--danger-text, #f1dcdc);
     border: 1px solid var(--danger-border, #a34a4a);
     min-width: 30px;
-    flex-shrink: 0; /* Prevent shrinking */
-    /* Ensure it uses general button styles if available, otherwise define base */
+    flex-shrink: 0;
     border-radius: var(--button-border-radius, 4px);
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -36,45 +32,37 @@
      background-color: var(--danger-background-hover, #7d2a2a);
 }
 
-/* Style for the button that adds new items */
 .add-item-button {
-    margin-top: 0.5rem; /* Space above add button */
-    margin-bottom: 1rem; /* Space below add button */
-    display: block; /* Make it block to control width/margin easily */
-    width: fit-content; /* Size to content */
-    /* Consider applying a standard button class like 'button secondary-button' in HTML */
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    display: block;
+    width: fit-content;
+    /* Maybe I should add standard button class e.g. 'button secondary-button' */
 }
 
-/* --- Autocomplete Styles --- */
 .autocomplete-suggestions-container {
-    display: none; /* Hidden by default */
+    display: none; /* Hidden by default, handled by JS */
     position: absolute;
-    /* Increased border contrast */
-    border: 1px solid #aaa; /* Was: var(--border-color, #ccc) */
+    border: 1px solid #aaa;
     border-top: none;
-    /* Explicit light background */
-    background-color: #686868; /* Was: var(--background-color, white) */
+    background-color: #686868;
     z-index: 99;
     left: 0;
     right: 0;
     max-height: 150px;
     overflow-y: auto;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.15); /* Slightly stronger shadow */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
     margin-top: -1px;
     border-radius: 0 0 var(--input-border-radius, 4px) var(--input-border-radius, 4px);
 }
 
 .autocomplete-suggestion {
-    padding: 9px 14px; /* Slightly increased padding */
+    padding: 9px 14px;
     cursor: pointer;
-    /* Lighter border between items */
-    border-bottom: 1px solid #eaeaea; /* Was: var(--border-light-color, #eee) */
-    /* Ensure background matches container */
-    background-color: #ffffff; /* Was: var(--background-color, white) */
-    /* Explicit dark text color */
-    color: #222222; /* Was: var(--text-color, black) */
+    border-bottom: 1px solid #eaeaea;
+    background-color: #ffffff;
+    color: #222222;
     font-size: 0.95em;
-    /* Added transition for smoother hover */
     transition: background-color 0.15s ease-in-out;
 }
 
@@ -84,13 +72,10 @@
 
 .autocomplete-suggestion:hover,
 .autocomplete-suggestion.active {
-    /* Clearer hover/active state */
-    background-color: #e9e9e9; /* Was: var(--hover-background-color, #f2f2f2) */
-    /* Ensure text remains dark on hover */
-    color: #111111; /* Was: var(--hover-text-color, var(--text-color, black)) */
+    background-color: #e9e9e9;
+    color: #111111;
 }
 
-/* Style for the remove button (existing) */
 .remove-item-btn:disabled {
     cursor: not-allowed;
     opacity: 0.6;

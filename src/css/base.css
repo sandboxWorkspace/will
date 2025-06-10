@@ -1,27 +1,22 @@
 :root {
-    /* Text Colors */
-    --text-primary: #e0e0e0;       /* Main text color */
-    --text-secondary: #aaa;       /* Lighter text for labels, placeholders */
-    --text-emphasis: #ffffff;     /* For strong elements or highlights */
-    --text-on-primary: #ffffff;   /* Text color on primary backgrounds */
+    --text-primary: #e0e0e0; 
+    --text-secondary: #aaa;
+    --text-emphasis: #ffffff;
+    --text-on-primary: #ffffff;
 
-    /* Background Colors */
-    --background-color: #121212;  /* Main background */
-    --background-alt: #2c2c2c;    /* Slightly lighter bg for inputs, cards */
-    --background-surface: #1e1e1e; /* Alternative surface color */
+    --background-color: #121212;
+    --background-alt: #2c2c2c;
+    --background-surface: #1e1e1e;
 
-    /* Border Colors */
-    --border-color: #333;         /* Standard border */
-    --border-color-light: #444;   /* Lighter border for dividers */
+    --border-color: #333;
+    --border-color-light: #444;
 
-    /* Primary/Accent Color */
-    --primary-color: #4a90e2;     /* Main accent color (links, focus) */
-    --primary-color-dark: #357abd; /* Darker shade for gradients/hovers */
+    --primary-color: #4a90e2;
+    --primary-color-dark: #357abd;
 
-    /* Utility */
-    --border-radius: 8px;         /* Standard border radius */
-    --border-radius-large: 16px;  /* Larger radius (e.g., for buttons) */
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Base font */
+    --border-radius: 8px;
+    --border-radius-large: 16px;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
     /* Status Colors (from forms.css) */
     --success-bg: #2f4d37;
@@ -48,9 +43,9 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    font-family: var(--font-family); /* Use variable */
-    background-color: var(--background-color); /* Use variable */
-    color: var(--text-primary); /* Use variable */
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-primary);
     padding: 20px;
     overflow-x: hidden;
 }
@@ -66,7 +61,6 @@ main {
 
 h1, h2, h3 {
     text-align: center;
-    /* Use variables for the gradient */
     background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
     background-clip: text;
     -webkit-background-clip: text;

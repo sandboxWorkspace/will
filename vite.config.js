@@ -26,7 +26,8 @@ export default defineConfig({
         reqMaintenance: path.resolve(__dirname, 'requestMaintenance.html'),
         reqSupplies: path.resolve(__dirname, 'requestSupply.html'),
         reqWishlist: path.resolve(__dirname, 'requestWishlist.html'),
-        fesBike: path.resolve(__dirname, 'fesBike.html'),
+        timestampTool: path.resolve(__dirname, 'timestampTool.html'),
+        fesBike: path.resolve(__dirname, 'fesBike.html')
       },
     },
   },

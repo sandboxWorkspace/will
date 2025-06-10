@@ -17,7 +17,7 @@
 
 .modal-content {
     background-color: rgba(25, 25, 25, 0.9);
-    padding: 20px 30px; /* Slightly larger padding */
+    padding: 20px 30px;
     border-radius: 8px;
     width: 80%; 
     max-width: 380px;
@@ -37,9 +37,9 @@
 .modal h4 {
     font-size: 1.8em;
     font-weight: bold;
-    margin-top: 0; /* Remove default margin */
-    margin-bottom: 20px; /* Increased spacing */
-    color: #e0e0e0; /* Lighter color */
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #e0e0e0;
 }
 
 .modal button {
@@ -78,5 +78,5 @@
 .no-button { background-color: #f44336; }
 .no-button:hover { background-color: #d22c2a; }
 
-.delete-button { background-color: #757575; } /* Slightly darker grey */
-.delete-button:hover { background-color: #363636; } /* Darker hover for grey */
+.delete-button { background-color: #757575; }
+.delete-button:hover { background-color: #363636; }
