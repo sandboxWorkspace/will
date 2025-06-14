@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="QR Code Generator Tool">
+    <title>QR Code Generator</title>
+    
+    <link rel="stylesheet" href="/src/css/base.css">
+    <link rel="stylesheet" href="/src/css/buttons.css">
+    <link rel="stylesheet" href="/src/css/scrollbar.css">
+    <link rel="stylesheet" href="/src/css/responsive.css">
+
+    <link rel="stylesheet" href="/src/css/forms.css">
+    <link rel="stylesheet" href="/src/css/qrCode.css">
+    <link rel="stylesheet" href="/src/css/toggleSwitch.css">
+    
+    <link rel="icon" href="/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+        <h2>QR Code Generator</h2>
+    </header>
+
+    <main>
+        <div class="styled-form" type="text">
+            <textarea id="qrData" placeholder="Enter, paste, drag & drop URL/text here..."></textarea>
+        </div>
+        <div id="qrCodeContainer">
+            <!-- QR Code will be rendered here by qrcode.js -->
+        </div>        
+        <div class="qr-controls">
+            <div class="color-toggle-container">
+                <span class="toggle-label">WoB</span> <!-- White on Black -->
+                <label class="switch">
+                    <input type="checkbox" id="colorToggleSwitch" checked>
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">BoW</span> <!-- Black on White -->
+            </div>
+            <button id="downloadPNGBtn" class="button green-button">
+                <img src="/assets/downloadicon.svg" alt="Download Icon" class="icon">
+                Download PNG
+            </button>
+            </div>
+    </main>
+    
+    <footer>
+        <div class="button-container">
+            <h3>Under Construction</h3>
+            <a href="v2index.html" class="button green-button">
+                <img src="/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                Experimental
+            </a>
+            <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">Contact Me</a>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/scripts.js"></script>
+    <script type="module" src="/src/js/utils/qrCodeGenerator.js"></script>
+</body>
+</html>

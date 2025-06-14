@@ -1,0 +1,35 @@
+/* Ensure the form container holding qrData spans full width */
+.styled-form:has(#qrData) {
+    width: 58%;
+}
+
+#qrData {
+    display: block;
+    width: 100%;
+    min-height: 80px;
+    text-align: center;
+}
+
+.qr-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+#qrCodeContainer {
+    margin: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 256px;
+    padding: 10px;
+}
+
+#qrCodeContainer img,
+#qrCodeContainer canvas {
+    max-width: auto;
+    height: auto;
+    display: block; /* Prevents extra space below canvas/img */
+}

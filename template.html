@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content ="Template Page">
+    <title>Template Page</title>
+    
+    <link rel="stylesheet" href="/src/css/base.css">
+    <link rel="stylesheet" href="/src/css/buttons.css">
+    <link rel="stylesheet" href="/src/css/scrollbar.css">
+    <link rel="stylesheet" href="/src/css/responsive.css">
+    
+    <link rel="icon" href="/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+        <h1>Template Page</h1>
+    </header>
+
+    <main>
+        <div class="collapse-button-container">
+            <button class="collapse-button red-button" id="toggleRequestButton" data-target="requestForms">
+                Drowndown Navigation
+            </button>
+            <div id="requestForms" class="collapse-content">
+                <a href="requestSupply.html" class="button green-button">
+                    <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
+                    Supplies
+                </a>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="button-container">
+            <h3>Under Construction</h3>
+            <a href="v2index.html" class="button green-button">
+                    <img src="/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/scripts.js"></script>
+    <!--
+    scripts.js
+    collapsibleSections.js
+    utils.js
+    -->
+</body>
+</html>

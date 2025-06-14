@@ -2,7 +2,7 @@
   "name": "qrsite",
   "version": "1.0.0",
   "description": "QR accessible mobile-friendly site serving as a centralized platform to streamline operations and digitize workflows",
-  "main": "src/js/scrips.js",
+  "main": "src/js/scripts.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/sandboxWorkspace/will#readme",
   "dependencies": {
-    "firebase": "^11.6.0"
+    "firebase": "^11.6.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "vite": "^6.2.0"

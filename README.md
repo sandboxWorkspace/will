@@ -1,5 +1,5 @@
 # [SEOP Digital Hub](https://sandboxworkspace.github.io/will/)
-### Developer: Wilbert Liu *[(Personal Site tbd)](https://example.com/)*
+### Developer: Wilbert Liu *[(Personal Site tbd)](https://w8liu.github.io/)*
 
 A mobile-first web app aiming to streamline operations and digitize workflows by serving as a centralized platform for inventory management, maintenance requests, and resource reservations. The primary goal is to enhance efficiency, reduce redundancy, and improve communication via increased accessibility and visibility.
 

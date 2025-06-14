@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Timestamp Converter</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Convert date/time strings to Firebase Timestamps.">
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <link rel="icon" href="/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+
+    <link rel="stylesheet" href="/src/css/base.css">
+    <link rel="stylesheet" href="/src/css/buttons.css">
+    <link rel="stylesheet" href="/src/css/responsive.css">
+
+    <link rel="stylesheet" href="/src/css/forms.css">
+</head>
+
+<body>
+  <header>
+    <a href="/will/">
+        <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
+    </a>
+  </header>
+  <main>
+    <section class="request-form-section">
+      <h2>Timestamp Converter</h2>
+      <div class="styled-form">
+        <div class="form-group">
+          <input id="input" type="text" placeholder="Enter date/time"/>
+        </div>
+        <button class="button green-button form-button" onclick="convert()">
+          Convert
+        </button>
+        <div id="out" class="form-status-message" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+    <footer>
+        <div class="button-container">
+            <h3>Under Construction</h3>
+                <a href="v2index.html" class="button green-button">
+                    <img src="/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+
+  <script>
+    const input = document.getElementById("input");
+    const out = document.getElementById("out");
+
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") convert();
+    });
+
+    function convert() {
+      const date = new Date(input.value.trim());
+      if (isNaN(date)) return out.textContent = "Invalid date";
+      const ts = firebase.firestore.Timestamp.fromDate(date);
+      out.textContent = `${ts.toMillis()}`;
+
+      out.classList.add("show");
+    }
+  </script>
+</body>
+</html>

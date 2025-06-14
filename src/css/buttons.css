@@ -22,20 +22,8 @@
 }
 
 .button.form-button {
-    background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
-    color: var(--text-on-primary);
-}
-
-.button.form-button:hover {
-    background: linear-gradient(138deg, var(--primary-color-dark),var(--primary-color-dark) ); /* Slightly darker second stop */
-}
-
-.button.spreadsheet-button {
-    background: linear-gradient(138deg, #50e3c2, #2c974b);
-}
-
-.button.spreadsheet-button:hover {
-    background: linear-gradient(138deg, #2c974b, #1b7a62);
+    width: 100%;
+    margin-top: 10px;
 }
 
 .button.pending-button {
@@ -43,11 +31,64 @@
     color: #b0b0b0;
 }
 
+.button.primary-button {
+    background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
+    color: var(--text-on-primary);
+}
+
+.button.primary-button:hover {
+    background: linear-gradient(138deg, var(--primary-color-dark),var(--primary-color-dark) ); /* Slightly darker second stop */
+}
+
+.button.red-button {
+    background: linear-gradient(138deg, #c63636, #a61212);
+}
+.button.red-button:hover {
+    background: linear-gradient(138deg, #c03030, #690808);
+}
+.button.blue-button {
+    background: linear-gradient(138deg, #4a90e2, #165798);
+}
+.button.blue-button:hover {
+    background: linear-gradient(138deg, #2672bf, #08325b);
+}
+.button.green-button {
+    background: linear-gradient(138deg, #50e3c2, #2c973b);
+}
+.button.green-button:hover {
+    background: linear-gradient(138deg, #2c973b, #0d7158);
+}
+.button.submit-button {
+    background: linear-gradient(138deg, #50e3c2, #2c973b);
+}
+.button.submit-button:hover {
+    background: linear-gradient(138deg, #2c973b, #0d7158);
+}
+
+.collapse-button.seagreen-button {
+    background: linear-gradient(138deg, #3cb851, #21c83d);
+}
+.button.seagreen-button:hover {
+    background: linear-gradient(138deg, #19cb37, #089b21);
+}
+.button.purple-button {
+    background: linear-gradient(138deg, #9e3fc7, #712e8e);
+}
+.button.purple-button:hover {
+    background: linear-gradient(138deg, #712e8e, #5e3370);
+}
+.button.orange-button {
+    background: linear-gradient(138deg, #df7a3c, #cb5d19);
+}
+.button.orange-button:hover {
+    background: linear-gradient(138deg, #cb5d19, #cb5106);
+}
+
 .button .icon {
     margin-right: 8px;
     width: 18px;
     height: 18px;
-    fill: currentColor; /* Use button's text color for SVG icon */
+    fill: currentColor;
 }
 
 .collapse-button-container {
@@ -77,40 +118,40 @@
     padding-left: 25px;
 }
 
-.collapse-button.inventory-and-maintenance-button {
+.collapse-button.red-button {
     background: linear-gradient(138deg, #c63636, #a61212);
 }
-.collapse-button.inventory-and-maintenance-button:hover {
+.collapse-button.red-button:hover {
     background: linear-gradient(138deg, #c03030, #690808);
 }
-.collapse-button.placeholder-button {
+.collapse-button.blue-button {
     background: linear-gradient(138deg, #4a90e2, #165798);
 }
-.collapse-button.placeholder-button:hover {
+.collapse-button.blue-button:hover {
     background: linear-gradient(138deg, #2672bf, #08325b);
 }
-.collapse-button.quick-tools-button {
+.collapse-button.green-button {
     background: linear-gradient(138deg, #3cb851, #21c83d);
 }
-.collapse-button.quick-tools-button:hover {
+.collapse-button.green-button:hover {
     background: linear-gradient(138deg, #19cb37, #089b21);
 }
-.collapse-button.open-form-button {
+.collapse-button.seagreen-button {
     background: linear-gradient(138deg, #50e3c2, #2c974b);
 }
-.collapse-button.open-form-button:hover {
+.collapse-button.seagreen-button:hover {
     background: linear-gradient(138deg, #2c974b, #0d7158);
 }
-.collapse-button.reservation-button {
+.collapse-button.purple-button {
     background: linear-gradient(138deg, #9e3fc7, #712e8e);
 }
-.collapse-button.reservation-button:hover {
+.collapse-button.purple-button:hover {
     background: linear-gradient(138deg, #712e8e, #5e3370);
 }
-.collapse-button.logs-button {
+.collapse-button.orange-button {
     background: linear-gradient(138deg, #df7a3c, #cb5d19);
 }
-.collapse-button.logs-button:hover {
+.collapse-button.orange-button:hover {
     background: linear-gradient(138deg, #cb5d19, #cb5106);
 }
 
@@ -136,11 +177,10 @@
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out; /* Smooth transitions */
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
 }
 
 .collapse-content a {
-    /* Inherit base .button styles */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -152,20 +192,6 @@
     color: var(--text-emphasis);
     font-size: 1em;
     margin: 10px 0;
-}
-
-.collapse-content a.form-button {
-    background: linear-gradient(138deg, var(--primary-color), var(--primary-color-dark));
-    color: var(--text-on-primary);
-}
-.collapse-content a.form-button:hover {
-    background: linear-gradient(138deg, var(--primary-color-dark),var(--primary-color-dark));
-}
-.collapse-content a.spreadsheet-button {
-    background: linear-gradient(138deg, #50e3c2, #2c974b);
-}
-.collapse-content a.spreadsheet-button:hover {
-    background: linear-gradient(138deg, #2c974b, #1b7a62);
 }
 
 .collapse-content.show {

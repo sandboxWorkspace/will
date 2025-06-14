@@ -65,3 +65,19 @@ export function escapeHtml(unsafe) {
      timeout = setTimeout(later, wait);
    };
  }
+
+ /**
+  * Sets up an event listener for a toggle switch (e.g., a checkbox).
+  * @param {HTMLInputElement} switchElement The switch input element.
+  * @param {Function} onStateChangeCallback A callback function that is called when the switch state changes.
+  *                                         It receives the new checked state (boolean) as an argument.
+  */
+ export function setupToggleSwitch(switchElement, onStateChangeCallback) {
+    if (!switchElement || typeof switchElement.addEventListener !== 'function') {
+        console.error("Invalid switch element provided for setupToggleSwitch.");
+        return;
+    }
+    switchElement.addEventListener('change', () => {
+        onStateChangeCallback(switchElement.checked);
+    });
+ }
