@@ -1,0 +1,272 @@
+.metronome-app-container {
+    background-color: var(--background-surface, #fff); /* Use var from base.css, fallback */
+    padding: 25px 40px;
+    border-radius: var(--border-radius, 8px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 450px; /* Slightly wider to accommodate controls comfortably */
+    margin: 20px auto; /* Center it in the main content area */
+    /* transition: background-color 0.05s ease-out; */ /* Visual pulse */
+    position: relative; /* Keep for potential absolute positioning of other elements if needed */
+}
+
+.metronome-controls {
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: center; /* Center items within the control group */
+}
+/* If the slider's control group now only contains the slider, 
+   it might not need specific justification or can be simplified. */
+.control-group label {
+    font-size: 0.95em;
+    color: var(--text-secondary, #555); /* Use var from base.css */
+    white-space: nowrap;
+}
+
+.bpm-input-group {
+    display: flex;
+    flex-direction: column; /* Stack label above input */
+    align-items: center; /* Center items horizontally */
+    gap: 5px; /* Space between label and input */
+}
+
+#tempoSlider {
+    flex-grow: 1;
+    /* Assuming .slider class might be styled by base.css or similar */
+}
+
+#tempoInput {
+    width: 70px;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid var(--border-color, #ccc); /* Use var */
+    border-radius: var(--border-radius, 4px); /* Use var */
+    font-size: 1em;
+    background-color: var(--background-alt, #f0f0f0); /* Style for dark mode */
+    color: var(--text-primary, #000); /* Style for dark mode */
+}
+
+/* #playPauseBtn uses .green-button and .red-button from buttons.css */
+/* The .active class was previously used for a generic active state, now specific color classes are toggled */
+/* #playPauseBtn.active {
+    /* Using a gradient consistent with .red-button:hover from buttons.css for "active" state */
+/*    background: linear-gradient(138deg, #c03030, #690808); */
+/* } */
+
+.visual-indicator-container {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+#menuToggleBtn {
+    margin: 0 auto 25px auto; /* Centered, with margin at the bottom */
+    /* Revert to default button styling by removing overrides */
+    /* background: transparent; */
+    /* border: none; */
+    /* box-shadow: none; */
+    /* width, height, line-height will be determined by .button class and content */
+    padding-right: 35px; /* Ensure space for the arrow, similar to collapse-button */
+    position: relative; /* Needed for ::after positioning */
+}
+
+#menuToggleBtn::after {
+    content: '';
+    position: absolute; /* Positioned relative to the button */
+    top: 50%; /* Vertical centering */
+    right: 15px; /* Position from the right edge, like collapse-button */
+    /* width/height removed, using padding for size like collapse-button */
+    padding: 3px; /* Size of the arrow itself */
+    border-style: solid;
+    border-color: var(--text-emphasis);
+    border-width: 0 2px 2px 0; /* For right-pointing arrow */
+    display: inline-block;
+    transition: transform 0.3s ease;
+    /* transform for rotation and vertical centering is below */
+}
+
+#menuToggleBtn[aria-expanded="false"]::after {
+    transform: translateY(-50%) rotate(-45deg); /* Pointing right */
+}
+
+/* Arrow pointing left (menu open) */
+#menuToggleBtn[aria-expanded="true"]::after {
+    transform: translateY(-50%) rotate(135deg); /* Pointing left */
+}
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Start off-screen; should be >= width + padding */
+    width: 280px; 
+    height: 100%;
+    background-color: var(--background-surface);
+    color: var(--text-primary);
+    padding: 20px;
+    padding-top: 60px; /* Space for content below fixed header if menu is part of main scroll */
+    box-shadow: 3px 0 10px rgba(0,0,0,0.3);
+    transition: left 0.3s ease-in-out;
+    z-index: 1000; /* Below menu toggle button, above main content */
+    overflow-y: auto; 
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Space between menu sections */
+}
+
+.side-menu .close-menu-btn {
+    /* Uses .button class from buttons.css */
+    margin-top: auto; /* Pushes it to the bottom of the flex container */
+    margin-bottom: 10px; /* Some spacing from the bottom edge */
+    background-color: var(--background-alt); /* Match general button style */
+}
+
+.side-menu.open {
+    left: 0;
+}
+
+.side-menu h2 {
+    /* base.css h2 styles will apply. Override if needed. */
+    margin-top: 0; /* Reset margin if needed */
+    font-size: 1.6em; /* Example adjustment */
+    text-align: left; /* Override centered h from base.css if desired for menu */
+    background: none; /* Override gradient from base.css if plain text is preferred in menu */
+    -webkit-text-fill-color: var(--text-emphasis); /* Ensure text color if background is removed */
+    color: var(--text-emphasis);
+    letter-spacing: 0.05em;
+}
+
+.menu-section {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color-light);
+}
+.menu-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.menu-label { /* New class for labels that aren't for an input */
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    text-align: left;
+}
+
+.menu-section label, .menu-section p {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    text-align: left;
+}
+
+.menu-section select,
+.menu-section input[type="range"],
+.menu-section input[type="checkbox"] {
+    width: 100%;
+    margin-bottom: 10px; /* Space below the input */
+}
+
+.menu-section select {
+    padding: 8px;
+    background-color: var(--background-alt);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+/* Style for small buttons within the menu, if not already in buttons.css */
+.button.small-button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    margin-right: 8px; /* Space between buttons like Reset/Split */
+}
+
+.color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start; /* Align buttons to the start */
+    margin-bottom: 10px;
+}
+
+.color-button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%; /* Circular buttons */
+    border: 2px solid transparent; /* Transparent border initially */
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+    outline: none;
+}
+
+.color-button.selected,
+.color-button:hover {
+    border-color: var(--text-emphasis, #007bff); /* Highlight color for selected/hover */
+    transform: scale(1.1);
+}
+
+/* Play/Pause Button Icon Styles */
+#playPauseBtn {
+    /* Ensure the button is large enough for the icon if it has no text. */
+    /* Adjust padding or min-width/height if necessary. */
+    /* The .button class from buttons.css might already provide sufficient padding. */
+    /* line-height: 1; /* Can help with vertical alignment of the icon */
+}
+
+.play-pause-icon-shape {
+    display: inline-block;
+    box-sizing: border-box;
+    position: relative; 
+    vertical-align: middle; /* Align with the (now invisible) text line */
+    /* Icon color is inherited (currentColor) from the button's text color */
+}
+
+/* Play Icon (Triangle) - Default state (when #playPauseBtn does NOT have .playing class) */
+#playPauseBtn:not(.playing) .play-pause-icon-shape {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 7px 0 7px 12px; /* Creates a triangle: height 14px, width 12px */
+    border-color: transparent transparent transparent currentColor;
+    background-color: transparent; /* Important for border-based shapes */
+}
+
+/* Pause Icon (Two Bars) - When #playPauseBtn HAS .playing class */
+#playPauseBtn.playing .play-pause-icon-shape {
+    width: 12px;  /* Total width for two 4px bars with a 4px gap */
+    height: 14px; /* Height of the bars */
+    border: none; /* Remove any triangle borders */
+}
+
+#playPauseBtn.playing .play-pause-icon-shape::before,
+#playPauseBtn.playing .play-pause-icon-shape::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%; /* 14px */
+    background-color: currentColor;
+    width: 4px; /* Width of each bar */
+}
+
+#playPauseBtn.playing .play-pause-icon-shape::before {
+    left: 0; /* First bar */
+}
+
+#playPauseBtn.playing .play-pause-icon-shape::after {
+    right: 0; /* Second bar (leaves a 4px gap in the middle) */
+}

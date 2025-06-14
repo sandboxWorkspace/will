@@ -40,6 +40,14 @@
     background: linear-gradient(138deg, var(--primary-color-dark),var(--primary-color-dark) ); /* Slightly darker second stop */
 }
 
+.button.submit-button {
+    background: linear-gradient(138deg, #50e3c2, #2c973b);
+}
+
+.button.submit-button:hover {
+    background: linear-gradient(138deg, #2c973b, #0d7158);
+}
+
 .button.red-button {
     background: linear-gradient(138deg, #c63636, #a61212);
 }
@@ -58,18 +66,11 @@
 .button.green-button:hover {
     background: linear-gradient(138deg, #2c973b, #0d7158);
 }
-.button.submit-button {
-    background: linear-gradient(138deg, #50e3c2, #2c973b);
+.button.teal-button {
+    background: linear-gradient(138deg, #57d8f5, #03c0eb);
 }
-.button.submit-button:hover {
-    background: linear-gradient(138deg, #2c973b, #0d7158);
-}
-
-.collapse-button.seagreen-button {
-    background: linear-gradient(138deg, #3cb851, #21c83d);
-}
-.button.seagreen-button:hover {
-    background: linear-gradient(138deg, #19cb37, #089b21);
+.button.teal-button:hover {
+    background: linear-gradient(138deg, #03c0eb, #00728b);
 }
 .button.purple-button {
     background: linear-gradient(138deg, #9e3fc7, #712e8e);
@@ -136,11 +137,11 @@
 .collapse-button.green-button:hover {
     background: linear-gradient(138deg, #19cb37, #089b21);
 }
-.collapse-button.seagreen-button {
-    background: linear-gradient(138deg, #50e3c2, #2c974b);
+.collapse-button.teal-button {
+    background: linear-gradient(138deg, #57d8f5, #03c0eb);
 }
-.collapse-button.seagreen-button:hover {
-    background: linear-gradient(138deg, #2c974b, #0d7158);
+.collapse-button.teal-button:hover {
+    background: linear-gradient(138deg, #03c0eb, #00728b);
 }
 .collapse-button.purple-button {
     background: linear-gradient(138deg, #9e3fc7, #712e8e);

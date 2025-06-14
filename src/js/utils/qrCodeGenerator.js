@@ -16,8 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQrText = "";
 
     const displaySize = 256;
-    const exportSize = 1024; // Standard export size
-    // Removed highResExportSize
+    const exportSize = 2048;
 
     function getColors() {
         return {
@@ -33,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCodeContainer.innerHTML = ''; // Clear previous QR code
 
         if (!currentQrText) {
-            qrCodeContainer.innerHTML = '<p>Enter data to generate a QR code.</p>';
+            qrCodeContainer.innerHTML = '<p>Generating QR code...</p>';
             return;
         }
 

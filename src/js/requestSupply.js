@@ -38,8 +38,8 @@ function renderSupplyRequestItem(request) {
         <strong>Requested Items: ${itemsHtml}</strong>
         ${details ? `<span class="item-details-preview" title="${escapeHtml(details)}">${detailsPreview}</span>` : ''}
         <div class="item-meta">
-            <span>Submitted: ${timestamp} by ${submitter}</span>
             <span>Status: ${escapeHtml(request.status || 'Unknown')}</span>
+            <span>Submitted: ${timestamp} by ${submitter}</span>
         </div>
     `;
     return itemElement;
@@ -115,8 +115,8 @@ export class SupplyRequestHandler {
                         loadDataFunction: this.dataManager.getRecentSupplyRequests.bind(this.dataManager),
                         renderItemFunction: renderSupplyRequestItem,
                         loadingMessage: "Loading recent supply requests...",
-                        errorMessage: "Could not load recent supply requests.",
-                        noItemsMessage: "No recent supply requests found."
+                        errorMessage: "<p>Could not load recent supply requests.</p>", // Added <p> for consistency
+                        noItemsMessage: "<p>No recent supply requests found.</p>"     // Added <p> for consistency
                     }
                 );
                 await this.recentSupplyRequestsListComponent.initialize();

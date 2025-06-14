@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Reserve equipment and access safety logs. More features to come.">
-    <title>Will SEOP QRSite</title>
+    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Quickly access tools and resources. More features to come.">
+    <title>Will's QR Clinic Project</title>
     
     <link rel="stylesheet" href="/src/css/base.css">
     <link rel="stylesheet" href="/src/css/buttons.css">
@@ -24,85 +24,79 @@
         <a href="/will/">
             <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-        <h1>SEOP QRSite</h1>
+        <h1></h1>
+        <!-- Maybe a little widget for time date weather idk-->
     </header>
 
     <main>
+        <div class="collapse-button-container">
+            <button class="collapse-button green-button" id="toggleQuickToolsButton" data-target="quickTools">
+                Quick Tools
+            </button>
+            <div id="quickTools" class="collapse-content">
+                <a href="" class="button pending-button">
+                    <img src="/assets/searchicon.svg" alt="Search Icon" class="icon">
+                    Supply Locator
+                </a>
+                <a href="toolQRGenerator.html" class="button purple-button">
+                    <img src="/assets/qrcodeicon.svg" alt="QR Code Icon" class="icon">
+                    QR Code Generator
+                </a>
+            </div>
+        </div>
+        <div class="collapse-button-container">
+            <button class="collapse-button blue-button" id="toggleSessionToolsButton" data-target="sessionTools">
+                Session Tools
+            </button>
+            <div id="sessionTools" class="collapse-content">
+                <a href="" class="button pending-button">
+                    <img src="/assets/timericon.svg" alt="Timer Icon" class="icon">
+                    Interval Timer
+                </a>
+                <a href="" class="button pending-button">
+                    <img src="/assets/graphicon.svg" alt="Graph Icon" class="icon">
+                    Outcome Measures
+                </a>
+                <a href="toolMetronome.html" class="button teal-button">
+                    <img src="/assets/metronomeicon.svg" alt="Metronome Icon" class="icon">
+                    Metronome
+                </a>
+                <a href="https://www.hep2go.com/exercises.php" class="button teal-button">
+                    <img src="/assets/exerciseicon.svg" alt="Exercise Icon" class="icon">
+                    HEP quick access
+                </a>
+                <a href="" class="button pending-button">
+                    <img src="/assets/randomicon.svg" alt="Random Icon" class="icon">
+                    Random Generator Sequence
+                </a>
+            </div>
+        </div>
         <div class="collapse-button-container">
             <button class="collapse-button red-button" id="toggleRequestButton" data-target="requestForms">
                 Request Forms
             </button>
             <div id="requestForms" class="collapse-content">
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLScILiXXKcw0l-hWi9jqsjAsG_NYDEbDhsaXrmF19nJagancGg/viewform" class="button blue-button">
+                <a href="requestSupply.html" class="button green-button">
                     <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
                     Supplies
                 </a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSeaEhSlrVSsvFQwC0eHc1rKBu-Ky0s-dpSBA49cnImGmlgYVg/viewform" class="button blue-button">
+                <a href="requestMaintenance.html" class="button green-button">
+                    <img src="/assets/repairicon.svg" alt="Repair Icon" class="icon">
+                    Maintenance + Repair
+                </a>
+                <a href="requestWishlist.html" class="button green-button">
                     <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
-                    Wishlist
-                </a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfRPPmL4T1krAL-O0YjKH_8ThVATCgumJgSHzQhG9ySBDtFiw/viewform" class="button blue-button">
-                    <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
-                    Maintenance & Repair
+                    Equipment Wishlist
                 </a>
             </div>
         </div>
-        <div class="collapse-button-container">
-            <button class="collapse-button blue-button" id="togglePlaceholderButton" data-target="placeholder">
-                View Requests
-            </button>
-            <div id="placeholder" class="collapse-content">
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNeZwa76RZerOeXpwjlddv7WwyDiR1D74bXeej2WfE6TPvcokSVHU9FtxUvzP7KaAT1s1wlCZ7Jc0K/pubhtml" class="button spreadsheet-button">
-                    <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                    Supplies
-                </a>
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRbS2ejqgNJgDJNthPtyHCQHwLgc6Bav5Wqj-Ngyd2n-SiCoO7OsKzqInwxEc3wmz8J2Cmy5K1Tq_4v/pubhtml" class="button spreadsheet-button">
-                    <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                    Wishlist
-                </a>
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRF0zsz1o8BPNHsue-3dCRM9M9OAHdM76deUq0ltpMSDvN-RtmXaWnKujGLDhWRGtdxUcQPQGpSav6m/pubhtml" class="button spreadsheet-button">
-                    <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                    Maintenance & Repair
-                </a>
-            </div>
-        </div>
-                <div class="collapse-button-container">
-            <button class="collapse-button green-button" id="toggleQuickToolsButton" data-target="quickTools">
-                Quick Tools
-            </button>
-            <div id="quickTools" class="collapse-content">
-                <a href="" class="button green-button">
-                    <img src="/assets/qrcodeicon.svg" alt="Spreadsheet Icon" class="icon">
-                    QR Code Generator
-                </a>
-                <a href="" class="button pending-button">
-                    <img src="/assets/graphicon.svg" alt="Spreadsheet Icon" class="icon">
-                    Outcome Measures
-                </a>
-                <a href="" class="button pending-button">
-                    <img src="/assets/metronomeicon.svg" alt="Spreadsheet Icon" class="icon">
-                    Metronome
-                </a>
-                <a href="" class="button pending-button">
-                    <img src="/assets/gradeicon.svg" alt="Spreadsheet Icon" class="icon">
-                    OCR Score Grader & Parser
-                </a>
-                <a href="" class="button pending-button">
-                    <img src="/assets/randomicon.svg" alt="Spreadsheet Icon" class="icon">
-                    Random Generator Sequence
-                </a>
-                <a href="" class="button pending-button">
-                    <img src="/assets/timericon.svg" alt="Spreadsheet Icon" class="icon">
-                    Interval Timer
-                </a>
-            </div>
-        </div>
+
     </main>
 
     <footer>
         <div class="button-container">
             <h3>Under Construction</h3>
-                <a href="v2index.html" class="button green-button">
+                <a href="v2index.html" class="button purple-button">
                     <img src="/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
                     Experimental
                 </a>

@@ -16,6 +16,7 @@ function renderWishlistRequestItem(request) {
     const equipmentURL = request.equipmentURL ? escapeHtml(request.equipmentURL) : '';
     const details = request.requestDetails || '';
     const detailsPreview = escapeHtml(details.substring(0, 100)) + (details.length > 100 ? '...' : '');
+    const status = escapeHtml(request.status || 'Unknown');
 
     itemElement.innerHTML = `
         <strong>${equipment}</strong>
@@ -23,8 +24,8 @@ function renderWishlistRequestItem(request) {
         <div class="item-meta">
             <span>Discipline: ${discipline}</span>
             ${equipmentURL ? `<span>URL: <a href="${equipmentURL}" target="_blank" rel="noopener noreferrer">${equipmentURL.length > 30 ? equipmentURL.substring(0, 27) + '...' : equipmentURL}</a></span>` : ''}
+            <span>Status: ${status}</span>
             <span>Submitted: ${timestamp} by ${submitter}</span>
-            <span>Status: ${escapeHtml(request.status || 'Unknown')}</span>
         </div>
     `;
     return itemElement;

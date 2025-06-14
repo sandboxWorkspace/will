@@ -111,6 +111,7 @@ export function renderMaintenanceRequestItem(request) {
     const type = escapeHtml(request.requestType || 'N/A');
     const submitter = escapeHtml(request.submitterName || 'Unknown');
     const details = request.requestDetails || '';
+    const status = escapeHtml(request.status || 'Unknown'); // Added status
     const detailsPreview = escapeHtml(details.substring(0, 100)) + (details.length > 100 ? '...' : '');
 
     requestItem.innerHTML = `
@@ -118,6 +119,7 @@ export function renderMaintenanceRequestItem(request) {
         <span class="item-details-preview" title="${escapeHtml(details)}">${detailsPreview}</span>
         <div class="item-meta">
             <span>Type: ${type}</span>
+            <span>Status: ${status}</span>
             <span>Submitted: ${timestamp} by ${submitter}</span>
         </div>
     `;

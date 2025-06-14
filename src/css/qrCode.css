@@ -1,6 +1,6 @@
 /* Ensure the form container holding qrData spans full width */
 .styled-form:has(#qrData) {
-    width: 58%;
+    width: 88%;
 }
 
 #qrData {
