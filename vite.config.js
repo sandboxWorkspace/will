@@ -28,6 +28,7 @@ export default defineConfig({
         reqSupplies: path.resolve(__dirname, 'requestSupply.html'),
         reqWishlist: path.resolve(__dirname, 'requestWishlist.html'),
         toolQRGenerator: path.resolve(__dirname, 'toolQRGenerator.html'),
+        toolMetronome: path.resolve(__dirname, 'toolMetronome.html'),
         toolOutcomemeasures: path.resolve(__dirname, 'toolOutcomemeasure.html'),
         internalTimestamp: path.resolve(__dirname, 'internalTimestamp.html'),
         fesBike: path.resolve(__dirname, 'fesBike.html')
