@@ -144,26 +144,60 @@ export class Metronome {
         }
     }
 
-    play() {
+    async play() { // Make the play method asynchronous
         if (this.isPlaying || !this.valid) return;
         this.isPlaying = true;
 
         if (!this.audioContext) {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        // Resume AudioContext if it's suspended (browsers often require user interaction)
-        if (this.audioContext && this.audioContext.state === 'suspended') {
-            this.audioContext.resume().catch(err => console.error("Error resuming AudioContext:", err));
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log("AudioContext created.");
+            } catch (e) {
+                console.error("Failed to create AudioContext:", e);
+                this.isPlaying = false; // Revert state
+                // Ensure UI reflects that play failed
+                this.playPauseBtn.classList.remove('red-button', 'playing');
+                this.playPauseBtn.classList.add('green-button');
+                this.playPauseBtn.setAttribute('aria-label', 'Play');
+                return;
+            }
         }
 
-        // this.playPauseBtn.textContent = 'Pause'; // Replaced by icon and ARIA label
+        // Resume AudioContext if it's suspended (common on mobile until user interaction)
+        if (this.audioContext.state === 'suspended') {
+            console.log("AudioContext is suspended, attempting to resume...");
+            try {
+                await this.audioContext.resume(); // Wait for the resume promise to resolve
+                console.log("AudioContext resumed successfully. State:", this.audioContext.state);
+            } catch (err) {
+                console.error("Error resuming AudioContext:", err);
+                this.isPlaying = false; // Revert state if resume fails
+                // Ensure UI reflects that play failed
+                this.playPauseBtn.classList.remove('red-button', 'playing');
+                this.playPauseBtn.classList.add('green-button');
+                this.playPauseBtn.setAttribute('aria-label', 'Play');
+                return;
+            }
+        }
+
+        // If AudioContext is still not running after attempt to resume, something is wrong.
+        if (this.audioContext.state !== 'running') {
+            console.warn(`AudioContext is not in 'running' state after setup. State: ${this.audioContext.state}. Sound may not play.`);
+            this.isPlaying = false; // Revert state
+            this.playPauseBtn.classList.remove('red-button', 'playing');
+            this.playPauseBtn.classList.add('green-button');
+            this.playPauseBtn.setAttribute('aria-label', 'Play');
+            return;
+        }
+
         this.playPauseBtn.classList.remove('green-button');
         this.playPauseBtn.classList.add('red-button'); // Change to red when playing
         this.playPauseBtn.classList.add('playing');
         this.playPauseBtn.setAttribute('aria-label', 'Pause');
 
-        const interval = (60 / this.bpm) * 1000;
-        this.intervalId = setInterval(this._beat, interval);
+        const intervalTime = (60 / this.bpm) * 1000;
+        if (this.intervalId) clearInterval(this.intervalId); // Ensure no duplicate intervals
+        this.intervalId = setInterval(this._beat, intervalTime);
         this._startTimerInterval();
         this._beat(); // Immediate first beat
     }
@@ -171,7 +205,6 @@ export class Metronome {
     stop() {
         if (!this.isPlaying || !this.valid) return;
         this.isPlaying = false;
-        // this.playPauseBtn.textContent = 'Play'; // Replaced by icon and ARIA label
         this.playPauseBtn.classList.remove('red-button');
         this.playPauseBtn.classList.add('green-button'); // Change back to green when paused
         this.playPauseBtn.classList.remove('playing');
