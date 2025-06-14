@@ -146,7 +146,8 @@ export class Metronome {
 
     async play() { // Make the play method asynchronous
         if (this.isPlaying || !this.valid) return;
-        this.isPlaying = true;
+        // Optimistically set isPlaying, but revert if audio setup fails
+        this.isPlaying = true; 
 
         if (!this.audioContext) {
             try {
@@ -154,16 +155,12 @@ export class Metronome {
                 console.log("AudioContext created.");
             } catch (e) {
                 console.error("Failed to create AudioContext:", e);
-                this.isPlaying = false; // Revert state
-                // Ensure UI reflects that play failed
-                this.playPauseBtn.classList.remove('red-button', 'playing');
-                this.playPauseBtn.classList.add('green-button');
-                this.playPauseBtn.setAttribute('aria-label', 'Play');
+                this.isPlaying = false;
+                this._updatePlayButtonUI(false);
                 return;
             }
         }
 
-        // Resume AudioContext if it's suspended (common on mobile until user interaction)
         if (this.audioContext.state === 'suspended') {
             console.log("AudioContext is suspended, attempting to resume...");
             try {
@@ -171,29 +168,41 @@ export class Metronome {
                 console.log("AudioContext resumed successfully. State:", this.audioContext.state);
             } catch (err) {
                 console.error("Error resuming AudioContext:", err);
-                this.isPlaying = false; // Revert state if resume fails
-                // Ensure UI reflects that play failed
-                this.playPauseBtn.classList.remove('red-button', 'playing');
-                this.playPauseBtn.classList.add('green-button');
-                this.playPauseBtn.setAttribute('aria-label', 'Play');
+                this.isPlaying = false;
+                this._updatePlayButtonUI(false);
                 return;
             }
         }
 
-        // If AudioContext is still not running after attempt to resume, something is wrong.
         if (this.audioContext.state !== 'running') {
             console.warn(`AudioContext is not in 'running' state after setup. State: ${this.audioContext.state}. Sound may not play.`);
-            this.isPlaying = false; // Revert state
-            this.playPauseBtn.classList.remove('red-button', 'playing');
-            this.playPauseBtn.classList.add('green-button');
-            this.playPauseBtn.setAttribute('aria-label', 'Play');
+            this.isPlaying = false;
+            this._updatePlayButtonUI(false);
             return;
         }
 
-        this.playPauseBtn.classList.remove('green-button');
-        this.playPauseBtn.classList.add('red-button'); // Change to red when playing
-        this.playPauseBtn.classList.add('playing');
-        this.playPauseBtn.setAttribute('aria-label', 'Pause');
+        // Prime the audio context - play a tiny, almost silent sound
+        // This can help ensure the audio pathway is open on some mobile browsers
+        try {
+            const primerOscillator = this.audioContext.createOscillator();
+            const primerGain = this.audioContext.createGain();
+            primerOscillator.connect(primerGain);
+            primerGain.connect(this.audioContext.destination);
+            
+            primerGain.gain.setValueAtTime(0.0001, this.audioContext.currentTime); // Very quiet
+            primerOscillator.frequency.setValueAtTime(20, this.audioContext.currentTime); // Low frequency
+            primerOscillator.type = 'sine';
+            
+            primerOscillator.start(this.audioContext.currentTime);
+            primerOscillator.stop(this.audioContext.currentTime + 0.01); // Play for 10ms
+            console.log("AudioContext primed with a short sound.");
+        } catch (primeError) {
+            console.warn("Could not prime AudioContext:", primeError);
+            // Continue anyway, main sound might still work
+        }
+
+        // If we've reached here, AudioContext should be running and isPlaying is true.
+        this._updatePlayButtonUI(true);
 
         const intervalTime = (60 / this.bpm) * 1000;
         if (this.intervalId) clearInterval(this.intervalId); // Ensure no duplicate intervals
@@ -205,10 +214,7 @@ export class Metronome {
     stop() {
         if (!this.isPlaying || !this.valid) return;
         this.isPlaying = false;
-        this.playPauseBtn.classList.remove('red-button');
-        this.playPauseBtn.classList.add('green-button'); // Change back to green when paused
-        this.playPauseBtn.classList.remove('playing');
-        this.playPauseBtn.setAttribute('aria-label', 'Play');
+        this._updatePlayButtonUI(false);
         clearInterval(this.intervalId);
         this.intervalId = null;
         if (this.timerIntervalId) {
@@ -216,6 +222,18 @@ export class Metronome {
             this.timerIntervalId = null;
         }
         this.appContainer.style.backgroundColor = this.baseIndicatorColor; // Reset to base color
+    }
+
+    _updatePlayButtonUI(isPlaying) {
+        if (isPlaying) {
+            this.playPauseBtn.classList.remove('green-button');
+            this.playPauseBtn.classList.add('red-button', 'playing');
+            this.playPauseBtn.setAttribute('aria-label', 'Pause');
+        } else {
+            this.playPauseBtn.classList.remove('red-button', 'playing');
+            this.playPauseBtn.classList.add('green-button');
+            this.playPauseBtn.setAttribute('aria-label', 'Play');
+        }
     }
 
     _startTimerInterval() {
@@ -252,7 +270,14 @@ export class Metronome {
     }
 
     _playBeep(isAccent = false) {
-        if (!this.audioContext || !this.valid) return;
+        if (!this.audioContext || !this.valid) {
+            console.warn("Metronome._playBeep: AudioContext not available or metronome invalid.");
+            return;
+        }
+        if (this.audioContext.state !== 'running') {
+            console.warn(`Metronome._playBeep: AudioContext not in 'running' state. Current state: ${this.audioContext.state}. Skipping beep.`);
+            return;
+        }
 
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
