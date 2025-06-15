@@ -66,32 +66,42 @@
         </aside>
 
         <!-- Metronome UI -->
-        <div class="metronome-app-container">
-            <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu" title="Open Menu">
-                <!-- Text removed, arrow will be ::after pseudo-element -->
-            </button>
-            <div class="metronome-controls">
-                <div class="control-group">
-                    <!-- <label for="tempoSlider">Tempo: <span id="tempoDisplay">120</span> BPM</label> --> <!-- Label removed -->
-                    <input type="range" id="tempoSlider" name="tempoSlider" min="8" max="280" value="60" class="slider">
-                </div>
-                <div class="control-group">
-                    <div class="bpm-input-group">
-                        <label for="tempoInput">BPM</label>
-                        <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
-                    </div>
-                </div>
-                <div class="control-group">
-                    <button id="playPauseBtn" class="button green-button" aria-label="Play">
-                        <span class="play-pause-icon-shape"></span>
-                    </button>
-                </div>
-            </div>
+        <!-- Metronome UI is now visible by default -->
+        <div id="metronomeMainUI" class="metronome-app-container">
+             <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu" title="Open Menu">
+                 <!-- Text removed, arrow will be ::after pseudo-element -->
+             </button>
+             <div class="metronome-controls">
+                 <div class="control-group">
+                     <input type="range" id="tempoSlider" name="tempoSlider" min="8" max="280" value="60" class="slider">
+                 </div>
+                 <div class="control-group">
+                     <div class="bpm-input-group">
+                         <label for="tempoInput">BPM</label>
+                         <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
+                     </div>
+                 </div>
+                 <div class="control-group">
+                     <button id="playPauseBtn" class="button green-button" aria-label="Play">
+                         <span class="play-pause-icon-shape"></span>
+                     </button>
+                 </div>
+             </div>
         </div>
 
+        <!-- Hidden audio element for unlocking audio on iOS -->
+        <audio id="unlockAudioElement" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" style="display: none;"></audio>
+
         <!-- Debug Log Output Area -->
-        <div id="debugLogContainer">
-            <p>Debug log initialized...</p>
+        <div class="collapse-button-container">
+            <button class="collapse-button pending-button" id="toggleDebugLogButton" data-target="DebugLogTools">
+                Janky iOS Debug Log
+            </button>
+            <div id="DebugLogTools" class="collapse-content">
+                <div id="debugLogContainer">
+                    <p>Debug log initialized...</p>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -109,6 +119,7 @@
     </footer>
 
     <script type="module" src="/src/scripts.js"></script>
+    <script type="module" src="src/js/utils/iosDebug.js"></script>
     <script type="module" src="src/js/utils/metronome.js"></script>
 </body>
 </html>

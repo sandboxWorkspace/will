@@ -1,3 +1,5 @@
+import { logger } from './iosDebug.js';
+
 export class Metronome {
     constructor(options = {}) {
         this.tempoSlider = document.getElementById(options.tempoSliderId || 'tempoSlider');
@@ -9,11 +11,9 @@ export class Metronome {
         // Display elements for beat count and timer, managed by Metronome class
         this.beatCountDisplayEl = document.getElementById(options.beatCountDisplayId || 'beatCountDisplay');
         this.runningTimerDisplayEl = document.getElementById(options.runningTimerDisplayId || 'runningTimerDisplay');
-        this.debugLogEl = document.getElementById('debugLogContainer'); // For on-screen debugging
 
         // Note: volumeControlSlider is handled by MetronomeApp
         if (!this.tempoSlider || !this.tempoInput || !this.playPauseBtn || !this.appContainer || !this.indicatorPalette) {
-            // Use console.error directly here as _logToUI might not be set up if `valid` is false.
             console.error("Metronome Class: Essential DOM elements missing. Ensure IDs/selectors match HTML.");
             this.valid = false;
             return;
@@ -46,7 +46,7 @@ export class Metronome {
         this.resetCounterAndTimer = this.resetCounterAndTimer.bind(this);
         this._updateBeatCountDisplay = this._updateBeatCountDisplay.bind(this);
         this._updateTimerDisplay = this._updateTimerDisplay.bind(this);
-        this._logToUI = this._logToUI.bind(this);
+        this.ensureAudioUnlocked = this.ensureAudioUnlocked.bind(this);
     }
 
     initialize() {
@@ -88,33 +88,47 @@ export class Metronome {
         this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._handleVisibilityChange);
 
-        this._logToUI("Metronome initialized.");
+        logger.log("Metronome initialized.");
         this._updateIndicatorColor(this.defaultPulseColor); // Ensure default is applied
     }
 
-    _logToUI(message, type = 'log') {
-        const originalConsole = window.console; // Keep a reference to the original console
-
-        if (type === 'error') {
-            if (originalConsole && originalConsole.error) originalConsole.error(message);
-        } else if (type === 'warn') {
-            if (originalConsole && originalConsole.warn) originalConsole.warn(message);
-        } else {
-            if (originalConsole && originalConsole.log) originalConsole.log(message);
+    async ensureAudioUnlocked() {
+        logger.log("Attempting to unlock audio...");
+        if (this.audioContext && this.audioContext.state === 'running') {
+            logger.log("AudioContext already running.");
+            return true;
+        }
+        const unlockAudioEl = document.getElementById('unlockAudioElement');
+        if (unlockAudioEl) {
+            try {
+                await unlockAudioEl.play();
+                this._logToUI("Played dummy HTML5 audio element successfully.");
+            } catch (err) {
+                logger.log(`Error playing dummy HTML5 audio: ${err}`, 'warn');
+                // Continue, as AudioContext might still resume
+            }
         }
 
-        if (this.debugLogEl) {
-            const entry = document.createElement('p');
-            const timestamp = new Date().toLocaleTimeString();
-            let prefix = type.toUpperCase() + ': ';
-            if (type === 'log') prefix = ''; // No prefix for simple logs
-
-            entry.textContent = `[${timestamp}] ${prefix}${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}`;
-            if (type === 'error') entry.style.color = '#ff7b72'; // Light red
-            else if (type === 'warn') entry.style.color = '#f0e68c'; // Khaki / Light yellow
-            this.debugLogEl.appendChild(entry);
-            this.debugLogEl.scrollTop = this.debugLogEl.scrollHeight;
+        if (!this.audioContext) {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                logger.log("AudioContext created during unlock process.");
+            } catch (e) {
+                logger.log(`Failed to create AudioContext during unlock: ${e}`, 'error');
+                return false;
+            }
         }
+
+        if (this.audioContext.state === 'suspended') {
+            return this.audioContext.resume().then(() => {
+                logger.log(`AudioContext resumed during unlock. State: ${this.audioContext.state}`);
+                return this.audioContext.state === 'running';
+            }).catch(err => {
+                logger.log(`Error resuming AudioContext during unlock: ${err}`, 'error');
+                return false;
+            });
+        }
+        return this.audioContext.state === 'running';
     }
 
     _handleVisibilityChange() {
@@ -122,15 +136,15 @@ export class Metronome {
 
         if (document.visibilityState === 'visible') {
             if (this.audioContext.state === 'suspended') {
-                this._logToUI("Page visible, AudioContext suspended. Attempting resume.");
+                logger.log("Page visible, AudioContext suspended. Attempting resume.");
                 this.audioContext.resume().then(() => {
-                    this._logToUI(`AudioContext resumed on visibility. State: ${this.audioContext.state}`);
+                    logger.log(`AudioContext resumed on visibility. State: ${this.audioContext.state}`);
                 }).catch(err => {
-                    this._logToUI(`Error resuming AudioContext on visibility: ${err}`, 'error');
+                    logger.log(`Error resuming AudioContext on visibility: ${err}`, 'error');
                 });
             }
         } else {
-            this._logToUI(`Page hidden. AudioContext state: ${this.audioContext.state}`);
+            logger.log(`Page hidden. AudioContext state: ${this.audioContext.state}`);
             // iOS often suspends the context automatically. Explicitly stopping the metronome
             // if it's playing might be a good idea if desired, but not strictly necessary for resume.
         }
@@ -180,7 +194,7 @@ export class Metronome {
             this.beatsPerMeasure = parseInt(parts[0], 10);
             this.beatUnit = parseInt(parts[1], 10); // beatUnit is stored but not directly used in current simple beep
             this.currentBeatInMeasure = 0; // Reset beat count on signature change
-            this._logToUI(`Time signature set to: ${this.beatsPerMeasure}/${this.beatUnit}`);
+            logger.log(`Time signature set to: ${this.beatsPerMeasure}/${this.beatUnit}`);
         }
         // If playing, restart to apply new signature immediately
         if (this.isPlaying) { this.stop(); this.play(); }
@@ -240,12 +254,21 @@ export class Metronome {
         // Optimistically set isPlaying, but revert if audio setup fails
         this.isPlaying = true; 
 
+        // Ensure audio is unlocked before proceeding
+        const audioUnlocked = await this.ensureAudioUnlocked();
+        if (!audioUnlocked) {
+            logger.log("Audio could not be unlocked or started. Playback aborted.", 'error');
+            this.isPlaying = false;
+            this._updatePlayButtonUI(false);
+            return;
+        }
+
         if (!this.audioContext) {
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                this._logToUI("AudioContext created.");
+                logger.log("AudioContext created.");
             } catch (e) {
-                this._logToUI(`Failed to create AudioContext: ${e}`, 'error');
+                logger.log(`Failed to create AudioContext: ${e}`, 'error');
                 this.isPlaying = false;
                 this._updatePlayButtonUI(false);
                 return;
@@ -253,12 +276,12 @@ export class Metronome {
         }
 
         if (this.audioContext.state === 'suspended') {
-            this._logToUI("AudioContext suspended, attempting resume...");
+            logger.log("AudioContext suspended, attempting resume...");
             try {
                 await this.audioContext.resume(); // Wait for the resume promise to resolve
-                this._logToUI(`AudioContext resumed. State: ${this.audioContext.state}`);
+                logger.log(`AudioContext resumed. State: ${this.audioContext.state}`);
             } catch (err) {
-                this._logToUI(`Error resuming AudioContext: ${err}`, 'error');
+                logger.log(`Error resuming AudioContext: ${err}`, 'error');
                 this.isPlaying = false;
                 this._updatePlayButtonUI(false);
                 return;
@@ -266,7 +289,7 @@ export class Metronome {
         }
 
         if (this.audioContext.state !== 'running') {
-            this._logToUI(`AudioContext not 'running' after setup. State: ${this.audioContext.state}. Sound may not play.`, 'warn');
+            logger.log(`AudioContext not 'running' after setup. State: ${this.audioContext.state}. Sound may not play.`, 'warn');
             this.isPlaying = false;
             this._updatePlayButtonUI(false);
             return;
@@ -286,9 +309,9 @@ export class Metronome {
             
             primerOscillator.start(this.audioContext.currentTime);
             primerOscillator.stop(this.audioContext.currentTime + 0.01); // Play for 10ms
-            this._logToUI("AudioContext primed.");
+            logger.log("AudioContext primed.");
         } catch (primeError) {
-            this._logToUI(`Could not prime AudioContext: ${primeError}`, 'warn');
+            logger.log(`Could not prime AudioContext: ${primeError}`, 'warn');
             // Continue anyway, main sound might still work
         }
 
@@ -372,23 +395,22 @@ export class Metronome {
 
     _playBeep(isAccent = false) {
         if (!this.audioContext || !this.valid || !this.audioContext.destination) {
-            this._logToUI("Metronome._playBeep: AudioContext not available or metronome invalid.", 'warn');
+            logger.log("Metronome._playBeep: AudioContext not available, invalid, or no destination.", 'warn');
             return;
         }
         if (this.audioContext.state !== 'running') {
-            this._logToUI(`Metronome._playBeep: AudioContext not 'running'. State: ${this.audioContext.state}. Skipping beep.`, 'warn');
+            logger.log(`Metronome._playBeep: AudioContext not 'running'. State: ${this.audioContext.state}. Skipping beep.`, 'warn');
             return;
         }
 
         const currentTime = this.audioContext.currentTime;
         const targetFrequency = isAccent ? 880 : 580;
-        // Let's temporarily boost the base volume for testing on iOS, ensure it's clearly audible if working
-        const baseTestVolume = 0.5; // Was this.beepVolume (0.1)
-        const targetGain = isAccent ? baseTestVolume * 1.5 : baseTestVolume;
+        // Use the actual beepVolume set by the user/default
+        const targetGain = isAccent ? this.beepVolume * 1.8 : this.beepVolume; // Accent is 1.8x louder
         const finalVolume = Math.min(1.0, Math.max(0.0, targetGain)); // Clamp between 0 and 1
-        const duration = 0.050; // Slightly longer duration for testing (50ms)
+        const duration = 0.030; // Reverted to 30ms for a crisp click
 
-        this._logToUI(`_playBeep: Accent: ${isAccent}, Freq: ${targetFrequency}, GainVal: ${finalVolume}, BaseVol: ${this.beepVolume}, ActualBaseTestVol: ${baseTestVolume}, Duration: ${duration}s, AC_Time: ${currentTime.toFixed(3)}`);
+        logger.log(`_playBeep: Accent: ${isAccent}, Freq: ${targetFrequency}, GainVal: ${finalVolume.toFixed(3)}, ActualBeepVol: ${this.beepVolume.toFixed(3)}, Duration: ${duration}s, AC_Time: ${currentTime.toFixed(3)}`);
 
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
@@ -403,7 +425,7 @@ export class Metronome {
 
         oscillator.start(currentTime);
         oscillator.stop(currentTime + duration);
-        this._logToUI(`_playBeep: Oscillator started at ${currentTime.toFixed(3)}, scheduled to stop at ${(currentTime + duration).toFixed(3)}`);
+        logger.log(`_playBeep: Oscillator started at ${currentTime.toFixed(3)}, scheduled to stop at ${(currentTime + duration).toFixed(3)}`);
     }
 
     destroy() {
@@ -412,6 +434,8 @@ export class Metronome {
     }
 }
 
+// MetronomeApp class remains largely the same but could also use the logger
+// if its console.error/warn calls are intended for the UI debug log.
 class MetronomeApp {
     constructor() {
         this.metronome = new Metronome({
@@ -428,6 +452,10 @@ class MetronomeApp {
         this.menuToggleBtn = document.getElementById('menuToggleBtn');
         this.sideMenu = document.getElementById('sideMenu');
         this.closeMenuBtnInside = document.getElementById('closeMenuBtnInside');
+        
+        // Audio Unlock UI
+        // this.enableAudioBtn = document.getElementById('enableAudioBtn'); // No longer needed
+        // this.metronomeMainUIDiv = document.getElementById('metronomeMainUI'); // No longer needed for this logic
 
         // Future Feature UI Placeholders
         this.timeSignatureSelect = document.getElementById('timeSignature'); // Still needed for app-level event binding
@@ -441,17 +469,19 @@ class MetronomeApp {
     }
 
     initialize() {
-        if (this.metronome.valid) { // Check if core metronome elements were found
-            this.metronome.initialize();
-        } else {
-            console.error("MetronomeApp: Metronome core failed to initialize."); // Keep as console.error for app-level issues
+        if (!this.metronome.valid) {
+            logger.log("MetronomeApp: Metronome core failed to initialize.", 'error');
+            return;
         }
 
         if (!this.menuToggleBtn || !this.sideMenu) {
-            console.warn("MetronomeApp: Side menu elements not found."); // Keep as console.warn
+            logger.log("MetronomeApp: Side menu elements not found.", 'warn');
         }
         
-        // console.log("Metronome App initialized."); // Can be logged via metronome's logger if passed or use direct console
+        // Initialize the metronome directly.
+        // Audio unlocking will be handled by the first call to metronome.play()
+        this.metronome.initialize(); 
+        logger.log("Metronome App initialized.");
     }
 
     _bindEvents() {
@@ -524,9 +554,7 @@ class MetronomeApp {
         if (this.metronome) {
             this.metronome.setTimeSignature(value);
         }
-        // If this needs to be in UI log, MetronomeApp would need access to _logToUI
-        // For now, let it be a standard console log for app-level events.
-        console.log("MetronomeApp: Time signature changed to:", value); 
+        logger.log(`MetronomeApp: Time signature changed to: ${value}`);
     }
 }
 
