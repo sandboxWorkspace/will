@@ -1,0 +1,22 @@
+#debugLogContainer {
+    width: 88%;
+    max-width: 680px;
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid #3e4451;
+    border-radius: var(--border-radius, 4px);
+    margin: 20px auto;
+    padding: 10px;
+    white-space: pre-wrap;
+}
+
+#debugLogContainer p {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px dotted #4b5263;
+    line-height: 1.4;
+}
+#debugLogContainer p:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}

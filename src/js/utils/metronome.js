@@ -371,10 +371,7 @@ export class Metronome {
     }
 
     _playBeep(isAccent = false) {
-        if (this.audioContext) {
-            // this._logToUI(`Metronome._playBeep: AudioContext state before playing beep: ${this.audioContext.state}`); // Can be verbose
-        }
-        if (!this.audioContext || !this.valid) {
+        if (!this.audioContext || !this.valid || !this.audioContext.destination) {
             this._logToUI("Metronome._playBeep: AudioContext not available or metronome invalid.", 'warn');
             return;
         }
@@ -383,21 +380,30 @@ export class Metronome {
             return;
         }
 
+        const currentTime = this.audioContext.currentTime;
+        const targetFrequency = isAccent ? 880 : 580;
+        // Let's temporarily boost the base volume for testing on iOS, ensure it's clearly audible if working
+        const baseTestVolume = 0.5; // Was this.beepVolume (0.1)
+        const targetGain = isAccent ? baseTestVolume * 1.5 : baseTestVolume;
+        const finalVolume = Math.min(1.0, Math.max(0.0, targetGain)); // Clamp between 0 and 1
+        const duration = 0.050; // Slightly longer duration for testing (50ms)
+
+        this._logToUI(`_playBeep: Accent: ${isAccent}, Freq: ${targetFrequency}, GainVal: ${finalVolume}, BaseVol: ${this.beepVolume}, ActualBaseTestVol: ${baseTestVolume}, Duration: ${duration}s, AC_Time: ${currentTime.toFixed(3)}`);
+
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
 
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
 
-        oscillator.type = 'triangle';
-        const frequency = isAccent ? 880 : 580; // lower accent pitch
-        const volume = isAccent ? this.beepVolume * 1.8 : this.beepVolume; // Slightly louder accent
+        oscillator.type = 'triangle'; // Or 'sine' for a softer test
 
-        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        gainNode.gain.setValueAtTime(Math.min(1.0, volume), this.audioContext.currentTime); // Ensure volume doesn't exceed 1.0
+        oscillator.frequency.setValueAtTime(targetFrequency, currentTime);
+        gainNode.gain.setValueAtTime(finalVolume, currentTime);
 
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + 0.030); // Shortened duration for a crisper click (30ms)
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime + duration);
+        this._logToUI(`_playBeep: Oscillator started at ${currentTime.toFixed(3)}, scheduled to stop at ${(currentTime + duration).toFixed(3)}`);
     }
 
     destroy() {
