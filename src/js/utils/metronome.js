@@ -9,10 +9,12 @@ export class Metronome {
         // Display elements for beat count and timer, managed by Metronome class
         this.beatCountDisplayEl = document.getElementById(options.beatCountDisplayId || 'beatCountDisplay');
         this.runningTimerDisplayEl = document.getElementById(options.runningTimerDisplayId || 'runningTimerDisplay');
+        this.debugLogEl = document.getElementById('debugLogContainer'); // For on-screen debugging
 
         // Note: volumeControlSlider is handled by MetronomeApp
         if (!this.tempoSlider || !this.tempoInput || !this.playPauseBtn || !this.appContainer || !this.indicatorPalette) {
-            console.error("Metronome Class: One or more essential DOM elements are missing (tempoSlider, tempoInput, playPauseBtn, appContainer, indicatorPalette). Ensure IDs/selectors match HTML.");
+            // Use console.error directly here as _logToUI might not be set up if `valid` is false.
+            console.error("Metronome Class: Essential DOM elements missing. Ensure IDs/selectors match HTML.");
             this.valid = false;
             return;
         }
@@ -44,6 +46,7 @@ export class Metronome {
         this.resetCounterAndTimer = this.resetCounterAndTimer.bind(this);
         this._updateBeatCountDisplay = this._updateBeatCountDisplay.bind(this);
         this._updateTimerDisplay = this._updateTimerDisplay.bind(this);
+        this._logToUI = this._logToUI.bind(this);
     }
 
     initialize() {
@@ -85,8 +88,33 @@ export class Metronome {
         this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._handleVisibilityChange);
 
-        console.log("Metronome initialized.");
+        this._logToUI("Metronome initialized.");
         this._updateIndicatorColor(this.defaultPulseColor); // Ensure default is applied
+    }
+
+    _logToUI(message, type = 'log') {
+        const originalConsole = window.console; // Keep a reference to the original console
+
+        if (type === 'error') {
+            if (originalConsole && originalConsole.error) originalConsole.error(message);
+        } else if (type === 'warn') {
+            if (originalConsole && originalConsole.warn) originalConsole.warn(message);
+        } else {
+            if (originalConsole && originalConsole.log) originalConsole.log(message);
+        }
+
+        if (this.debugLogEl) {
+            const entry = document.createElement('p');
+            const timestamp = new Date().toLocaleTimeString();
+            let prefix = type.toUpperCase() + ': ';
+            if (type === 'log') prefix = ''; // No prefix for simple logs
+
+            entry.textContent = `[${timestamp}] ${prefix}${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}`;
+            if (type === 'error') entry.style.color = '#ff7b72'; // Light red
+            else if (type === 'warn') entry.style.color = '#f0e68c'; // Khaki / Light yellow
+            this.debugLogEl.appendChild(entry);
+            this.debugLogEl.scrollTop = this.debugLogEl.scrollHeight;
+        }
     }
 
     _handleVisibilityChange() {
@@ -94,15 +122,15 @@ export class Metronome {
 
         if (document.visibilityState === 'visible') {
             if (this.audioContext.state === 'suspended') {
-                console.log("Page became visible, AudioContext is suspended. Attempting to resume.");
+                this._logToUI("Page visible, AudioContext suspended. Attempting resume.");
                 this.audioContext.resume().then(() => {
-                    console.log("AudioContext resumed on visibility change. State:", this.audioContext.state);
+                    this._logToUI(`AudioContext resumed on visibility. State: ${this.audioContext.state}`);
                 }).catch(err => {
-                    console.error("Error resuming AudioContext on visibility change:", err);
+                    this._logToUI(`Error resuming AudioContext on visibility: ${err}`, 'error');
                 });
             }
         } else {
-            console.log("Page became hidden. AudioContext state:", this.audioContext.state);
+            this._logToUI(`Page hidden. AudioContext state: ${this.audioContext.state}`);
             // iOS often suspends the context automatically. Explicitly stopping the metronome
             // if it's playing might be a good idea if desired, but not strictly necessary for resume.
         }
@@ -152,8 +180,7 @@ export class Metronome {
             this.beatsPerMeasure = parseInt(parts[0], 10);
             this.beatUnit = parseInt(parts[1], 10); // beatUnit is stored but not directly used in current simple beep
             this.currentBeatInMeasure = 0; // Reset beat count on signature change
-            // totalBeatsPlayed is not reset here, only on explicit reset.
-            console.log(`Time signature set to: ${this.beatsPerMeasure}/${this.beatUnit}`);
+            this._logToUI(`Time signature set to: ${this.beatsPerMeasure}/${this.beatUnit}`);
         }
         // If playing, restart to apply new signature immediately
         if (this.isPlaying) { this.stop(); this.play(); }
@@ -216,9 +243,9 @@ export class Metronome {
         if (!this.audioContext) {
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                console.log("AudioContext created.");
+                this._logToUI("AudioContext created.");
             } catch (e) {
-                console.error("Failed to create AudioContext:", e);
+                this._logToUI(`Failed to create AudioContext: ${e}`, 'error');
                 this.isPlaying = false;
                 this._updatePlayButtonUI(false);
                 return;
@@ -226,12 +253,12 @@ export class Metronome {
         }
 
         if (this.audioContext.state === 'suspended') {
-            console.log("AudioContext is suspended, attempting to resume...");
+            this._logToUI("AudioContext suspended, attempting resume...");
             try {
                 await this.audioContext.resume(); // Wait for the resume promise to resolve
-                console.log("AudioContext resumed successfully. State:", this.audioContext.state);
+                this._logToUI(`AudioContext resumed. State: ${this.audioContext.state}`);
             } catch (err) {
-                console.error("Error resuming AudioContext:", err);
+                this._logToUI(`Error resuming AudioContext: ${err}`, 'error');
                 this.isPlaying = false;
                 this._updatePlayButtonUI(false);
                 return;
@@ -239,7 +266,7 @@ export class Metronome {
         }
 
         if (this.audioContext.state !== 'running') {
-            console.warn(`AudioContext is not in 'running' state after setup. State: ${this.audioContext.state}. Sound may not play.`);
+            this._logToUI(`AudioContext not 'running' after setup. State: ${this.audioContext.state}. Sound may not play.`, 'warn');
             this.isPlaying = false;
             this._updatePlayButtonUI(false);
             return;
@@ -259,9 +286,9 @@ export class Metronome {
             
             primerOscillator.start(this.audioContext.currentTime);
             primerOscillator.stop(this.audioContext.currentTime + 0.01); // Play for 10ms
-            console.log("AudioContext primed with a short sound.");
+            this._logToUI("AudioContext primed.");
         } catch (primeError) {
-            console.warn("Could not prime AudioContext:", primeError);
+            this._logToUI(`Could not prime AudioContext: ${primeError}`, 'warn');
             // Continue anyway, main sound might still work
         }
 
@@ -344,12 +371,15 @@ export class Metronome {
     }
 
     _playBeep(isAccent = false) {
+        if (this.audioContext) {
+            // this._logToUI(`Metronome._playBeep: AudioContext state before playing beep: ${this.audioContext.state}`); // Can be verbose
+        }
         if (!this.audioContext || !this.valid) {
-            console.warn("Metronome._playBeep: AudioContext not available or metronome invalid.");
+            this._logToUI("Metronome._playBeep: AudioContext not available or metronome invalid.", 'warn');
             return;
         }
         if (this.audioContext.state !== 'running') {
-            console.warn(`Metronome._playBeep: AudioContext not in 'running' state. Current state: ${this.audioContext.state}. Skipping beep.`);
+            this._logToUI(`Metronome._playBeep: AudioContext not 'running'. State: ${this.audioContext.state}. Skipping beep.`, 'warn');
             return;
         }
 
@@ -408,15 +438,14 @@ class MetronomeApp {
         if (this.metronome.valid) { // Check if core metronome elements were found
             this.metronome.initialize();
         } else {
-            console.error("MetronomeApp: Metronome core failed to initialize. App features might be limited.");
+            console.error("MetronomeApp: Metronome core failed to initialize."); // Keep as console.error for app-level issues
         }
 
         if (!this.menuToggleBtn || !this.sideMenu) {
-            console.warn("MetronomeApp: Side menu elements (menuToggleBtn or sideMenu) not found. Menu functionality will be disabled.");
+            console.warn("MetronomeApp: Side menu elements not found."); // Keep as console.warn
         }
         
-        // Initialize future feature states/listeners if needed (stubs for now)
-        console.log("Metronome App initialized with UI placeholders for advanced features.");
+        // console.log("Metronome App initialized."); // Can be logged via metronome's logger if passed or use direct console
     }
 
     _bindEvents() {
@@ -489,7 +518,9 @@ class MetronomeApp {
         if (this.metronome) {
             this.metronome.setTimeSignature(value);
         }
-        console.log("MetronomeApp: Time signature changed to:", value);
+        // If this needs to be in UI log, MetronomeApp would need access to _logToUI
+        // For now, let it be a standard console log for app-level events.
+        console.log("MetronomeApp: Time signature changed to:", value); 
     }
 }
 

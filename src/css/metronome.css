@@ -36,7 +36,7 @@
 .bpm-input-group {
     display: flex;
     flex-direction: column;
-    align-items: center
+    align-items: center;
     gap: 5px;
 }
 
@@ -235,4 +235,33 @@
 
 #playPauseBtn.playing .play-pause-icon-shape::after {
     right: 0;
+}
+
+/* Debug Log Container Styles */
+#debugLogContainer {
+    width: 100%;
+    max-width: 450px; /* Match metronome width */
+    max-height: 200px; /* Adjust as needed */
+    overflow-y: auto;
+    background-color: #282c34; /* Darker background */
+    color: #abb2bf; /* Light grey text */
+    border: 1px solid #3e4451;
+    border-radius: var(--border-radius, 4px);
+    margin: 20px auto;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85em;
+    white-space: pre-wrap; /* Preserve line breaks and spaces */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#debugLogContainer p {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px dotted #4b5263;
+    line-height: 1.4;
+}
+#debugLogContainer p:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
 }
