@@ -102,7 +102,7 @@ export class Metronome {
         if (unlockAudioEl) {
             try {
                 await unlockAudioEl.play();
-                this._logToUI("Played dummy HTML5 audio element successfully.");
+                logger.log("Played dummy HTML5 audio element successfully.");
             } catch (err) {
                 logger.log(`Error playing dummy HTML5 audio: ${err}`, 'warn');
                 // Continue, as AudioContext might still resume
