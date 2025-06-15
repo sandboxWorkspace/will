@@ -73,8 +73,30 @@ export class Metronome {
             }
         });
 
+        this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
+        document.addEventListener('visibilitychange', this._handleVisibilityChange);
+
         console.log("Metronome initialized.");
         this._updateIndicatorColor(this.defaultPulseColor); // Ensure default is applied
+    }
+
+    _handleVisibilityChange() {
+        if (!this.audioContext) return; // No audio context to manage yet
+
+        if (document.visibilityState === 'visible') {
+            if (this.audioContext.state === 'suspended') {
+                console.log("Page became visible, AudioContext is suspended. Attempting to resume.");
+                this.audioContext.resume().then(() => {
+                    console.log("AudioContext resumed on visibility change. State:", this.audioContext.state);
+                }).catch(err => {
+                    console.error("Error resuming AudioContext on visibility change:", err);
+                });
+            }
+        } else {
+            console.log("Page became hidden. AudioContext state:", this.audioContext.state);
+            // iOS often suspends the context automatically. Explicitly stopping the metronome
+            // if it's playing might be a good idea if desired, but not strictly necessary for resume.
+        }
     }
 
     _updateTempo(newTempo) {
@@ -87,8 +109,6 @@ export class Metronome {
         this.bpm = newTempo;
         this.tempoSlider.value = this.bpm;
         this.tempoInput.value = this.bpm;
-
-        // Tempo change logic now handled by _handleTempoInteractionEnd
     }
 
     _handleTempoInteractionStart() {
@@ -101,8 +121,14 @@ export class Metronome {
     }
 
     _handleTempoInteractionEnd() {
+        // Ensure this.bpm reflects the definitive final value from the slider
+        // (which is kept in sync with the input field by _updateTempo via 'input' or 'change' events).
+        // Calling _updateTempo here guarantees this.bpm is set to the slider's value at interaction end.
+        const finalTempo = parseInt(this.tempoSlider.value, 10);
+        this._updateTempo(finalTempo);
+
         if (this.wasPlayingBeforeTempoChange) {
-            this.play(); // Resume playback if it was playing before adjustment
+            this.play(); // Resume playback using the now-guaranteed-latest this.bpm
         }
     }
 
@@ -295,6 +321,11 @@ export class Metronome {
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + 0.058);
     }
+
+    destroy() {
+        if (!this.valid) return;
+        document.removeEventListener('visibilitychange', this._handleVisibilityChange);
+    }
 }
 
 class MetronomeApp {
@@ -441,4 +472,7 @@ class MetronomeApp {
 
 document.addEventListener('DOMContentLoaded', () => {
     new MetronomeApp();
+    // If you ever need to clean up the metronome, for example, if navigating away
+    // in a single-page application, you might want to call metronome.destroy().
+    // window.addEventListener('beforeunload', () => { if (app && app.metronome) app.metronome.destroy(); });
 });
