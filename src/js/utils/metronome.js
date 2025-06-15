@@ -94,41 +94,59 @@ export class Metronome {
 
     async ensureAudioUnlocked() {
         logger.log("Attempting to unlock audio...");
+
+        // 1. Check if AudioContext already exists and is running
         if (this.audioContext && this.audioContext.state === 'running') {
             logger.log("AudioContext already running.");
             return true;
         }
+
+        // 2. Attempt to play a dummy sound to satisfy browser autoplay policies
         const unlockAudioEl = document.getElementById('unlockAudioElement');
         if (unlockAudioEl) {
             try {
                 await unlockAudioEl.play();
                 logger.log("Played dummy HTML5 audio element successfully.");
             } catch (err) {
-                logger.log(`Error playing dummy HTML5 audio: ${err}`, 'warn');
-                // Continue, as AudioContext might still resume
+                logger.log(`Error playing dummy HTML5 audio: ${err.message}`, 'warn');
+                // Don't necessarily fail here; AudioContext operations might still succeed.
             }
+        } else {
+            logger.log("unlockAudioElement not found in DOM. This might be an issue for audio unlocking.", 'warn');
         }
 
-        if (!this.audioContext) {
+        // 3. Create or Re-create AudioContext if it doesn't exist or is closed
+        if (!this.audioContext || this.audioContext.state === 'closed') {
+            logger.log(this.audioContext ? "AudioContext was closed, creating a new one." : "AudioContext does not exist, creating one.");
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                logger.log("AudioContext created during unlock process.");
+                logger.log(`AudioContext created/re-created. Initial state: ${this.audioContext.state}`);
             } catch (e) {
-                logger.log(`Failed to create AudioContext during unlock: ${e}`, 'error');
-                return false;
+                logger.log(`Failed to create/re-create AudioContext: ${e.message}`, 'error');
+                return false; // Critical failure
             }
         }
 
+        // 4. If AudioContext is suspended, try to resume it
         if (this.audioContext.state === 'suspended') {
-            return this.audioContext.resume().then(() => {
-                logger.log(`AudioContext resumed during unlock. State: ${this.audioContext.state}`);
-                return this.audioContext.state === 'running';
-            }).catch(err => {
-                logger.log(`Error resuming AudioContext during unlock: ${err}`, 'error');
-                return false;
-            });
+            logger.log("AudioContext is suspended, attempting to resume...");
+            try {
+                await this.audioContext.resume(); // resume() returns a Promise
+                logger.log(`AudioContext resume attempt finished. State: ${this.audioContext.state}`);
+            } catch (err) {
+                logger.log(`Error resuming AudioContext: ${err.message}`, 'error');
+                // Continue to final state check
+            }
         }
-        return this.audioContext.state === 'running';
+
+        // 5. Final check: Is the AudioContext now running?
+        if (this.audioContext && this.audioContext.state === 'running') {
+            logger.log("AudioContext is now running.");
+            return true;
+        } else {
+            logger.log(`AudioContext is not running. Final state: ${this.audioContext ? this.audioContext.state : 'null'}.`, 'warn');
+            return false;
+        }
     }
 
     _handleVisibilityChange() {
@@ -140,7 +158,7 @@ export class Metronome {
                 this.audioContext.resume().then(() => {
                     logger.log(`AudioContext resumed on visibility. State: ${this.audioContext.state}`);
                 }).catch(err => {
-                    logger.log(`Error resuming AudioContext on visibility: ${err}`, 'error');
+                    logger.log(`Error resuming AudioContext on visibility: ${err.message}`, 'error');
                 });
             }
         } else {
@@ -251,68 +269,43 @@ export class Metronome {
 
     async play() { // Make the play method asynchronous
         if (this.isPlaying || !this.valid) return;
-        // Optimistically set isPlaying, but revert if audio setup fails
-        this.isPlaying = true; 
 
         // Ensure audio is unlocked before proceeding
         const audioUnlocked = await this.ensureAudioUnlocked();
         if (!audioUnlocked) {
-            logger.log("Audio could not be unlocked or started. Playback aborted.", 'error');
-            this.isPlaying = false;
+            logger.log("Audio could not be unlocked or started by ensureAudioUnlocked. Playback aborted.", 'error');
             this._updatePlayButtonUI(false);
             return;
         }
 
-        if (!this.audioContext) {
-            try {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                logger.log("AudioContext created.");
-            } catch (e) {
-                logger.log(`Failed to create AudioContext: ${e}`, 'error');
-                this.isPlaying = false;
-                this._updatePlayButtonUI(false);
-                return;
-            }
-        }
-
-        if (this.audioContext.state === 'suspended') {
-            logger.log("AudioContext suspended, attempting resume...");
-            try {
-                await this.audioContext.resume(); // Wait for the resume promise to resolve
-                logger.log(`AudioContext resumed. State: ${this.audioContext.state}`);
-            } catch (err) {
-                logger.log(`Error resuming AudioContext: ${err}`, 'error');
-                this.isPlaying = false;
-                this._updatePlayButtonUI(false);
-                return;
-            }
-        }
-
-        if (this.audioContext.state !== 'running') {
-            logger.log(`AudioContext not 'running' after setup. State: ${this.audioContext.state}. Sound may not play.`, 'warn');
-            this.isPlaying = false;
+        // At this point, ensureAudioUnlocked has confirmed this.audioContext exists and is 'running'.
+        // If ensureAudioUnlocked returned true, this.audioContext must be non-null and running.
+        // A redundant check for paranoia, should ideally not be hit:
+        if (!this.audioContext || this.audioContext.state !== 'running') {
+            logger.log(`Critical: AudioContext not 'running' (state: ${this.audioContext ? this.audioContext.state : 'null'}) after ensureAudioUnlocked reported success. Playback aborted.`, 'error');
             this._updatePlayButtonUI(false);
             return;
         }
 
-        // Prime the audio context - play a tiny, almost silent sound
-        // This can help ensure the audio pathway is open on some mobile browsers
+        this.isPlaying = true;
+        this._updatePlayButtonUI(true);
+
+        // Prime the audio context
         try {
             const primerOscillator = this.audioContext.createOscillator();
             const primerGain = this.audioContext.createGain();
             primerOscillator.connect(primerGain);
             primerGain.connect(this.audioContext.destination);
-            
+
             primerGain.gain.setValueAtTime(0.0001, this.audioContext.currentTime); // Very quiet
             primerOscillator.frequency.setValueAtTime(20, this.audioContext.currentTime); // Low frequency
             primerOscillator.type = 'sine';
-            
+
             primerOscillator.start(this.audioContext.currentTime);
             primerOscillator.stop(this.audioContext.currentTime + 0.01); // Play for 10ms
-            logger.log("AudioContext primed.");
+            logger.log("AudioContext primed after ensuring it's running.");
         } catch (primeError) {
-            logger.log(`Could not prime AudioContext: ${primeError}`, 'warn');
-            // Continue anyway, main sound might still work
+            logger.log(`Could not prime AudioContext: ${primeError.message}`, 'warn');
         }
 
         // If we've reached here, AudioContext should be running and isPlaying is true.
