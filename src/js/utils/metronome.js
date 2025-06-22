@@ -1,88 +1,56 @@
 import { logger } from './iosDebug.js';
 
+/**
+ * A pure logic class for the metronome engine.
+ * It manages state and timing, but has no knowledge of the DOM.
+ * It communicates state changes via a callback.
+ */
 export class Metronome {
     constructor(options = {}) {
-        this.tempoSlider = document.getElementById(options.tempoSliderId || 'tempoSlider');
-        this.tempoInput = document.getElementById(options.tempoInputId || 'tempoInput');
-        this.playPauseBtn = document.getElementById(options.playPauseBtnId || 'playPauseBtn');
-        this.appContainer = document.querySelector(options.appContainerSelector || '.metronome-app-container');
-        this.indicatorPalette = document.getElementById(options.indicatorPaletteId || 'indicatorColorPalette');
-        // Display elements for beat count and timer, managed by Metronome class
-        this.beatCountDisplayEl = document.getElementById(options.beatCountDisplayId || 'beatCountDisplay');
-        this.runningTimerDisplayEl = document.getElementById(options.runningTimerDisplayId || 'runningTimerDisplay');
-        this.tempoDecrementBtn = document.getElementById(options.tempoDecrementBtnId || 'tempoDecrementBtn');
-        this.tempoIncrementBtn = document.getElementById(options.tempoIncrementBtnId || 'tempoIncrementBtn');
+        // State
+        this.bpm = options.bpm || 60;
+        this.minTempo = options.minTempo || 8;
+        this.maxTempo = options.maxTempo || 280;
+        this.beatsPerMeasure = options.beatsPerMeasure || 1;
+        this.beatUnit = options.beatUnit || 4;
+        this.beepVolume = options.beepVolume || 0.1;
+        this.pulseColor = options.pulseColor || '#E74C3C';
 
-        // Note: volumeControlSlider is handled by MetronomeApp
-        if (!this.tempoSlider || !this.tempoInput || !this.playPauseBtn || !this.appContainer || !this.indicatorPalette || !this.tempoDecrementBtn || !this.tempoIncrementBtn) {
-            console.error("Metronome Class: Essential DOM elements missing. Ensure IDs/selectors match HTML.");
-            this.valid = false;
-            return;
-        }
-        this.valid = true;
-
-        this.defaultPulseColor = '#E74C3C'; // Default red
-        this.bpm = parseInt(this.tempoInput.value, 10);
         this.isPlaying = false;
-        this.intervalId = null;
-        this.baseIndicatorColor = getComputedStyle(this.appContainer).backgroundColor; // Store initial background
-        this.pulseColor = this.defaultPulseColor; // Initialize with defaultPulseColor
-
-        this.beatsPerMeasure = 1;
-        this.beatUnit = 4;
         this.currentBeatInMeasure = 0;
         this.totalBeatsPlayed = 0;
         this.elapsedTimeInSeconds = 0;
+        this.isPulsing = false; // Flag for the UI to know when to show pulse color
+
+        // Internals
+        this.intervalId = null;
         this.timerIntervalId = null;
         this.audioContext = null;
-        this.beepVolume = 0.1;
 
-        this._updateTempo = this._updateTempo.bind(this);
+        // Callback for state changes
+        this.onStateChange = options.onStateChange || (() => {});
+
+        // Bind methods
         this.togglePlay = this.togglePlay.bind(this);
         this._beat = this._beat.bind(this);
-        this._updateIndicatorColor = this._updateIndicatorColor.bind(this);
         this._playBeep = this._playBeep.bind(this);
-        this.setTimeSignature = this.setTimeSignature.bind(this);
-        this.resetCounterAndTimer = this.resetCounterAndTimer.bind(this);
-        this._updateBeatCountDisplay = this._updateBeatCountDisplay.bind(this);
-        this._updateTimerDisplay = this._updateTimerDisplay.bind(this);
-    }
-
-    initialize() {
-        if (!this.valid) return;
-
-        this.tempoSlider.value = this.bpm;
-        this.tempoInput.value = this.bpm;
-        this.pulseColor = this.defaultPulseColor;
-        this._updateBeatCountDisplay();
-        this._updateTimerDisplay();
-
-        // The 'input' event is sufficient for live updates from both the slider and the text field.
-        this.tempoSlider.addEventListener('input', (e) => this._updateTempo(parseInt(e.target.value, 10)));
-        this.tempoInput.addEventListener('input', (e) => this._updateTempo(parseInt(e.target.value, 10)));
-        this.tempoDecrementBtn.addEventListener('click', () => this._updateTempo(this.bpm - 1));
-        this.tempoIncrementBtn.addEventListener('click', () => this._updateTempo(this.bpm + 1));
-        this.playPauseBtn.addEventListener('click', this.togglePlay);
-        
-        const colorButtons = this.indicatorPalette.querySelectorAll('.color-button');
-        colorButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const newColor = button.dataset.color;
-                this._updateIndicatorColor(newColor);
-                
-                colorButtons.forEach(btn => btn.classList.remove('selected'));
-                button.classList.add('selected');
-            });
-            if (button.dataset.color === this.pulseColor) {
-                button.classList.add('selected');
-            }
-        });
-
         this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._handleVisibilityChange);
+    }
 
-        logger.log("Metronome initialized.");
-        this._updateIndicatorColor(this.defaultPulseColor);
+    _getState() {
+        return {
+            isPlaying: this.isPlaying,
+            bpm: this.bpm,
+            totalBeatsPlayed: this.totalBeatsPlayed,
+            elapsedTimeInSeconds: this.elapsedTimeInSeconds,
+            pulseColor: this.pulseColor,
+            isPulsing: this.isPulsing,
+        };
+    }
+
+    _notifyStateChange() {
+        this.onStateChange(this._getState());
     }
 
     async _ensureAudioIsReady() {
@@ -113,7 +81,7 @@ export class Metronome {
         }
 
         // 3. Final check: Is the AudioContext now running?
-        if (this.audioContext && this.audioContext.state === 'running') {
+        if (this.audioContext?.state === 'running') {
             return true;
         } else {
             logger.log(`AudioContext is NOT running. Final state: ${this.audioContext.state}.`, 'error');
@@ -140,90 +108,63 @@ export class Metronome {
         }
     }
 
-    _updateTempo(newTempo) {
-        const minTempo = parseInt(this.tempoSlider.min, 10) || 8; // Read from element or fallback
-        const maxTempo = parseInt(this.tempoSlider.max, 10) || 280; // Read from element or fallback
-
+    setTempo(newTempo) {
         if (isNaN(newTempo)) newTempo = this.bpm; // Revert to current if invalid input
-        newTempo = Math.max(minTempo, Math.min(maxTempo, newTempo)); // Clamp value
+        newTempo = Math.max(this.minTempo, Math.min(this.maxTempo, newTempo)); // Clamp value
+
+        if (newTempo === this.bpm) return; // No change, no need to update
 
         this.bpm = newTempo;
-        this.tempoSlider.value = this.bpm;
-        this.tempoInput.value = this.bpm;
 
-        // If playing, immediately update the interval
         if (this.isPlaying) {
             clearInterval(this.intervalId);
             const intervalTime = (60 / this.bpm) * 1000;
             this.intervalId = setInterval(this._beat, intervalTime);
         }
+        this._notifyStateChange();
     }
 
-    _updateIndicatorColor(newColor) {
+    setPulseColor(newColor) {
         this.pulseColor = newColor;
-        // If playing, the next beat will use the new color. If stopped, no immediate visual change.
+        this._notifyStateChange();
     }
     
-    setTimeSignature(signatureString) {
-        if (!this.valid) return;
+    async setTimeSignature(signatureString) {
+        const wasPlaying = this.isPlaying;
+        if (wasPlaying) this.stop();
+
         const parts = signatureString.split('/');
         if (parts.length === 2) {
             this.beatsPerMeasure = parseInt(parts[0], 10);
-            this.beatUnit = parseInt(parts[1], 10); // beatUnit is stored but not directly used in current simple beep
-            this.currentBeatInMeasure = 0; // Reset beat count on signature change
+            this.beatUnit = parseInt(parts[1], 10);
+            this.currentBeatInMeasure = 0;
             logger.log(`Time signature set to: ${this.beatsPerMeasure}/${this.beatUnit}`);
-            // If playing, restart to apply new signature immediately
-            if (this.isPlaying) { this.stop(); this.togglePlay(); }
+            this._notifyStateChange();
         }
+
+        if (wasPlaying) await this.togglePlay();
     }
+
     setVolume(newVolumePercent) {
-        // Map 0-100 slider value to 0.0-1.0 gain value
         this.beepVolume = Math.max(0, Math.min(1, newVolumePercent / 100));
     }
 
-    resetCounterAndTimer() {
-        if (!this.valid) return;
-
-        const wasCurrentlyPlaying = this.isPlaying;
-
-        if (wasCurrentlyPlaying) {
-            this.stop();
-        }
+    async resetCounterAndTimer() {
+        const wasPlaying = this.isPlaying;
+        if (wasPlaying) this.stop();
 
         this.totalBeatsPlayed = 0;
         this.currentBeatInMeasure = 0;
         this.elapsedTimeInSeconds = 0;
+        this._notifyStateChange();
 
-        this._updateBeatCountDisplay();
-        this._updateTimerDisplay();
-
-        // If it was playing before reset, start it again.
-        if (wasCurrentlyPlaying) {
-            this.togglePlay();
-        }
-    }
-
-    _updateBeatCountDisplay() {
-        if (this.beatCountDisplayEl) {
-            this.beatCountDisplayEl.textContent = this.totalBeatsPlayed;
-        }
-    }
-
-    _updateTimerDisplay() {
-        if (this.runningTimerDisplayEl) {
-            const time = this.elapsedTimeInSeconds;
-            // const hours = String(Math.floor(time / 3600)).padStart(2, '0'); // Not currently displayed
-            const minutes = String(Math.floor((time % 3600) / 60)).padStart(2, '0');
-            const seconds = String(time % 60).padStart(2, '0');
-            this.runningTimerDisplayEl.textContent = `${minutes}:${seconds}`;
-        }
+        if (wasPlaying) await this.togglePlay();
     }
 
     _startPlayback() {
-        if (this.isPlaying || !this.valid) return;
+        if (this.isPlaying) return;
     
         this.isPlaying = true;
-        this._updatePlayButtonUI(true);
         logger.log(`Starting playback. AC State: ${this.audioContext.state}`);
 
         // Prime the audio context right before the first beat to prevent issues on some platforms
@@ -240,7 +181,7 @@ export class Metronome {
         } catch (primeError) {
             logger.log(`CRITICAL ERROR during priming: ${primeError.message}. Playback aborted.`, 'error');
             this.isPlaying = false;
-            this._updatePlayButtonUI(false);
+            this._notifyStateChange();
             return;
         }
 
@@ -249,61 +190,41 @@ export class Metronome {
         if (this.intervalId) clearInterval(this.intervalId);
         this.intervalId = setInterval(this._beat, intervalTime);
         this._startTimerInterval();
+        this._notifyStateChange();
     }
 
     stop() {
-        if (!this.isPlaying || !this.valid) return;
+        if (!this.isPlaying) return;
         this.isPlaying = false;
-        this._updatePlayButtonUI(false);
         clearInterval(this.intervalId);
         this.intervalId = null;
         if (this.timerIntervalId) {
             clearInterval(this.timerIntervalId);
             this.timerIntervalId = null;
         }
-        // Update displays to reflect final state upon stopping
-        this._updateBeatCountDisplay();
-        this._updateTimerDisplay();
-
-        this.appContainer.style.backgroundColor = this.baseIndicatorColor; // Reset to base color
+        this._notifyStateChange();
     }
-
-    _updatePlayButtonUI(isPlaying) {
-        if (isPlaying) {
-            this.playPauseBtn.classList.remove('green-button');
-            this.playPauseBtn.classList.add('red-button', 'playing');
-            this.playPauseBtn.setAttribute('aria-label', 'Pause');
-        } else {
-            this.playPauseBtn.classList.remove('red-button', 'playing');
-            this.playPauseBtn.classList.add('green-button');
-            this.playPauseBtn.setAttribute('aria-label', 'Play');
-        }
-    }
-
     _startTimerInterval() {
         if (this.timerIntervalId) clearInterval(this.timerIntervalId);
         this.timerIntervalId = setInterval(() => {
             this.elapsedTimeInSeconds++;
-            this._updateTimerDisplay();
+            this._notifyStateChange();
         }, 1000);
     }
 
     async togglePlay() {
-        if (!this.valid) return;
-
         if (this.isPlaying) {
-            logger.log("togglePlay: Stopping metronome.");
             this.stop();
         } else {
-            logger.log("togglePlay: Attempting to play metronome.");
             const audioReady = await this._ensureAudioIsReady();
 
             if (audioReady) {
                 this._startPlayback();
             } else {
                 logger.log("togglePlay: Playback aborted, audio context not ready.", 'error');
+                // Ensure state is correct and UI is notified
                 this.isPlaying = false;
-                this._updatePlayButtonUI(false);
+                this._notifyStateChange();
             }
         }
     }
@@ -315,24 +236,20 @@ export class Metronome {
             this.currentBeatInMeasure = 1;
         }
         this.totalBeatsPlayed++;
-        this._updateBeatCountDisplay();
+        this._playBeep(this.currentBeatInMeasure === 1);
 
-        const isAccent = this.currentBeatInMeasure === 1;
-        this.appContainer.style.backgroundColor = this.pulseColor; // Pulse with selected color
-        this._playBeep(isAccent); // Play the beep, possibly accented
+        this.isPulsing = true;
+        this._notifyStateChange();
 
         setTimeout(() => {
-            if (this.isPlaying) { // Only reset color if metronome is still supposed to be playing
-                this.appContainer.style.backgroundColor = this.baseIndicatorColor; // Return to base color
+            if (this.isPlaying) {
+                this.isPulsing = false;
+                this._notifyStateChange();
             }
         }, 100);
     }
 
     _playBeep(isAccent = false) {
-        if (!this.valid) { // this.valid is about DOM elements, less likely the audio cause
-            logger.log("Metronome._playBeep: Metronome instance is not valid (this.valid is false). Skipping beep.", 'warn');
-            return;
-        }
         if (!this.audioContext) {
             logger.log("Metronome._playBeep: AudioContext is null. Skipping beep.", 'warn');
             return;
@@ -348,8 +265,8 @@ export class Metronome {
 
         const currentTime = this.audioContext.currentTime;
         const targetFrequency = isAccent ? 880 : 580;
-        const targetGain = isAccent ? this.beepVolume * 1.8 : this.beepVolume; // Accent is 1.8x louder
-        const finalVolume = Math.min(1.0, Math.max(0.0, targetGain)); // Clamp between 0 and 1
+        const targetGain = isAccent ? this.beepVolume * 1.8 : this.beepVolume;
+        const finalVolume = Math.min(1.0, Math.max(0.0, targetGain));
         const duration = 0.028;
 
         const oscillator = this.audioContext.createOscillator();
@@ -358,7 +275,7 @@ export class Metronome {
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
 
-        oscillator.type = 'triangle'; // Or 'sine' for a softer test
+        oscillator.type = 'triangle';
 
         oscillator.frequency.setValueAtTime(targetFrequency, currentTime);
         gainNode.gain.setValueAtTime(finalVolume, currentTime);
@@ -368,106 +285,145 @@ export class Metronome {
     }
 
     destroy() {
-        if (!this.valid) return;
         document.removeEventListener('visibilitychange', this._handleVisibilityChange);
     }
 }
 
 class MetronomeApp {
     constructor() {
+        if (!this._cacheDOMElements()) {
+            logger.log("MetronomeApp: One or more essential DOM elements are missing. App will not run.", 'error');
+            return;
+        }
+
+        this.baseIndicatorColor = getComputedStyle(this.appContainer).backgroundColor;
+
         this.metronome = new Metronome({
-            tempoSliderId: 'tempoSlider',
-            tempoInputId: 'tempoInput',
-            playPauseBtnId: 'playPauseBtn',
-            appContainerSelector: '.metronome-app-container',
-            indicatorPaletteId: 'indicatorColorPalette',
-            beatCountDisplayId: 'beatCountDisplay',
-            runningTimerDisplayId: 'runningTimerDisplay',
-            tempoDecrementBtnId: 'tempoDecrementBtn',
-            tempoIncrementBtnId: 'tempoIncrementBtn'
+            bpm: parseInt(this.tempoInput.value, 10),
+            minTempo: parseInt(this.tempoSlider.min, 10),
+            maxTempo: parseInt(this.tempoSlider.max, 10),
+            beepVolume: parseInt(this.volumeControlSlider.value, 10) / 100,
+            onStateChange: this._render.bind(this)
         });
 
+        this._bindEventListeners();
+        this._initializeUI();
+        logger.log("Metronome App initialized.");
+    }
+
+    _cacheDOMElements() {
+        this.appContainer = document.querySelector('.metronome-app-container');
+        this.tempoSlider = document.getElementById('tempoSlider');
+        this.tempoInput = document.getElementById('tempoInput');
+        this.playPauseBtn = document.getElementById('playPauseBtn');
+        this.indicatorPalette = document.getElementById('indicatorColorPalette');
+        this.beatCountDisplayEl = document.getElementById('beatCountDisplay');
+        this.runningTimerDisplayEl = document.getElementById('runningTimerDisplay');
+        this.tempoDecrementBtn = document.getElementById('tempoDecrementBtn');
+        this.tempoIncrementBtn = document.getElementById('tempoIncrementBtn');
         this.menuToggleBtn = document.getElementById('menuToggleBtn');
         this.sideMenu = document.getElementById('sideMenu');
         this.closeMenuBtnInside = document.getElementById('closeMenuBtnInside');
-        
         this.timeSignatureSelect = document.getElementById('timeSignature');
         this.volumeControlSlider = document.getElementById('volumeControl');
         this.resetTimerBtn = document.getElementById('resetTimerBtn');
 
-        this._bindEventListeners();
-        this.initialize();
+        return this.tempoSlider && this.tempoInput && this.playPauseBtn && this.appContainer;
     }
 
-    initialize() {
-        if (!this.metronome.valid) {
-            logger.log("MetronomeApp: Metronome core failed to initialize.", 'error');
-            return;
+    _initializeUI() {
+        const initialState = this.metronome._getState();
+        this.tempoSlider.value = initialState.bpm;
+        this.tempoInput.value = initialState.bpm;
+        this.metronome.setTimeSignature(this.timeSignatureSelect.value);
+        this.metronome.setVolume(parseInt(this.volumeControlSlider.value, 10));
+
+        // Set initial selected color
+        const colorButtons = this.indicatorPalette.querySelectorAll('.color-button');
+        colorButtons.forEach(button => {
+            if (button.dataset.color === this.metronome.pulseColor) {
+                button.classList.add('selected');
+            }
+        });
+
+        // Set initial menu state
+        const isInitiallyOpen = this.sideMenu.classList.contains('open');
+        this.menuToggleBtn.setAttribute('aria-expanded', isInitiallyOpen);
+        this.menuToggleBtn.textContent = isInitiallyOpen ? 'Close Menu' : 'Expand Menu';
+        this.sideMenu.setAttribute('aria-hidden', !isInitiallyOpen);
+        this.sideMenu.inert = !isInitiallyOpen;
+    }
+
+    _render(state) {
+        // Update BPM controls
+        this.tempoSlider.value = state.bpm;
+        this.tempoInput.value = state.bpm;
+
+        // Update play/pause button
+        if (state.isPlaying) {
+            this.playPauseBtn.classList.remove('green-button');
+            this.playPauseBtn.classList.add('red-button', 'playing');
+            this.playPauseBtn.setAttribute('aria-label', 'Pause');
+        } else {
+            this.playPauseBtn.classList.remove('red-button', 'playing');
+            this.playPauseBtn.classList.add('green-button');
+            this.playPauseBtn.setAttribute('aria-label', 'Play');
         }
 
-        if (!this.menuToggleBtn || !this.sideMenu) {
-            logger.log("MetronomeApp: Side menu elements not found.", 'warn');
-        }
-        
-        this.metronome.initialize(); 
-        logger.log("Metronome App initialized.");
+        // Update beat count and timer displays
+        this.beatCountDisplayEl.textContent = state.totalBeatsPlayed;
+        const time = state.elapsedTimeInSeconds;
+        const minutes = String(Math.floor((time % 3600) / 60)).padStart(2, '0');
+        const seconds = String(time % 60).padStart(2, '0');
+        this.runningTimerDisplayEl.textContent = `${minutes}:${seconds}`;
+
+        // Update visual pulse indicator
+        this.appContainer.style.backgroundColor = state.isPulsing ? state.pulseColor : this.baseIndicatorColor;
     }
 
     _toggleMenu() {
-        if (!this.sideMenu || !this.menuToggleBtn) return;
         const isOpen = this.sideMenu.classList.toggle('open');
-
         this.menuToggleBtn.setAttribute('aria-expanded', isOpen);
         this.menuToggleBtn.textContent = isOpen ? 'Close Menu' : 'Expand Menu';
         this.sideMenu.setAttribute('aria-hidden', !isOpen);
         this.sideMenu.inert = !isOpen;
 
         if (isOpen) {
-            // When the menu opens, move focus to an element inside it for accessibility.
-            if (this.closeMenuBtnInside) {
-                this.closeMenuBtnInside.focus();
-            }
+            this.closeMenuBtnInside?.focus();
         } else {
-            // When the menu closes, return focus to the button that opened it.
-            // This prevents the "aria-hidden element has focus" warning.
             this.menuToggleBtn.focus();
         }
     }
 
     _bindEventListeners() {
-        if (this.menuToggleBtn && this.sideMenu) {
-            // Set initial state from HTML and add listener
-            const isInitiallyOpen = this.sideMenu.classList.contains('open');
-            this.menuToggleBtn.setAttribute('aria-expanded', isInitiallyOpen);
-            this.menuToggleBtn.textContent = isInitiallyOpen ? 'Close Menu' : 'Expand Menu';
-            this.sideMenu.setAttribute('aria-hidden', !isInitiallyOpen);
-            this.sideMenu.inert = !isInitiallyOpen;
+        // Main controls
+        this.playPauseBtn.addEventListener('click', () => this.metronome.togglePlay());
+        this.tempoSlider.addEventListener('input', (e) => this.metronome.setTempo(parseInt(e.target.value, 10)));
+        this.tempoInput.addEventListener('input', (e) => this.metronome.setTempo(parseInt(e.target.value, 10)));
+        this.tempoDecrementBtn.addEventListener('click', () => this.metronome.setTempo(this.metronome.bpm - 1));
+        this.tempoIncrementBtn.addEventListener('click', () => this.metronome.setTempo(this.metronome.bpm + 1));
 
-            this.menuToggleBtn.addEventListener('click', () => this._toggleMenu());
-        }
+        // Menu controls
+        this.menuToggleBtn.addEventListener('click', () => this._toggleMenu());
+        this.closeMenuBtnInside.addEventListener('click', () => this._toggleMenu());
 
-        if (this.closeMenuBtnInside) {
-            this.closeMenuBtnInside.addEventListener('click', () => this._toggleMenu());
-        }
+        // Advanced settings
+        this.timeSignatureSelect.addEventListener('change', (e) => this.metronome.setTimeSignature(e.target.value));
+        this.volumeControlSlider.addEventListener('input', (e) => this.metronome.setVolume(parseInt(e.target.value, 10)));
+        this.resetTimerBtn.addEventListener('click', () => this.metronome.resetCounterAndTimer());
 
-        if (this.timeSignatureSelect) {
-            this.metronome.setTimeSignature(this.timeSignatureSelect.value);
-            this.timeSignatureSelect.addEventListener('change', (e) => this.metronome.setTimeSignature(e.target.value));
-        }
+        // Color palette
+        this.indicatorPalette.addEventListener('click', (e) => {
+            const button = e.target.closest('.color-button');
+            if (!button) return;
 
-        if (this.volumeControlSlider && this.metronome) {
-            this.volumeControlSlider.addEventListener('input', (e) => {
-                this.metronome.setVolume(parseInt(e.target.value, 10));
-            });
-            this.metronome.setVolume(parseInt(this.volumeControlSlider.value, 10));
-        }
+            const newColor = button.dataset.color;
+            this.metronome.setPulseColor(newColor);
 
-        if (this.resetTimerBtn && this.metronome) {
-            this.resetTimerBtn.addEventListener('click', () => {
-                this.metronome.resetCounterAndTimer();
-                
-            });
-        }
+            // Update selected state on buttons
+            this.indicatorPalette.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        });
     }
 }
 
