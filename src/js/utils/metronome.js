@@ -53,42 +53,6 @@ export class Metronome {
         this.onStateChange(this._getState());
     }
 
-    async _ensureAudioIsReady() {
-        // 1. Create AudioContext if it doesn't exist or is closed.
-        // This should be done within the user gesture.
-        if (!this.audioContext || this.audioContext.state === 'closed') {
-            logger.log(this.audioContext ? "AudioContext was closed, creating a new one." : "AudioContext does not exist, creating one.");
-            try {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                logger.log(`AudioContext created. Initial state: ${this.audioContext.state}`);
-            } catch (e) {
-                logger.log(`Failed to create AudioContext: ${e.message}`, 'error');
-                return false; 
-            }
-        }
-
-        // 2. If AudioContext is suspended, try to resume it.
-        // This is the key part for iOS. It must be called from a user gesture.
-        if (this.audioContext.state === 'suspended') {
-            logger.log("AudioContext is suspended, attempting to resume...");
-            try {
-                await this.audioContext.resume(); 
-                logger.log(`AudioContext resumed. State: ${this.audioContext.state}`);
-            } catch (err) {
-                logger.log(`Error resuming AudioContext: ${err.message}`, 'error');
-                return false;
-            }
-        }
-
-        // 3. Final check: Is the AudioContext now running?
-        if (this.audioContext?.state === 'running') {
-            return true;
-        } else {
-            logger.log(`AudioContext is NOT running. Final state: ${this.audioContext.state}.`, 'error');
-            return false;
-        }
-    }
-
     _handleVisibilityChange() {
         if (!this.audioContext) return; // No audio context to manage yet
 
@@ -129,7 +93,7 @@ export class Metronome {
         this._notifyStateChange();
     }
     
-    async setTimeSignature(signatureString) {
+    setTimeSignature(signatureString) {
         const wasPlaying = this.isPlaying;
         if (wasPlaying) this.stop();
 
@@ -142,14 +106,14 @@ export class Metronome {
             this._notifyStateChange();
         }
 
-        if (wasPlaying) await this.togglePlay();
+        if (wasPlaying) this.togglePlay();
     }
 
     setVolume(newVolumePercent) {
         this.beepVolume = Math.max(0, Math.min(1, newVolumePercent / 100));
     }
 
-    async resetCounterAndTimer() {
+    resetCounterAndTimer() {
         const wasPlaying = this.isPlaying;
         if (wasPlaying) this.stop();
 
@@ -158,7 +122,7 @@ export class Metronome {
         this.elapsedTimeInSeconds = 0;
         this._notifyStateChange();
 
-        if (wasPlaying) await this.togglePlay();
+        if (wasPlaying) this.togglePlay();
     }
 
     _startPlayback() {
@@ -214,18 +178,16 @@ export class Metronome {
         }, 1000);
     }
 
-    async togglePlay() {
+    togglePlay() {
         if (this.isPlaying) {
             this.stop();
         } else {
-            const audioReady = await this._ensureAudioIsReady();
-
-            if (audioReady) {
+            // Assumes AudioContext is ready, as it's handled by the UI event listener
+            if (this.audioContext && this.audioContext.state === 'running') {
                 this._startPlayback();
             } else {
-                logger.log("togglePlay: Playback aborted, audio context not ready.", 'error');
-                // Ensure state is correct and UI is notified
-                this.isPlaying = false;
+                logger.log(`togglePlay: Playback aborted. AudioContext not running. State: ${this.audioContext?.state}`, 'error');
+                this.isPlaying = false; // Ensure state is correct
                 this._notifyStateChange();
             }
         }
@@ -383,6 +345,24 @@ class MetronomeApp {
         this.appContainer.style.backgroundColor = state.isPulsing ? state.pulseColor : this.baseIndicatorColor;
     }
 
+    async _resumeAudioContext() {
+        // This method ensures the AudioContext is created and resumed,
+        // and should be called directly from a user gesture.
+        try {
+            if (!this.metronome.audioContext || this.metronome.audioContext.state === 'closed') {
+                this.metronome.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                logger.log("Created new AudioContext from UI gesture.");
+            }
+        
+            if (this.metronome.audioContext.state === 'suspended') {
+                await this.metronome.audioContext.resume();
+                logger.log("AudioContext resumed in UI gesture.");
+            }
+        } catch (e) {
+            logger.log(`Failed to create or resume AudioContext: ${e.message}`, 'error');
+        }
+    }
+
     _toggleMenu() {
         const isOpen = this.sideMenu.classList.toggle('open');
         this.menuToggleBtn.setAttribute('aria-expanded', isOpen);
@@ -399,11 +379,16 @@ class MetronomeApp {
 
     _bindEventListeners() {
         // Main controls
-        this.playPauseBtn.addEventListener('click', () => this.metronome.togglePlay());
-        this.playPauseBtn.addEventListener('touchend', (e) => {
-            e.preventDefault(); // Avoids the browser firing a duplicate 'click' event
+        const handlePlayToggle = async (e) => {
+            // Prevents default action and the "ghost click" from touchend
+            e.preventDefault();
+            
+            await this._resumeAudioContext();
             this.metronome.togglePlay();
-        });
+        };
+        this.playPauseBtn.addEventListener('click', handlePlayToggle);
+        this.playPauseBtn.addEventListener('touchend', handlePlayToggle);
+
         this.tempoSlider.addEventListener('input', (e) => this.metronome.setTempo(parseInt(e.target.value, 10)));
         this.tempoInput.addEventListener('input', (e) => this.metronome.setTempo(parseInt(e.target.value, 10)));
         this.tempoDecrementBtn.addEventListener('click', () => this.metronome.setTempo(this.metronome.bpm - 1));
