@@ -93,7 +93,7 @@ export class Metronome {
         this._notifyStateChange();
     }
     
-    async setTimeSignature(signatureString) {
+    setTimeSignature(signatureString) {
         const wasPlaying = this.isPlaying;
         if (wasPlaying) this.stop();
 
@@ -106,14 +106,14 @@ export class Metronome {
             this._notifyStateChange();
         }
 
-        if (wasPlaying) await this.togglePlay();
+        if (wasPlaying) this.togglePlay();
     }
 
     setVolume(newVolumePercent) {
         this.beepVolume = Math.max(0, Math.min(1, newVolumePercent / 100));
     }
 
-    async resetCounterAndTimer() {
+    resetCounterAndTimer() {
         const wasPlaying = this.isPlaying;
         if (wasPlaying) this.stop();
 
@@ -122,7 +122,7 @@ export class Metronome {
         this.elapsedTimeInSeconds = 0;
         this._notifyStateChange();
 
-        if (wasPlaying) await this.togglePlay();
+        if (wasPlaying) this.togglePlay();
     }
 
     _startPlayback() {
@@ -178,33 +178,17 @@ export class Metronome {
         }, 1000);
     }
 
-    async togglePlay() {
+    togglePlay() {
         if (this.isPlaying) {
             this.stop();
             return;
         }
 
-        try {
-            // Ensure AudioContext exists and is in a valid state.
-            if (!this.audioContext || this.audioContext.state === 'closed') {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                logger.log("Created AudioContext in togglePlay.");
-            }
-
-            // Resume if suspended (required by user gesture).
-            if (this.audioContext.state === 'suspended') {
-                await this.audioContext.resume();
-                logger.log("Resumed AudioContext in togglePlay.");
-            }
-
-            // If running, start playback. Otherwise, log an error.
-            if (this.audioContext.state === 'running') {
-                this._startPlayback();
-            } else {
-                throw new Error(`AudioContext is in an unexpected state: ${this.audioContext.state}`);
-            }
-        } catch (e) {
-            logger.log(`Failed to start playback: ${e.message}`, 'error');
+        // Assumes AudioContext is ready, as it's handled by the UI event listener
+        if (this.audioContext && this.audioContext.state === 'running') {
+            this._startPlayback();
+        } else {
+            logger.log(`togglePlay: Playback aborted. AudioContext not running. State: ${this.audioContext?.state}`, 'error');
             this.isPlaying = false;
             this._notifyStateChange();
         }
@@ -379,9 +363,25 @@ class MetronomeApp {
     _bindEventListeners() {
         // Main controls
         const handlePlayToggle = async (e) => {
-            // Prevents default action and the "ghost click" from touchend
             e.preventDefault();
-            await this.metronome.togglePlay();
+
+            // iOS FIX: Resume AudioContext directly in the user gesture callback
+            if (!this.metronome.audioContext || this.metronome.audioContext.state === 'closed') {
+                this.metronome.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                logger.log("Created AudioContext in user gesture.");
+            }
+
+            if (this.metronome.audioContext.state === 'suspended') {
+                try {
+                    await this.metronome.audioContext.resume();
+                    logger.log("Resumed AudioContext in user gesture.");
+                } catch (err) {
+                    logger.log(`Error resuming AudioContext: ${err.message}`, 'error');
+                }
+            }
+
+            // Then toggle play (which is now synchronous)
+            this.metronome.togglePlay();
         };
         this.playPauseBtn.addEventListener('click', handlePlayToggle);
         this.playPauseBtn.addEventListener('touchend', handlePlayToggle);
@@ -396,9 +396,9 @@ class MetronomeApp {
         this.closeMenuBtnInside.addEventListener('click', () => this._toggleMenu());
 
         // Advanced settings
-        this.timeSignatureSelect.addEventListener('change', async (e) => await this.metronome.setTimeSignature(e.target.value));
+        this.timeSignatureSelect.addEventListener('change', (e) => this.metronome.setTimeSignature(e.target.value));
         this.volumeControlSlider.addEventListener('input', (e) => this.metronome.setVolume(parseInt(e.target.value, 10)));
-        this.resetTimerBtn.addEventListener('click', async () => await this.metronome.resetCounterAndTimer());
+        this.resetTimerBtn.addEventListener('click', () => this.metronome.resetCounterAndTimer());
 
         // Color palette
         this.indicatorPalette.addEventListener('click', (e) => {
