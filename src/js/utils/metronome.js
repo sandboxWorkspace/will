@@ -3,7 +3,6 @@ import { logger } from './iosDebug.js';
 export class Metronome {
     constructor(options = {}) {
         this.tempoSlider = document.getElementById(options.tempoSliderId || 'tempoSlider');
-        // Ensure all getElementById calls are robust
         this.tempoInput = document.getElementById(options.tempoInputId || 'tempoInput');
         this.playPauseBtn = document.getElementById(options.playPauseBtnId || 'playPauseBtn');
         this.appContainer = document.querySelector(options.appContainerSelector || '.metronome-app-container');
@@ -25,7 +24,7 @@ export class Metronome {
         this.defaultPulseColor = '#E74C3C'; // Default red
         this.bpm = parseInt(this.tempoInput.value, 10);
         this.isPlaying = false;
-        this.intervalId = null; // Renamed for clarity (setInterval)
+        this.intervalId = null;
         this.baseIndicatorColor = getComputedStyle(this.appContainer).backgroundColor; // Store initial background
         this.pulseColor = this.defaultPulseColor; // Initialize with defaultPulseColor
 
@@ -47,7 +46,6 @@ export class Metronome {
         this.resetCounterAndTimer = this.resetCounterAndTimer.bind(this);
         this._updateBeatCountDisplay = this._updateBeatCountDisplay.bind(this);
         this._updateTimerDisplay = this._updateTimerDisplay.bind(this);
-        this.ensureAudioUnlocked = this.ensureAudioUnlocked.bind(this);
     }
 
     initialize() {
@@ -56,8 +54,8 @@ export class Metronome {
         this.tempoSlider.value = this.bpm;
         this.tempoInput.value = this.bpm;
         this.pulseColor = this.defaultPulseColor;
-        this._updateBeatCountDisplay(); // Initialize display
-        this._updateTimerDisplay();     // Initialize display
+        this._updateBeatCountDisplay();
+        this._updateTimerDisplay();
 
         // The 'input' event is sufficient for live updates from both the slider and the text field.
         this.tempoSlider.addEventListener('input', (e) => this._updateTempo(parseInt(e.target.value, 10)));
@@ -87,63 +85,38 @@ export class Metronome {
         this._updateIndicatorColor(this.defaultPulseColor);
     }
 
-    async ensureAudioUnlocked() {
-        logger.log("Attempting to unlock audio...");
-
-        // 1. Attempt to play a dummy sound FIRST - this is often the most crucial step for iOS
-        const unlockAudioEl = document.getElementById('unlockAudioElement');
-        let dummyAudioPlayed = false;
-        if (unlockAudioEl) {
-            try {
-                await unlockAudioEl.play();
-                logger.log("Played dummy HTML5 audio element successfully.");
-                dummyAudioPlayed = true;
-            } catch (err) {
-                logger.log(`Error playing dummy HTML5 audio: ${err.message}. This might prevent audio from working on iOS.`, 'error');
-                // On iOS, if this fails, subsequent AudioContext operations are very likely to fail or be silent.
-            }
-        } else {
-            logger.log("unlockAudioElement not found. This is critical for audio unlocking on some platforms.", 'error');
-            return false; // If the element isn't there, we can't do the primary unlock step.
-        }
-
-        // 2. Create or Re-create AudioContext if it doesn't exist or is closed, or if it's not running
-        if (this.audioContext && this.audioContext.state === 'running') {
-            logger.log("AudioContext already running.");
-            // Even if running, ensure it's the same context instance. If not, it might have been closed and recreated.
-        } else if (!this.audioContext || this.audioContext.state === 'closed') {
+    async _ensureAudioIsReady() {
+        // 1. Create AudioContext if it doesn't exist or is closed.
+        // This should be done within the user gesture.
+        if (!this.audioContext || this.audioContext.state === 'closed') {
             logger.log(this.audioContext ? "AudioContext was closed, creating a new one." : "AudioContext does not exist, creating one.");
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                logger.log(`AudioContext created/re-created. Initial state: ${this.audioContext.state}`);
+                logger.log(`AudioContext created. Initial state: ${this.audioContext.state}`);
             } catch (e) {
-                logger.log(`Failed to create/re-create AudioContext: ${e.message}`, 'error');
+                logger.log(`Failed to create AudioContext: ${e.message}`, 'error');
                 return false; 
             }
         }
 
-        // 3. If AudioContext is suspended, try to resume it
-        // This resume should ideally happen after a user gesture (dummy audio play can count).
+        // 2. If AudioContext is suspended, try to resume it.
+        // This is the key part for iOS. It must be called from a user gesture.
         if (this.audioContext.state === 'suspended') {
             logger.log("AudioContext is suspended, attempting to resume...");
             try {
                 await this.audioContext.resume(); 
-                logger.log(`AudioContext resume attempt finished. State: ${this.audioContext.state}`);
+                logger.log(`AudioContext resumed. State: ${this.audioContext.state}`);
             } catch (err) {
                 logger.log(`Error resuming AudioContext: ${err.message}`, 'error');
+                return false;
             }
         }
 
-        // 4. Final check: Is the AudioContext now running?
-        if (!this.audioContext || this.audioContext.state === 'closed') {
-             logger.log(`AudioContext is null or closed after attempts. Dummy audio played: ${dummyAudioPlayed}`, 'error');
-             return false;
-        }
+        // 3. Final check: Is the AudioContext now running?
         if (this.audioContext && this.audioContext.state === 'running') {
-            logger.log("AudioContext is now running.");
             return true;
         } else {
-            logger.log(`AudioContext is NOT running. Final state: ${this.audioContext.state}. Dummy audio played: ${dummyAudioPlayed}`, 'error');
+            logger.log(`AudioContext is NOT running. Final state: ${this.audioContext.state}.`, 'error');
             return false;
         }
     }
@@ -199,9 +172,9 @@ export class Metronome {
             this.beatUnit = parseInt(parts[1], 10); // beatUnit is stored but not directly used in current simple beep
             this.currentBeatInMeasure = 0; // Reset beat count on signature change
             logger.log(`Time signature set to: ${this.beatsPerMeasure}/${this.beatUnit}`);
+            // If playing, restart to apply new signature immediately
+            if (this.isPlaying) { this.stop(); this.togglePlay(); }
         }
-        // If playing, restart to apply new signature immediately
-        if (this.isPlaying) { this.stop(); this.play(); }
     }
     setVolume(newVolumePercent) {
         // Map 0-100 slider value to 0.0-1.0 gain value
@@ -211,23 +184,22 @@ export class Metronome {
     resetCounterAndTimer() {
         if (!this.valid) return;
 
-        const wasCurrentlyPlaying = this.isPlaying; // Store current playing state
+        const wasCurrentlyPlaying = this.isPlaying;
 
         if (wasCurrentlyPlaying) {
-            this.stop(); // Stop the metronome: clears intervals, resets UI, sets isPlaying to false.
+            this.stop();
         }
 
-        // Reset core state variables
         this.totalBeatsPlayed = 0;
-        this.currentBeatInMeasure = 0; // Also reset current beat in measure
+        this.currentBeatInMeasure = 0;
         this.elapsedTimeInSeconds = 0;
 
-        this._updateBeatCountDisplay(); // Update display
-        this._updateTimerDisplay();     // Update display
+        this._updateBeatCountDisplay();
+        this._updateTimerDisplay();
 
         // If it was playing before reset, start it again.
         if (wasCurrentlyPlaying) {
-            this.play(); // play() will handle the immediate first beat, start the timer interval, and update UI.
+            this.togglePlay();
         }
     }
 
@@ -247,63 +219,36 @@ export class Metronome {
         }
     }
 
-    async play() { // Make the play method asynchronous
+    _startPlayback() {
         if (this.isPlaying || !this.valid) return;
-        logger.log("Play method initiated.");
-
-        // Ensure audio is unlocked before proceeding
-        const audioUnlocked = await this.ensureAudioUnlocked();
-        if (!audioUnlocked) {
-            logger.log("Audio could not be unlocked by ensureAudioUnlocked. Playback aborted.", 'error');
-            this._updatePlayButtonUI(false);
-            this.isPlaying = false; // Ensure state is reset
-            return;
-        }
-
-        // At this point, ensureAudioUnlocked has confirmed this.audioContext exists and is 'running'.
-        if (!this.audioContext || this.audioContext.state !== 'running') {
-            logger.log(`Critical: AudioContext not 'running' (state: ${this.audioContext ? this.audioContext.state : 'null'}) even after ensureAudioUnlocked reported success. Playback aborted.`, 'error');
-            this._updatePlayButtonUI(false);
-            this.isPlaying = false;
-            return;
-        }
-
+    
         this.isPlaying = true;
         this._updatePlayButtonUI(true);
-        logger.log(`isPlaying set to true. AC State: ${this.audioContext.state}`);
+        logger.log(`Starting playback. AC State: ${this.audioContext.state}`);
 
-        // Prime the audio context
-        logger.log(`Attempting to prime audio. AC State: ${this.audioContext.state}`);
+        // Prime the audio context right before the first beat to prevent issues on some platforms
         try {
             const primerOscillator = this.audioContext.createOscillator();
             const primerGain = this.audioContext.createGain();
             primerOscillator.connect(primerGain);
             primerGain.connect(this.audioContext.destination);
-            primerGain.gain.setValueAtTime(0.0001, this.audioContext.currentTime); // Very quiet
-            primerOscillator.frequency.setValueAtTime(20, this.audioContext.currentTime); // Low frequency
+            primerGain.gain.setValueAtTime(0.0001, this.audioContext.currentTime);
+            primerOscillator.frequency.setValueAtTime(20, this.audioContext.currentTime);
             primerOscillator.type = 'sine';
             primerOscillator.start(this.audioContext.currentTime);
-            primerOscillator.stop(this.audioContext.currentTime + 0.01); // Play for 10ms
-            logger.log("AudioContext primed successfully.");
+            primerOscillator.stop(this.audioContext.currentTime + 0.01);
         } catch (primeError) {
-            logger.log(`CRITICAL ERROR during priming: ${primeError.message}. AC State: ${this.audioContext.state}. Playback aborted.`, 'error');
+            logger.log(`CRITICAL ERROR during priming: ${primeError.message}. Playback aborted.`, 'error');
             this.isPlaying = false;
             this._updatePlayButtonUI(false);
-            // Optionally, try to close and nullify the AudioContext if it's in a bad state
-            // if (this.audioContext) {
-            //     this.audioContext.close().catch(e => logger.log(`Error closing AC after priming failure: ${e.message}`, 'warn'));
-            //     this.audioContext = null;
-            // }
-            return; // Abort if priming fails
+            return;
         }
 
-        logger.log(`Priming successful. Setting up metronome interval. AC State: ${this.audioContext.state}`);
-        this._beat(); // Play the first beat immediately and count it.
+        this._beat(); // Play the first beat immediately
         const intervalTime = (60 / this.bpm) * 1000;
-        if (this.intervalId) clearInterval(this.intervalId); // Ensure no duplicate intervals
+        if (this.intervalId) clearInterval(this.intervalId);
         this.intervalId = setInterval(this._beat, intervalTime);
         this._startTimerInterval();
-        logger.log("Play method finished successfully.");
     }
 
     stop() {
@@ -343,34 +288,27 @@ export class Metronome {
         }, 1000);
     }
 
-    togglePlay() {
+    async togglePlay() {
         if (!this.valid) return;
+
         if (this.isPlaying) {
             logger.log("togglePlay: Stopping metronome.");
             this.stop();
         } else {
             logger.log("togglePlay: Attempting to play metronome.");
-            // play() is async, handle its promise
-            this.play().then(() => {
-                if (this.isPlaying) {
-                    logger.log("togglePlay: Play succeeded and metronome isPlaying.");
-                } else {
-                    // This case means play() itself determined it shouldn't play or failed internally.
-                    // It should have already updated UI and logged the reason.
-                    logger.log("togglePlay: Play method completed but metronome is not playing. State should have been managed by play().");
-                }
-            }).catch(err => {
-                logger.log(`togglePlay: Error during play() execution: ${err.message}`, 'error');
-                // Ensure state is reset if an unexpected error bubbles up from play()
+            const audioReady = await this._ensureAudioIsReady();
+
+            if (audioReady) {
+                this._startPlayback();
+            } else {
+                logger.log("togglePlay: Playback aborted, audio context not ready.", 'error');
                 this.isPlaying = false;
                 this._updatePlayButtonUI(false);
-            });
+            }
         }
     }
 
     _beat() {
-        logger.log(`_beat called. AC State: ${this.audioContext ? this.audioContext.state : 'null'}. isPlaying: ${this.isPlaying}.`);
-
         this.currentBeatInMeasure++;
         // Reset currentBeatInMeasure if it exceeds beatsPerMeasure
         if (this.currentBeatInMeasure > this.beatsPerMeasure) {
@@ -391,7 +329,6 @@ export class Metronome {
     }
 
     _playBeep(isAccent = false) {
-        logger.log(`_playBeep entered. AC State: ${this.audioContext ? this.audioContext.state : 'null'}`);
         if (!this.valid) { // this.valid is about DOM elements, less likely the audio cause
             logger.log("Metronome._playBeep: Metronome instance is not valid (this.valid is false). Skipping beep.", 'warn');
             return;
@@ -415,8 +352,6 @@ export class Metronome {
         const finalVolume = Math.min(1.0, Math.max(0.0, targetGain)); // Clamp between 0 and 1
         const duration = 0.028;
 
-        logger.log(`_playBeep: Accent: ${isAccent}, Freq: ${targetFrequency}, GainVal: ${finalVolume.toFixed(3)}, ActualBeepVol: ${this.beepVolume.toFixed(3)}, Duration: ${duration}s, AC_Time: ${currentTime.toFixed(3)}`);
-
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
 
@@ -430,7 +365,6 @@ export class Metronome {
 
         oscillator.start(currentTime);
         oscillator.stop(currentTime + duration);
-        logger.log(`_playBeep: Oscillator started at ${currentTime.toFixed(3)}, scheduled to stop at ${(currentTime + duration).toFixed(3)}`);
     }
 
     destroy() {
