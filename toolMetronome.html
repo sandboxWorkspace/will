@@ -12,10 +12,10 @@
     <link rel="manifest" href="/will/assets/manifest-DQDg6Fj5.json">
     <link rel="apple-touch-icon" href="/will/assets/logo.png">
 
-  <script type="module" crossorigin src="/will/assets/toolMetronome-CUqF-P-9.js"></script>
-  <link rel="modulepreload" crossorigin href="/will/assets/scripts-DCfHQS_U.js">
+  <script type="module" crossorigin src="/will/assets/toolMetronome-DvUAT8fO.js"></script>
+  <link rel="modulepreload" crossorigin href="/will/assets/scripts-CvklkfPU.js">
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-B5V2Wh3s.css">
-  <link rel="stylesheet" crossorigin href="/will/assets/toolMetronome-Dolu0ZAP.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/toolMetronome-DyYp0IDV.css">
   <link rel="stylesheet" crossorigin href="/will/assets/responsive-DZFeoapd.css">
 </head>
 <body>
@@ -67,8 +67,8 @@
         <!-- Metronome UI -->
         <!-- Metronome UI is now visible by default -->
         <div id="metronomeMainUI" class="metronome-app-container">
-             <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu" title="Open Menu">
-                 <!-- Text removed, arrow will be ::after pseudo-element -->
+             <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu">
+                 Expand Menu
              </button>
              <div class="metronome-controls">
                  <div class="control-group">
@@ -77,7 +77,11 @@
                  <div class="control-group">
                      <div class="bpm-input-group">
                          <label for="tempoInput">BPM</label>
-                         <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
+                         <div class="input-with-buttons">
+                            <button id="tempoDecrementBtn" class="button small-button tempo-adjust-btn" aria-label="Decrease tempo by 1 BPM">-</button>
+                            <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
+                            <button id="tempoIncrementBtn" class="button small-button tempo-adjust-btn" aria-label="Increase tempo by 1 BPM">+</button>
+                         </div>
                      </div>
                  </div>
                  <div class="control-group">
