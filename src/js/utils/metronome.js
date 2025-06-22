@@ -167,13 +167,15 @@ export class Metronome {
         this.isPlaying = true;
         logger.log(`Starting playback. AC State: ${this.audioContext.state}`);
 
-        // Prime the audio context right before the first beat to prevent issues on some platforms
+        // Prime the audio context to prevent issues on some platforms
         try {
             const primerOscillator = this.audioContext.createOscillator();
             const primerGain = this.audioContext.createGain();
             primerOscillator.connect(primerGain);
             primerGain.connect(this.audioContext.destination);
-            primerGain.gain.setValueAtTime(0.0001, this.audioContext.currentTime);
+
+            // Raise priming volume to avoid being stripped by browser optimizations
+            primerGain.gain.setValueAtTime(0.01, this.audioContext.currentTime);
             primerOscillator.frequency.setValueAtTime(20, this.audioContext.currentTime);
             primerOscillator.type = 'sine';
             primerOscillator.start(this.audioContext.currentTime);
@@ -398,6 +400,10 @@ class MetronomeApp {
     _bindEventListeners() {
         // Main controls
         this.playPauseBtn.addEventListener('click', () => this.metronome.togglePlay());
+        this.playPauseBtn.addEventListener('touchend', (e) => {
+            e.preventDefault(); // Avoids the browser firing a duplicate 'click' event
+            this.metronome.togglePlay();
+        });
         this.tempoSlider.addEventListener('input', (e) => this.metronome.setTempo(parseInt(e.target.value, 10)));
         this.tempoInput.addEventListener('input', (e) => this.metronome.setTempo(parseInt(e.target.value, 10)));
         this.tempoDecrementBtn.addEventListener('click', () => this.metronome.setTempo(this.metronome.bpm - 1));
