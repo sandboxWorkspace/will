@@ -35,7 +35,7 @@ function renderSupplyRequestItem(request) {
 
     // Construct the inner HTML for the list item
     itemElement.innerHTML = `
-        <strong>Requested Items: ${itemsHtml}</strong>
+        <strong>${itemsHtml}</strong>
         ${details ? `<span class="item-details-preview" title="${escapeHtml(details)}">${detailsPreview}</span>` : ''}
         <div class="item-meta">
             <span>Status: ${escapeHtml(request.status || 'Unknown')}</span>
@@ -44,7 +44,6 @@ function renderSupplyRequestItem(request) {
     `;
     return itemElement;
 }
-// --- --- --- --- --- --- --- --- --- --- ---
 
 export class SupplyRequestHandler {
     constructor(dataManager) {

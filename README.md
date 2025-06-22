@@ -5,6 +5,24 @@ A mobile-first web app aiming to streamline operations and digitize workflows by
 
 Keeping scalability in mind, this should allow for future expansion and ideas/suggestions are welcome!
 
+I'd like a Functional Limitation Statement Generator based on standardized scores such as low BERG or FIM 6MWT etc... along with the Standardized Outcome Measure Interpretation Guide, what other useful tools could be made
+
+Functional Limitation Statement Generator (Template-based):
+
+Function: A tool that, based on selected common impairments, suggests pre-written, measurable functional limitation statements that align with billing and clinical guidelines (e.g., "Patient unable to ambulate >50 feet independently due to 3/5 quadriceps weakness and knee pain"). Users could select components (e.g., activity, impairment, measurable deficit) to build a statement.
+Benefit: Streamlines the creation of defensible documentation, ensures medical necessity is clearly articulated, and helps therapists formulate strong functional goals. Crucially, this would generate the structure and examples of statements, not use actual patient data.
+Standardized Outcome Measure Interpretation Guide:
+
+Function: For commonly used outcome measures (e.g., Berg Balance Scale, FIM, Oswestry Disability Index, TUG, 6MWT), this tool would provide:
+The scale itself (for reference, not for scoring a patient).
+Interpretation of scores (e.g., "Score of X indicates high fall risk").
+Minimal Clinically Important Difference (MCID) values.
+Minimal Detectable Change (MDC) values.
+Relevant normative data (e.g., "Average TUG time for healthy adults 60-69 is X seconds").
+Benefit: Enables therapists to quickly interpret results, set realistic goals, and demonstrate the clinical significance of patient progress, all vital for documentation.
+
+Patient Handoff Chart? transfers? typical BP? HR? Notes?
+
 Live Feature List:
 - Inventory Requests and Tracking
 - Maintenance Requests and Tracking

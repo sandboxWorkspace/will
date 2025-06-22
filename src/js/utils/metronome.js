@@ -11,9 +11,11 @@ export class Metronome {
         // Display elements for beat count and timer, managed by Metronome class
         this.beatCountDisplayEl = document.getElementById(options.beatCountDisplayId || 'beatCountDisplay');
         this.runningTimerDisplayEl = document.getElementById(options.runningTimerDisplayId || 'runningTimerDisplay');
+        this.tempoDecrementBtn = document.getElementById(options.tempoDecrementBtnId || 'tempoDecrementBtn');
+        this.tempoIncrementBtn = document.getElementById(options.tempoIncrementBtnId || 'tempoIncrementBtn');
 
         // Note: volumeControlSlider is handled by MetronomeApp
-        if (!this.tempoSlider || !this.tempoInput || !this.playPauseBtn || !this.appContainer || !this.indicatorPalette) {
+        if (!this.tempoSlider || !this.tempoInput || !this.playPauseBtn || !this.appContainer || !this.indicatorPalette || !this.tempoDecrementBtn || !this.tempoIncrementBtn) {
             console.error("Metronome Class: Essential DOM elements missing. Ensure IDs/selectors match HTML.");
             this.valid = false;
             return;
@@ -26,7 +28,6 @@ export class Metronome {
         this.intervalId = null; // Renamed for clarity (setInterval)
         this.baseIndicatorColor = getComputedStyle(this.appContainer).backgroundColor; // Store initial background
         this.pulseColor = this.defaultPulseColor; // Initialize with defaultPulseColor
-        this.wasPlayingBeforeTempoChange = false; // Flag for muting during adjustment
 
         this.beatsPerMeasure = 1;
         this.beatUnit = 4;
@@ -58,14 +59,11 @@ export class Metronome {
         this._updateBeatCountDisplay(); // Initialize display
         this._updateTimerDisplay();     // Initialize display
 
+        // The 'input' event is sufficient for live updates from both the slider and the text field.
         this.tempoSlider.addEventListener('input', (e) => this._updateTempo(parseInt(e.target.value, 10)));
-        this.tempoSlider.addEventListener('mousedown', () => this._handleTempoInteractionStart());
-        this.tempoSlider.addEventListener('touchstart', () => this._handleTempoInteractionStart(), { passive: true });
-        this.tempoSlider.addEventListener('mouseup', () => this._handleTempoInteractionEnd());
-        this.tempoSlider.addEventListener('touchend', () => this._handleTempoInteractionEnd());
-        this.tempoInput.addEventListener('input', (e) => this._updateTempo(parseInt(e.target.value, 10))); // Use input for live updates
-        this.tempoInput.addEventListener('focus', () => this._handleTempoInteractionStart());
-        this.tempoInput.addEventListener('blur', () => this._handleTempoInteractionEnd());
+        this.tempoInput.addEventListener('input', (e) => this._updateTempo(parseInt(e.target.value, 10)));
+        this.tempoDecrementBtn.addEventListener('click', () => this._updateTempo(this.bpm - 1));
+        this.tempoIncrementBtn.addEventListener('click', () => this._updateTempo(this.bpm + 1));
         this.playPauseBtn.addEventListener('click', this.togglePlay);
         
         const colorButtons = this.indicatorPalette.querySelectorAll('.color-button');
@@ -188,16 +186,6 @@ export class Metronome {
         }
     }
 
-    _handleTempoInteractionStart() {
-    }
-
-    _handleTempoInteractionEnd() {
-        const finalTempo = parseInt(this.tempoSlider.value, 10);
-        this._updateTempo(finalTempo);
-        // If metronome was playing, _updateTempo already restarted the interval.
-        // If it was not playing, it remains not playing.
-    }
-
     _updateIndicatorColor(newColor) {
         this.pulseColor = newColor;
         // If playing, the next beat will use the new color. If stopped, no immediate visual change.
@@ -233,12 +221,6 @@ export class Metronome {
         this.totalBeatsPlayed = 0;
         this.currentBeatInMeasure = 0; // Also reset current beat in measure
         this.elapsedTimeInSeconds = 0;
-
-        // Explicitly clear timerIntervalId if it exists (stop() should handle it if wasPlaying)
-        if (this.timerIntervalId) {
-            clearInterval(this.timerIntervalId);
-            this.timerIntervalId = null;
-        }
 
         this._updateBeatCountDisplay(); // Update display
         this._updateTimerDisplay();     // Update display
@@ -316,12 +298,11 @@ export class Metronome {
         }
 
         logger.log(`Priming successful. Setting up metronome interval. AC State: ${this.audioContext.state}`);
+        this._beat(); // Play the first beat immediately and count it.
         const intervalTime = (60 / this.bpm) * 1000;
         if (this.intervalId) clearInterval(this.intervalId); // Ensure no duplicate intervals
         this.intervalId = setInterval(this._beat, intervalTime);
-        this._startTimerInterval(); // Timer starts, but first beat won't count towards total yet
-        logger.log("Calling initial _beat.");
-        this._beat(true); // Immediate first beat, marked as initial
+        this._startTimerInterval();
         logger.log("Play method finished successfully.");
     }
 
@@ -387,21 +368,18 @@ export class Metronome {
         }
     }
 
-    _beat(isInitialBeat = false) {
-        logger.log(`_beat called. AC State: ${this.audioContext ? this.audioContext.state : 'null'}. isPlaying: ${this.isPlaying}. Initial: ${isInitialBeat}`);
-        // If it's not the very first beat triggered by play(), increment counters.
-        if (!isInitialBeat) {
-            this.currentBeatInMeasure++;
-            this.totalBeatsPlayed++;
-            this._updateBeatCountDisplay(); // Update beat count display from Metronome
-            // Reset currentBeatInMeasure if it exceeds beatsPerMeasure
-            if (this.currentBeatInMeasure > this.beatsPerMeasure) {
-                this.currentBeatInMeasure = 1;
-            }
+    _beat() {
+        logger.log(`_beat called. AC State: ${this.audioContext ? this.audioContext.state : 'null'}. isPlaying: ${this.isPlaying}.`);
+
+        this.currentBeatInMeasure++;
+        // Reset currentBeatInMeasure if it exceeds beatsPerMeasure
+        if (this.currentBeatInMeasure > this.beatsPerMeasure) {
+            this.currentBeatInMeasure = 1;
         }
+        this.totalBeatsPlayed++;
+        this._updateBeatCountDisplay();
 
-        const isAccent = isInitialBeat || this.currentBeatInMeasure === 1;
-
+        const isAccent = this.currentBeatInMeasure === 1;
         this.appContainer.style.backgroundColor = this.pulseColor; // Pulse with selected color
         this._playBeep(isAccent); // Play the beep, possibly accented
 
@@ -470,7 +448,9 @@ class MetronomeApp {
             appContainerSelector: '.metronome-app-container',
             indicatorPaletteId: 'indicatorColorPalette',
             beatCountDisplayId: 'beatCountDisplay',
-            runningTimerDisplayId: 'runningTimerDisplay'
+            runningTimerDisplayId: 'runningTimerDisplay',
+            tempoDecrementBtnId: 'tempoDecrementBtn',
+            tempoIncrementBtnId: 'tempoIncrementBtn'
         });
 
         this.menuToggleBtn = document.getElementById('menuToggleBtn');
@@ -479,11 +459,9 @@ class MetronomeApp {
         
         this.timeSignatureSelect = document.getElementById('timeSignature');
         this.volumeControlSlider = document.getElementById('volumeControl');
-        this.beatCountDisplay = document.getElementById('beatCountDisplay');
-        this.runningTimerDisplay = document.getElementById('runningTimerDisplay');
         this.resetTimerBtn = document.getElementById('resetTimerBtn');
 
-        this._bindEvents();
+        this._bindEventListeners();
         this.initialize();
     }
 
@@ -501,40 +479,46 @@ class MetronomeApp {
         logger.log("Metronome App initialized.");
     }
 
-    _bindEvents() {
-        const toggleMenu = () => {
-            if (!this.sideMenu || !this.menuToggleBtn) return;
-            this.sideMenu.classList.toggle('open');
-            const isOpen = this.sideMenu.classList.contains('open');
+    _toggleMenu() {
+        if (!this.sideMenu || !this.menuToggleBtn) return;
+        const isOpen = this.sideMenu.classList.toggle('open');
 
-            this.menuToggleBtn.textContent = isOpen ? 'Close Menu' : 'Open Menu';
-            this.menuToggleBtn.setAttribute('aria-expanded', isOpen);
+        this.menuToggleBtn.setAttribute('aria-expanded', isOpen);
+        this.menuToggleBtn.textContent = isOpen ? 'Close Menu' : 'Expand Menu';
+        this.sideMenu.setAttribute('aria-hidden', !isOpen);
+        this.sideMenu.inert = !isOpen;
 
-            if (isOpen) {
-                this.sideMenu.setAttribute('aria-hidden', 'false');
-                this.sideMenu.inert = false;
-            } else {
-                this.sideMenu.setAttribute('aria-hidden', 'true');
-                this.sideMenu.inert = true;
+        if (isOpen) {
+            // When the menu opens, move focus to an element inside it for accessibility.
+            if (this.closeMenuBtnInside) {
+                this.closeMenuBtnInside.focus();
             }
-        };
+        } else {
+            // When the menu closes, return focus to the button that opened it.
+            // This prevents the "aria-hidden element has focus" warning.
+            this.menuToggleBtn.focus();
+        }
+    }
 
-        if (this.menuToggleBtn) {
-            this.menuToggleBtn.addEventListener('click', toggleMenu);
+    _bindEventListeners() {
+        if (this.menuToggleBtn && this.sideMenu) {
+            // Set initial state from HTML and add listener
             const isInitiallyOpen = this.sideMenu.classList.contains('open');
-            this.menuToggleBtn.textContent = isInitiallyOpen ? 'Close Menu' : 'Open Menu';
             this.menuToggleBtn.setAttribute('aria-expanded', isInitiallyOpen);
+            this.menuToggleBtn.textContent = isInitiallyOpen ? 'Close Menu' : 'Expand Menu';
             this.sideMenu.setAttribute('aria-hidden', !isInitiallyOpen);
             this.sideMenu.inert = !isInitiallyOpen;
+
+            this.menuToggleBtn.addEventListener('click', () => this._toggleMenu());
         }
 
         if (this.closeMenuBtnInside) {
-            this.closeMenuBtnInside.addEventListener('click', toggleMenu);
+            this.closeMenuBtnInside.addEventListener('click', () => this._toggleMenu());
         }
 
         if (this.timeSignatureSelect) {
             this.metronome.setTimeSignature(this.timeSignatureSelect.value);
-            this.timeSignatureSelect.addEventListener('change', (e) => this._handleTimeSignatureChange(e.target.value));
+            this.timeSignatureSelect.addEventListener('change', (e) => this.metronome.setTimeSignature(e.target.value));
         }
 
         if (this.volumeControlSlider && this.metronome) {
@@ -550,13 +534,6 @@ class MetronomeApp {
                 
             });
         }
-    }
-
-    _handleTimeSignatureChange(value) {
-        if (this.metronome) {
-            this.metronome.setTimeSignature(value);
-        }
-        logger.log(`MetronomeApp: Time signature changed to: ${value}`);
     }
 }
 

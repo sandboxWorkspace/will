@@ -68,8 +68,8 @@
         <!-- Metronome UI -->
         <!-- Metronome UI is now visible by default -->
         <div id="metronomeMainUI" class="metronome-app-container">
-             <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu" title="Open Menu">
-                 <!-- Text removed, arrow will be ::after pseudo-element -->
+             <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu">
+                 Expand Menu
              </button>
              <div class="metronome-controls">
                  <div class="control-group">
@@ -78,7 +78,11 @@
                  <div class="control-group">
                      <div class="bpm-input-group">
                          <label for="tempoInput">BPM</label>
-                         <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
+                         <div class="input-with-buttons">
+                            <button id="tempoDecrementBtn" class="button small-button tempo-adjust-btn" aria-label="Decrease tempo by 1 BPM">-</button>
+                            <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
+                            <button id="tempoIncrementBtn" class="button small-button tempo-adjust-btn" aria-label="Increase tempo by 1 BPM">+</button>
+                         </div>
                      </div>
                  </div>
                  <div class="control-group">
