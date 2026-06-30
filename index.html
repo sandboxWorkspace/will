@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Quickly access tools and resources. More features to come.">
-    <title>Will's QR Clinic Project</title>
+    <meta name="description" content="Submit supply, maintenance, and equipment wishlist requests. Access therapy tools and resources for clinic workflows.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <meta property="og:title" content="Will Clinic Hub — Southeast">
+    <meta property="og:description" content="Clinic request forms and therapy tools for Southeast location.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sandboxworkspace.github.io/will/">
+    <meta name="twitter:card" content="summary">
+    <link rel="canonical" href="https://sandboxworkspace.github.io/will/">
+    <title>Will Clinic Hub — Southeast</title>
     
     <link rel="stylesheet" href="/src/css/base.css">
     <link rel="stylesheet" href="/src/css/buttons.css">
     <link rel="stylesheet" href="/src/css/scrollbar.css">
     <link rel="stylesheet" href="/src/css/responsive.css">
 
-    <!--
-    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    -->    
     <link rel="icon" href="/assets/logo.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/logo.png">
@@ -24,33 +29,34 @@
         <a href="/will/">
             <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-        <h1></h1>
-        <!-- Maybe a little widget for time date weather idk-->
+        <span class="location-badge">Southeast</span>
     </header>
 
     <main>
+        <!-- Southeast -->
         <div class="collapse-button-container">
-            <button class="collapse-button red-button" id="toggleRequestButton" data-target="requestForms" data-default-open="true">
+            <button class="collapse-button red-button" data-target="southeastForms" data-default-open="true">
                 Request Forms
             </button>
-            <div id="requestForms" class="collapse-content">
-                <a href="requestSupply.html" class="button green-button">
+            <div id="southeastForms" class="collapse-content">
+                <a href="southeast-requestSupply.html" class="button green-button">
                     <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
                     Supplies
                 </a>
-                <a href="requestMaintenance.html" class="button green-button">
+                <a href="southeast-requestMaintenance.html" class="button green-button">
                     <img src="/assets/repairicon.svg" alt="Repair Icon" class="icon">
                     Maintenance + Repair
                 </a>
-                <a href="requestWishlist.html" class="button green-button">
+                <a href="southeast-requestWishlist.html" class="button green-button">
                     <img src="/assets/formicon.svg" alt="Form Icon" class="icon">
                     Equipment Wishlist
                 </a>
             </div>
         </div>
+
         <div class="collapse-button-container">
-            <button class="collapse-button green-button" id="toggleQuickToolsButton" data-target="QuickTools">
-                Quick Tools
+            <button class="collapse-button blue-button" id="toggleQuickToolsButton" data-target="QuickTools">
+                Therapy Tools
             </button>
             <div id="QuickTools" class="collapse-content">
                 <a href="" class="button pending-button">
@@ -80,8 +86,8 @@
             </div>
         </div>
         <div class="collapse-button-container">
-            <button class="collapse-button blue-button" id="toggleNullToolsButton" data-target="NullTools">
-                NullTools
+            <button class="collapse-button green-button" id="toggleNullToolsButton" data-target="NullTools">
+                Quick Links
             </button>
             <div id="NullTools" class="collapse-content">
                 (Supply Locator, Order, Restock Status)

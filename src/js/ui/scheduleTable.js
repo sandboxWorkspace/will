@@ -1,11 +1,12 @@
 export class ScheduleTable {
-    constructor(dataManager, confirmationModal) {
+    constructor(dataManager, confirmationModal, scheduleType = 'fesBike') {
         this.dataManager = dataManager;
-        this.confirmationModal = confirmationModal; // Store the modal instance
+        this.confirmationModal = confirmationModal;
+        this.scheduleType = scheduleType;
         this.tableBody = document.querySelector("#schedule-table tbody");
         this.timeSlots = ["8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm"];
         this.daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-        this.scheduleData = null; // Add property to store loaded data
+        this.scheduleData = null;
     }
 
     async initialize() {
@@ -25,7 +26,7 @@ export class ScheduleTable {
         try {
             // --- Load the entire schedule data first ---
             console.log("Loading schedule data...");
-            this.scheduleData = await this.dataManager.loadScheduleData();
+            this.scheduleData = await this.dataManager.loadScheduleData(this.scheduleType);
             console.log("Schedule data loaded:", this.scheduleData);
             // Handle case where data might be null/empty from the database
             if (!this.scheduleData) {

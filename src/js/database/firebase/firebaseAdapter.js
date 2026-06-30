@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get, push, serverTimestamp, query, orderByChild, limitToLast } from "firebase/database";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInAnonymously, signOut } from "firebase/auth";
 import { DatabaseInterface } from "../databaseInterface.js";
 
 class FirebaseAdapter extends DatabaseInterface {
@@ -114,6 +115,62 @@ class FirebaseAdapter extends DatabaseInterface {
             throw new Error("Failed to load change log from Firebase.");
         }
     }
+
+    // ── Auth methods ──────────────────────────────────────────
+
+    /** Registers an auth state listener. */
+    onAuthStateChanged(callback) {
+        if (!this.app) throw new Error("Firebase not initialized. Call initialize() first.");
+        const auth = getAuth(this.app);
+        return onAuthStateChanged(auth, callback);
+    }
+
+    /** Signs in anonymously — blocks raw REST calls without requiring login. */
+    async signInAnonymously() {
+        if (!this.app) throw new Error("Firebase not initialized. Call initialize() first.");
+        try {
+            const auth = getAuth(this.app);
+            const credential = await signInAnonymously(auth);
+            console.log("FirebaseAdapter: signed in anonymously as", credential.user.uid);
+            return credential;
+        } catch (error) {
+            console.error("FirebaseAdapter anonymous sign-in failed:", error.message);
+            throw error;
+        }
+    }
+
+    /** Signs in with email/password. */
+    async signIn(email, password) {
+        if (!this.app) throw new Error("Firebase not initialized. Call initialize() first.");
+        try {
+            const auth = getAuth(this.app);
+            const credential = await signInWithEmailAndPassword(auth, email, password);
+            console.log("FirebaseAdapter: signIn successful for", email);
+            return credential;
+        } catch (error) {
+            console.error("FirebaseAdapter signIn error:", error.message);
+            // Re-throw a user-friendly message
+            if (error.code === 'auth/user-not-found') throw new Error('No account found with this email.');
+            if (error.code === 'auth/wrong-password') throw new Error('Incorrect password.');
+            if (error.code === 'auth/invalid-credential') throw new Error('Invalid email or password.');
+            throw new Error(error.message);
+        }
+    }
+
+    /** Signs out the current user. */
+    async signOutUser() {
+        if (!this.app) throw new Error("Firebase not initialized. Call initialize() first.");
+        try {
+            const auth = getAuth(this.app);
+            await signOut(auth);
+            console.log("FirebaseAdapter: signOut successful.");
+        } catch (error) {
+            console.error("FirebaseAdapter signOut error:", error.message);
+            throw new Error('Failed to sign out. Please try again.');
+        }
+    }
+
+    // ── Data methods ─────────────────────────────────────────
 
     /**
      * Fetches the most recent items from a specified path, ordered by timestamp.

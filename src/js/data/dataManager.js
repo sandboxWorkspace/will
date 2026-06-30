@@ -1,22 +1,28 @@
 import { DatabaseInterface } from '../database/databaseInterface.js';
 
 export class DataManager {
-    constructor(databaseAdapter) {
-        // Ensure the adapter implements the expected interface
+    /**
+     * @param {object} databaseAdapter - An instance conforming to DatabaseInterface.
+     * @param {string} [location='southeast'] - Location prefix ('southeast' or 'moursund').
+     */
+    constructor(databaseAdapter, location = 'southeast') {
         if (!(databaseAdapter instanceof DatabaseInterface)) {
-            // Or check for specific methods if DatabaseInterface is abstract/not used for instanceof
             console.error("Provided databaseAdapter:", databaseAdapter);
             throw new Error("databaseAdapter does not conform to the expected DatabaseInterface structure.");
         }
         this.databaseAdapter = databaseAdapter;
+        this.location = location;
 
-        // Define base paths for different data types
-        this.scheduleBasePath = "schedule"; // Note: This path isn't actually used in the methods below, they use scheduleType directly.
-        this.maintenanceRequestPath = 'requestMaintenance';
-        this.supplyRequestPath = 'requestSupply';
-        this.wishlistRequestPath = 'requestWishlist'; // Added for wishlist
+        // Build Firebase Realtime DB paths scoped by location
+        this.maintenanceRequestPath = `${location}Maintenance`;
+        this.supplyRequestPath = `${location}Supply`;
+        this.wishlistRequestPath = `${location}Wishlist`;
 
-        console.log("DataManager Initialized. Paths configured.");
+        console.log(`DataManager Initialized for location "${location}". Paths:`, {
+            maintenance: this.maintenanceRequestPath,
+            supply: this.supplyRequestPath,
+            wishlist: this.wishlistRequestPath,
+        });
     }
 
     // --- Schedule Methods ---

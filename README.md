@@ -1,7 +1,16 @@
-# [SEOP Digital Hub](https://sandboxworkspace.github.io/will/)
+# [Will Clinic Hub](https://sandboxworkspace.github.io/will/)
 ### Developer: Wilbert Liu *[(Personal Site tbd)](https://w8liu.github.io/)*
 
 A mobile-first web app aiming to streamline operations and digitize workflows by serving as a centralized platform for inventory management, maintenance requests, and resource reservations. The primary goal is to enhance efficiency, reduce redundancy, and improve communication via increased accessibility and visibility.
+
+### Locations
+
+| Location | Landing page | QR scans to |
+|----------|-------------|-------------|
+| Southeast | `index.html` | `https://sandboxworkspace.github.io/will/` |
+| Moursund | `moursund.html` | `https://sandboxworkspace.github.io/will/moursund.html` |
+
+Each location has its own landing page and request form pages. They share backend code (Firebase adapter, Google Form submission utility) but the UI entry points are completely separate — no cross-location navigation links exist.
 
 Keeping scalability in mind, this should allow for future expansion and ideas/suggestions are welcome!
 
@@ -44,7 +53,6 @@ Future Ideas:
 - Add transportation kiosk QR validation and agreement
 - Add QR Code generator function (Dark Mode as well) - email to print
 - FAQ and suggestion(s) form
-
 Quick List:
 - Add feature wishlist
 - Add handoff vitals (pt. transfer method)

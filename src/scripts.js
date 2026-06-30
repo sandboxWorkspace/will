@@ -9,6 +9,17 @@ import { MaintenanceRequestHandler } from './js/requestMaintenance.js';
 import { SupplyRequestHandler } from './js/requestSupply.js';
 import { WishlistRequestHandler } from './js/requestWishlist.js';
 
+/**
+ * Determine the location context from the page URL.
+ * Pages containing "moursund" use the Moursund config;
+ * everything else defaults to Southeast.
+ */
+function detectLocation() {
+    const path = window.location.pathname;
+    if (path.includes('moursund')) return 'moursund';
+    return 'southeast';
+}
+
 async function initializeApp() {
     console.log("Initializing application...");
 
@@ -19,8 +30,12 @@ async function initializeApp() {
         await databaseAdapter.initialize();
         console.log("Database Adapter initialized.");
 
-        const dataManager = new DataManager(databaseAdapter);
-        console.log("Data Manager initialized.");
+        // Anonymous auth — revisit when Firebase provider toggle is stable
+        // try { await databaseAdapter.signInAnonymously(); } catch (e) {}
+
+        const location = detectLocation();
+        const dataManager = new DataManager(databaseAdapter, location);
+        console.log(`Data Manager initialized for location: ${location}`);
 
         // --- Initialize Page-Specific Components ---
         const pagePath = window.location.pathname; // Get path for context if needed

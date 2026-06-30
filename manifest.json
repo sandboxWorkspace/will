@@ -1,6 +1,6 @@
 {
-    "name": "QR Code Proj SE",
-    "short_name": "QRSiteSE",
+    "name": "Will Clinic Hub",
+    "short_name": "WillHub",
     "start_url": "/will/",
     "display": "standalone",
     "background_color": "#121212",

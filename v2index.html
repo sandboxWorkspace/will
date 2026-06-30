@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content ="Home - Request and check inventory, equipment, and maintenance requests. Reserve equipment and access safety logs. More features to come.">
-    <title>Will SEOP QRSite</title>
+    <meta name="description" content="Experimental page — internal dev tools, location switcher, and upcoming features. Part of Will Clinic Hub.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <meta property="og:title" content="Will Clinic Hub — Experimental">
+    <meta property="og:description" content="Experimental tools and dev utilities for clinic workflows.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link rel="canonical" href="https://sandboxworkspace.github.io/will/v2index.html">
+    <title>Will Clinic Hub — Experimental</title>
     
     <link rel="stylesheet" href="/src/css/base.css">
     <link rel="stylesheet" href="/src/css/buttons.css">
     <link rel="stylesheet" href="/src/css/scrollbar.css">
     <link rel="stylesheet" href="/src/css/responsive.css">
-    
+
     <link rel="icon" href="/assets/logo.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/logo.png">
@@ -20,23 +27,26 @@
         <a href="/will/">
             <img src="/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-        <h1>Experimental Features</h1>
+        <h1>Experimental</h1>
     </header>
 
     <main>
         <div class="collapse-button-container">
-            <button class="collapse-button red-button" id="togglePlaceholderButton" data-target="placeholder">
+            <button class="collapse-button red-button" id="toggleDevToolsButton" data-target="devTools" data-default-open="true">
                 Internal Dev Tools
             </button>
-            <div id="placeholder" class="collapse-content">
-                <a href="internalTimestamp.html" class="button purple-button">
-                    <img src="/assets/converticon.svg" alt="Convert Icon" class="icon">
-                    Timestamp Converstion Tool
-                </a>
-                <a href="requestDashboard.html" class="button purple-button">
+            <div id="devTools" class="collapse-content">
+                <div style="margin-bottom: 12px; padding: 8px 12px; background: var(--background-alt, #f5f5f5); border-radius: 6px;">
+                    <div style="font-weight: 600; font-size: 0.85em; margin-bottom: 6px;">Location switcher</div>
+                    <div class="location-toggle" role="group" aria-label="Switch location landing page">
+                        <a href="/will/" class="toggle-btn active">Southeast</a>
+                        <a href="/will/moursund.html" class="toggle-btn">Moursund</a>
+                    </div>
+                </div>
+                <!-- <a href="requestDashboard.html" class="button purple-button">
                     <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
                     Requests Dashboard
-                </a>
+                </a> -->
             </div>
         </div>
         <div class="collapse-button-container">
@@ -83,16 +93,10 @@
                 Reservation Sign Up
             </button>
             <div id="equiptmentSignUp" class="collapse-content">
-                <!--
-                <a href="tech.html" class="button green-button">
-                    <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
-                    Tech
-                </a>
-                -->
-                <a href="xCite.html" class="button green-button">
+                <!-- <a href="xCite.html" class="button green-button">
                     <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
                     Xcite
-                </a>
+                </a> -->
                 <a href="fesBike.html" class="button green-button">
                     <img src="/assets/sheeticon.svg" alt="Spreadsheet Icon" class="icon">
                     FES Bike
@@ -103,7 +107,6 @@
     
     <footer>
         <div class="button-container">
-            <h3>Under Construction</h3>
             <a href="v2index.html" class="button purple-button">
                     <img src="/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
                     Experimental
@@ -114,11 +117,7 @@
         </div>
     </footer>
 
+
     <script type="module" src="/src/scripts.js"></script>
-    <!--
-    scripts.js
-    collapsibleSections.js
-    utils.js
-    -->
 </body>
 </html>

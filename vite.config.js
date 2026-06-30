@@ -1,8 +1,5 @@
 import { defineConfig } from 'vite';
 import path from 'path';
-import { MaintenanceRequestHandler } from './src/js/requestMaintenance';
-import { SupplyRequestHandler } from './src/js/requestSupply.js';
-import { WishlistRequestHandler } from './src/js/requestWishlist.js';
 
 export default defineConfig({
   base: '/will/', 
@@ -22,15 +19,20 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
+        moursund: path.resolve(__dirname, 'moursund.html'),
         v2index: path.resolve(__dirname, 'v2index.html'),
-        reqDashboard: path.resolve(__dirname, 'requestDashboard.html'),
-        reqMaintenance: path.resolve(__dirname, 'requestMaintenance.html'),
-        reqSupplies: path.resolve(__dirname, 'requestSupply.html'),
-        reqWishlist: path.resolve(__dirname, 'requestWishlist.html'),
+        // Southeast
+        seSupply: path.resolve(__dirname, 'southeast-requestSupply.html'),
+        seMaintenance: path.resolve(__dirname, 'southeast-requestMaintenance.html'),
+        seWishlist: path.resolve(__dirname, 'southeast-requestWishlist.html'),
+
+        // Moursund (unlinked pages — access by direct URL only)
+        moSupply: path.resolve(__dirname, 'moursund-requestSupply.html'),
+        moMaintenance: path.resolve(__dirname, 'moursund-requestMaintenance.html'),
+        moWishlist: path.resolve(__dirname, 'moursund-requestWishlist.html'),
+
         toolQRGenerator: path.resolve(__dirname, 'toolQRGenerator.html'),
         toolMetronome: path.resolve(__dirname, 'toolMetronome.html'),
-        toolOutcomemeasures: path.resolve(__dirname, 'toolOutcomemeasure.html'),
-        internalTimestamp: path.resolve(__dirname, 'internalTimestamp.html'),
         fesBike: path.resolve(__dirname, 'fesBike.html')
       },
     },
