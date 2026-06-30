@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Clinical metronome for gait training, timed interventions, and therapy pacing. Part of Will Clinic Hub.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <meta property="og:title" content="Metronome | Will Clinic Hub">
+    <meta property="og:description" content="Clinical metronome for gait training and therapy pacing.">
+    <title>Metronome | Will Clinic Hub</title>
+    
+    
+    
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/will/assets/manifest-jx2tHeoB.json">
+    <link rel="apple-touch-icon" href="/will/assets/logo.png">
+
+  <script type="module" crossorigin src="/will/assets/toolMetronome-D8H3a093.js"></script>
+  <link rel="modulepreload" crossorigin href="/will/assets/scripts-BMZCuOyy.js">
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-C09BiKd2.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/toolMetronome-DyYp0IDV.css">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+            <h2>Metronome</h2>
+    </header>
+
+    <main>
+        <!-- Side Menu (Initially Hidden) - Positioned fixed by CSS -->
+        <aside id="sideMenu" class="side-menu" aria-hidden="true">
+            <h2>Advanced Settings</h2>
+            <div class="menu-content-wrapper"> 
+                <div class="menu-section">
+                    <label for="timeSignature">Time Signature:</label>
+                    <select id="timeSignature" name="timeSignature">
+                        <option value="1/1">1/1</option>
+                        <option value="4/4">4/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="2/4">2/4</option>
+                        <option value="6/8">6/8</option>
+                    </select>
+                </div>
+                <div class="menu-section">
+                    <label for="volumeControl">Volume:</label>
+                    <input type="range" id="volumeControl" name="volumeControl" min="0" max="100" value="80" class="slider">
+                    <p><span id="beatCountDisplay">0</span> beat(s)</p>
+                    <p><span id="runningTimerDisplay">00:00</span></p>
+                    <button id="resetTimerBtn" class="button small-button">Reset</button>
+                </div>
+                <div class="menu-section">
+                    <p class="menu-label">Color:</p> <!-- Changed from label to p for semantics -->
+                    <div class="color-palette" id="indicatorColorPalette">
+                        <button class="color-button" data-color="#E74C3C" style="background-color: #E74C3C;" aria-label="Red"></button>
+                        <button class="color-button" data-color="#3498DB" style="background-color: #3498DB;" aria-label="Blue"></button>
+                        <button class="color-button" data-color="#2ECC71" style="background-color: #2ECC71;" aria-label="Green"></button>
+                        <button class="color-button" data-color="#F1C40F" style="background-color: #F1C40F;" aria-label="Yellow"></button>
+                        <button class="color-button" data-color="#E67E22" style="background-color: #E67E22;" aria-label="Orange"></button>
+                        <button class="color-button" data-color="#9B59B6" style="background-color: #9B59B6;" aria-label="Purple"></button>
+                        <!-- Add more colors as needed -->
+                    </div>
+                </div>
+            </div>
+            <button id="closeMenuBtnInside" class="button close-menu-btn">Close Menu</button>
+        </aside>
+
+        <!-- Metronome UI -->
+        <!-- Metronome UI is now visible by default -->
+        <div id="metronomeMainUI" class="metronome-app-container">
+             <button id="menuToggleBtn" class="button" aria-expanded="false" aria-controls="sideMenu">
+                 Expand Menu
+             </button>
+             <div class="metronome-controls">
+                 <div class="control-group">
+                     <input type="range" id="tempoSlider" name="tempoSlider" min="8" max="280" value="60" class="slider">
+                 </div>
+                 <div class="control-group">
+                     <div class="bpm-input-group">
+                         <label for="tempoInput">BPM</label>
+                         <div class="input-with-buttons">
+                            <button id="tempoDecrementBtn" class="button small-button tempo-adjust-btn" aria-label="Decrease tempo by 1 BPM">-</button>
+                            <input type="number" id="tempoInput" name="tempoInput" min="8" max="280" value="60">
+                            <button id="tempoIncrementBtn" class="button small-button tempo-adjust-btn" aria-label="Increase tempo by 1 BPM">+</button>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="control-group">
+                     <button id="playPauseBtn" class="button green-button" aria-label="Play">
+                         <span class="play-pause-icon-shape"></span>
+                     </button>
+                 </div>
+             </div>
+        </div>
+
+        <!-- Debug Log Output Area -->
+        <div class="collapse-button-container">
+            <button class="collapse-button pending-button" id="toggleDebugLogButton" data-target="DebugLogTools">
+                Janky iOS Debug Log
+            </button>
+            <div id="DebugLogTools" class="collapse-content">
+                <div id="debugLogContainer">
+                    <p>Debug log initialized...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="button-container">
+                <a href="v2index.html" class="button purple-button">
+                    <img src="/will/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+
+</body>
+</html>

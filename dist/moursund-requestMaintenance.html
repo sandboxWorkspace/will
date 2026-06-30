@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Submit a maintenance or repair request for the Moursund location via Will Clinic Hub.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <meta property="og:title" content="Maintenance Request — Moursund | Will Clinic Hub">
+    <meta property="og:description" content="Request equipment maintenance or repair for the Moursund location.">
+    <title>Maintenance Request — Moursund | Will Clinic Hub</title>
+
+
+
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/will/assets/manifest-jx2tHeoB.json">
+    <link rel="apple-touch-icon" href="/will/assets/logo.png">
+  <script type="module" crossorigin src="/will/assets/scripts-BMZCuOyy.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-C09BiKd2.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/forms-Cw21zwpd.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/recentItemsList-OE3pRblK.css">
+</head>
+<body>
+    <header>
+        <a href="/will/moursund.html">
+            <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+        <span class="location-badge">Moursund</span>
+   </header>
+
+    <main>
+        <section class="recent-requests-section">
+            <h2>Recent Maintenance Requests</h2>
+            <div id="recentRequestsList" class="recent-items-list-container">
+                <p>Loading recent requests...</p> <!-- Initial message -->
+            </div>
+        </section>
+
+        <section class="request-form-section">
+            <div class="collapse-button-container">
+                <button class="collapse-button blue-button" id="toggleOpenFormButton" data-target="openForm">
+                    Start Maintenance Request
+                </button>
+                <div id="openForm" class="collapse-content">
+                    <form id="maintenanceRequestForm" class="styled-form">
+                        <div class="form-group">
+                            <label for="submitterName">Your Name:</label>
+                            <input type="text" id="submitterName" name="submitterName" placeholder= "e.g. Alex Jordan" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="requestType">Request Type:</label>
+                            <input type="text" id="requestType" name="requestType" placeholder="e.g., Repair, Replace, Other" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="equipmentName">Name of Equipment or Area:</label>
+                            <input type="text" id="equipmentName" name="equipmentName" required maxlength ="28">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="requestDetails">Details:</label>
+                            <textarea id="requestDetails" name="requestDetails" rows="4" placeholder="Describe the location, issue, damage, etc." required></textarea>
+                        </div>
+
+                        <button type="submit" class="button form-button submit-button">Submit Request</button>
+                        <p id="formStatus" class="form-status-message" aria-live="polite"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="button-container">
+                <a href="v2index.html" class="button purple-button">
+                    <img src="/will/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+
+    <!--
+    scripts.js
+    maintenanceRequest.js
+    firebaseAdapter.js
+    dataManager.js
+    databaseInterface.js
+    collapsibleSections.js
+    utils.js
+    -->
+</body>
+</html>

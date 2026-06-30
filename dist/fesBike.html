@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View and reserve FES Bike time slots for clinic therapy sessions via Will Clinic Hub.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <meta property="og:title" content="FES Bike Sign Up | Will Clinic Hub">
+    <meta property="og:description" content="View and reserve FES Bike time slots.">
+    <title>FES Bike Sign Up | Will Clinic Hub</title>
+    
+
+    
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/will/assets/manifest-jx2tHeoB.json">
+    <link rel="apple-touch-icon" href="/will/assets/logo.png">
+  <script type="module" crossorigin src="/will/assets/scripts-BMZCuOyy.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-C09BiKd2.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/fesBike-DUJqz4DP.css">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+        <h2>FES Bike Sign Up</h2>
+    </header>
+
+    <main>
+        <button id="openChangelogBtn" class="changelog-button">Change Log</button>
+
+        <table id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be generated dynamically here -->
+            </tbody>
+        </table>
+
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <h4>Change this sign up?</h4>
+                <div class="modal-buttons">
+                    <button id="confirmBtn" class="yes-button">Yes</button>
+                    <button id="cancelBtn" class="no-button">No</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="changelogModal" class="modal">
+            <div class="modal-content">
+                <h4>Change Log</h4>
+                <div id="changelogList" class="changelog-list">
+                    <!-- Changelog items will be dynamically populated here -->
+                </div>
+                <button id="closeChangelogBtn" class="changelog-button">Close</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="button-container">
+                <a href="v2index.html" class="button purple-button">
+                    <img src="/will/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                    Experimental
+                </a>
+                <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                    Contact Me
+                </a>
+        </div>
+    </footer>
+
+    <!--
+    scripts.js
+    scheduleTable.js
+    confirmationModal.js
+    changeLogModal.js
+    firebaseAdapter.js
+    dataManager.js
+    databaseInterface.js
+    -->
+</body>
+</html>
