@@ -64,6 +64,16 @@
         </div>
     </footer>
 
+    <script>
+    (function() {
+        var p = new URLSearchParams(location.search);
+        var from = p.get('from');
+        if (from) {
+            var link = document.querySelector('header a[href*="will"]');
+            if (link) link.href = from === 'moursund' ? '/will/moursund.html' : '/will/';
+        }
+    })();
+    </script>
     <script type="module" src="/src/scripts.js"></script>
     <script type="module" src="/src/js/utils/qrCodeGenerator.js"></script>
 </body>

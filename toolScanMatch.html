@@ -146,11 +146,6 @@
             display: flex; gap: 5px; justify-content: center;
             flex-wrap: wrap; align-items: center; margin: 4px 0;
         }
-        .option-group .opt-label {
-            font-size: 0.7em; color: var(--text-subtle);
-            letter-spacing: 0.04em; text-transform: uppercase;
-            margin-right: 6px;
-        }
         .option-group button {
             padding: 5px 12px; border: 1.5px solid var(--border);
             border-radius: 8px; background: var(--surface);
@@ -444,7 +439,6 @@
             </div>
         </div>
         <div id="countOptions" class="option-group" style="display:flex">
-            <span class="opt-label">Rounds</span>
             <button class="count-btn" data-target="10">10</button>
             <button class="count-btn active" data-target="25">25</button>
             <button class="count-btn" data-target="50">50</button>
@@ -453,7 +447,6 @@
                    placeholder="Count" min="1" max="200" style="display:none">
         </div>
         <div id="timerOptions" class="option-group" style="display:none">
-            <span class="opt-label">Time</span>
             <button class="timer-btn" data-minutes="1">1 min</button>
             <button class="timer-btn active" data-minutes="2">2 min</button>
             <button class="timer-btn" data-minutes="5">5 min</button>
@@ -500,9 +493,9 @@
                 <span id="countSymbol">Σ</span>
                 <span id="countNumber">0</span>
                 <div id="countTrack"><div id="countFill"></div></div>
-                <span id="countMax">/28</span>
+                <span id="countMax"></span>
             </div>
-            <span id="timerDisplay">
+            <span id="timerDisplay" style="display:none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="13" r="8"/>
                     <path d="M12 9v4l2.5 2.5"/>
@@ -535,6 +528,16 @@
         <button id="newBtn">Play Again</button>
     </div>
 
+    <script>
+    (function() {
+        var p = new URLSearchParams(location.search);
+        var from = p.get('from');
+        if (from) {
+            document.getElementById('homeBtn').href =
+                from === 'moursund' ? '/will/moursund.html' : '/will/';
+        }
+    })();
+    </script>
     <script type="module" src="/src/scripts.js"></script>
 </body>
 </html>

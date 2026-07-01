@@ -22,10 +22,10 @@ const EMOJI = [
   '🦓',
   // ── +34 for N=9/10 support ──────────────────────
   '🦙','🦛','🦘','🦡','🦨','🦦','🦥','🦔',
-  '🐿️','🦃','🦩','🦜','🦚','🦢','🫏','🦬',
-  '🐄','🐃','🐂','🐐','🦫','🪿','🐓','🦮',
-  '🐁','🦧','🦍','🦣','🐀','🐩','🐈‍⬛','🐕‍🦺',
-  '🐇','🦝'
+  '🐿','🦃','🦏','🦍','🦚','🦢','🐏','🐒',
+  '🐄','🐃','🐂','🐐','🦈','🐘','🐓','🦝',
+  '🐁','🦧','🐕','🦣','🐀','🐩','🦭','🐖',
+  '🐇','🐎'
 ];
 
 // ── Seeded RNG (Mulberry32) ─────────────────────────────────────────────
@@ -100,14 +100,14 @@ export class ScanMatchGame {
     this.timerDuration = 60;
     this.startedAt = null;  // Firebase server timestamp (ms)
     this.timerInterval = null;
-    this.maxRounds = 28;
+    this.maxRounds = 25;
     this.symbolsPerCard = 8;
   }
 
   // ── Room Management ─────────────────────────────────────────────────
 
   /** Create a room. Returns the PIN string. */
-  async createRoom(mode = 'count', timerDuration = 60, maxRounds = 28, symbolsPerCard = 8) {
+  async createRoom(mode = 'count', timerDuration = 60, maxRounds = 25, symbolsPerCard = 8) {
     this.mode = mode;
     this.timerDuration = timerDuration;
     this.maxRounds = maxRounds;
@@ -158,8 +158,8 @@ export class ScanMatchGame {
     });
 
     this.mode = data.mode || 'count';
-    this.timerDuration = data.timerDuration || 60;
-    this.maxRounds = data.maxRounds || 28;
+    this.timerDuration = data.timerDuration !== undefined ? data.timerDuration : 60;
+    this.maxRounds = data.maxRounds !== undefined ? data.maxRounds : 25;
     this.symbolsPerCard = data.symbolsPerCard || 8;
     this.state = 'playing';
     this.round = data.round || 0;
@@ -317,9 +317,9 @@ export class ScanMatchGame {
     this.cardPositions = this.deck.map(() => {
       const pool = ALL_POSITIONS.slice(0, N);
       const shuffled = pool.map(p => ({
-        x: p.x + (rng.next() - 0.5) * 8,  // ±4% jitter
-        y: p.y + (rng.next() - 0.5) * 8,
-        r: (rng.next() - 0.5) * 30
+      x: p.x + (rng.next() - 0.5) * 4,  // ±2% jitter
+      y: p.y + (rng.next() - 0.5) * 4,
+      r: (rng.next() - 0.5) * 20
       }));
       rng.shuffle(shuffled);
       return shuffled;
@@ -441,6 +441,7 @@ export class ScanMatchUI {
 
     // Game
     this.countNumber = document.getElementById('countNumber');
+    this.countMax = document.getElementById('countMax');
     this.countFill = document.getElementById('countFill');
     this.timerDisplay = document.getElementById('timerDisplay');
     this.timerValue = document.getElementById('timerValue');
@@ -494,7 +495,7 @@ export class ScanMatchUI {
         if (btn.dataset.target === 'custom') {
           this.countCustomInput.style.display = '';
           this.countCustomInput.focus();
-          this.selectedCount = parseInt(this.countCustomInput.value, 10) || 28;
+          this.selectedCount = parseInt(this.countCustomInput.value, 10) || 25;
         } else {
           this.countCustomInput.style.display = 'none';
           this.selectedCount = parseInt(btn.dataset.target, 10);
@@ -502,7 +503,7 @@ export class ScanMatchUI {
       });
     });
     this.countCustomInput.addEventListener('input', () => {
-      this.selectedCount = parseInt(this.countCustomInput.value, 10) || 28;
+      this.selectedCount = parseInt(this.countCustomInput.value, 10) || 25;
     });
 
     // Timer duration toggles (minutes → seconds)
@@ -695,6 +696,7 @@ export class ScanMatchUI {
   _renderRound() {
     const g = this.game;
     this.countNumber.textContent = g.round;
+    if (this.countMax) this.countMax.textContent = '/' + g.maxRounds;
     const pct = g.maxRounds > 0 ? (g.round / g.maxRounds) * 100 : 0;
     this.countFill.style.width = `${pct}%`;
 
@@ -762,12 +764,17 @@ export class ScanMatchUI {
     const matchPos = card.indexOf(matchIdx);
 
     const cells = this.myCard.querySelectorAll('.cell');
+    // Phase 1: highlight the match immediately
     cells.forEach((cell, i) => {
-      if (i === matchPos) {
-        cell.classList.add('match-highlight');
-      } else {
-        cell.classList.add('cell-hide');
-      }
+      if (i === matchPos) cell.classList.add('match-highlight');
+    });
+    // Phase 2: vanish non-matching cells after a brief pause
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cells.forEach((cell, i) => {
+          if (i !== matchPos) cell.classList.add('cell-hide');
+        });
+      });
     });
 
     // Card-level pulse
