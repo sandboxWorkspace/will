@@ -36,6 +36,12 @@ async function initializeApp() {
   const location = detectLocation();
   const dataManager = new DataManager(databaseAdapter, location);
 
+  // Init collapsible sections on every page that has them
+  if (document.querySelector('.collapse-button-container')) {
+    const { default: initCollapse } = await import('./js/ui/collapsibleSections.js');
+    initCollapse();
+  }
+
   // --- Page-specific modules ---
 
   // Schedule (fesBike)
