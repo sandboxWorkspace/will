@@ -10,7 +10,7 @@
 
     <style>
         /* ── Reset base.css for full-screen app ──────────── */
-        html, body { height: 100%; overflow: hidden; margin: 0; }
+        html, body { height: 100%; overflow: hidden; margin: 0; overscroll-behavior: none; }
         body {
             display: block !important;
             min-height: 100dvh;
@@ -59,7 +59,7 @@
         .screen { display: none; }
         .screen.active {
             display: flex; flex-direction: column;
-            height: 100dvh; overflow: hidden;
+            height: 100vh; height: 100dvh; overflow: hidden;
         }
 
         /* ── Top bar (home + toggle) ──────────────────────── */
@@ -94,13 +94,33 @@
         #themeToggle .switch { width: 48px; height: 26px; }
         #themeToggle .slider:before { height: 20px; width: 20px; }
         #themeToggle input:checked + .slider:before { transform: translateX(22px); }
+        /* Fix: use page theme vars instead of toggleSwitch.css hardcoded colors */
+        .switch.theme-switch .slider {
+            background-color: var(--border);
+            background-image: url('/will/assets/moon.svg');
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 16px;
+        }
+        .switch.theme-switch input:checked + .slider {
+            background-color: var(--accent);
+            background-image: url('/will/assets/sun.svg');
+            background-position: left 6px center;
+        }
 
 
 
         /* ── Lobby ───────────────────────────────────────── */
         #lobbyScreen {
             align-items: center; justify-content: center;
-            padding: 20px; gap: 10px;
+            padding: 16px; gap: 8px;
+        }
+        @media (max-width: 400px) {
+            #lobbyScreen { padding: 10px; gap: 6px; }
+            .option-group button { padding: 4px 10px; font-size: 0.75em; }
+            .pin-row { max-width: 100%; }
+            .pin-row input { font-size: 1.1em; letter-spacing: 4px; padding: 10px; }
+            .join-btn { padding: 8px 16px; font-size: 0.9em; }
         }
         #lobbyScreen h1 {
             font-size: 1.2em; font-weight: 600;
