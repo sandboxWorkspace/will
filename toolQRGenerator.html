@@ -15,8 +15,8 @@
     <link rel="icon" href="/will/assets/logo.png" type="image/png">
     <link rel="manifest" href="/will/assets/manifest-jx2tHeoB.json">
     <link rel="apple-touch-icon" href="/will/assets/logo.png">
-  <script type="module" crossorigin src="/will/assets/toolQRGenerator-t9QVSSve.js"></script>
-  <link rel="modulepreload" crossorigin href="/will/assets/scripts-d3BtnBGw.js">
+  <script type="module" crossorigin src="/will/assets/toolQRGenerator-mIM1ymSO.js"></script>
+  <link rel="modulepreload" crossorigin href="/will/assets/scripts-y48HmwCr.js">
   <link rel="modulepreload" crossorigin href="/will/assets/utils-DL4mckC_.js">
   <link rel="modulepreload" crossorigin href="/will/assets/browser-BtZzEF0O.js">
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-DBH1DUSb.css">
@@ -66,5 +66,15 @@
         </div>
     </footer>
 
+    <script>
+    (function() {
+        var p = new URLSearchParams(location.search);
+        var from = p.get('from');
+        if (from) {
+            var link = document.querySelector('header a[href*="will"]');
+            if (link) link.href = from === 'moursund' ? '/will/moursund.html' : '/will/';
+        }
+    })();
+    </script>
 </body>
 </html>
