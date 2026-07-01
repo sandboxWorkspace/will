@@ -301,28 +301,27 @@ export class ScanMatchGame {
       card.map(() => sizeClasses[Math.floor(rng.next() * sizeClasses.length)])
     );
 
-    // Fixed scattered positions — use first N for fewer-emoji decks
-    const ALL_POSITIONS = [
-      { x: 20, y: 22 },   // top-left
-      { x: 78, y: 18 },   // top-right
-      { x: 50, y: 14 },   // top-center
-      { x: 84, y: 52 },   // right
-      { x: 24, y: 60 },   // left
-      { x: 66, y: 78 },   // bottom-right
-      { x: 34, y: 82 },   // bottom-center
-      { x: 70, y: 34 },   // upper-right inner
-      { x: 43, y: 44 },   // center
-      { x: 14, y: 40 },   // far left
-    ];
+    // Positions — elliptical distribution to fill the rectangular card better.
+    // Most symbols on a single outer ellipse, 1 near center. Near-zero jitter.
     this.cardPositions = this.deck.map(() => {
-      const pool = ALL_POSITIONS.slice(0, N);
-      const shuffled = pool.map(p => ({
-      x: p.x + (rng.next() - 0.5) * 4,  // ±2% jitter
-      y: p.y + (rng.next() - 0.5) * 4,
-      r: (rng.next() - 0.5) * 20
-      }));
-      rng.shuffle(shuffled);
-      return shuffled;
+      const positions = [];
+      const aspectNorm = 0.82;  // between circle (0.71) and full-height (1.0)
+      const cx = 49.5 + (rng.next() - 0.5) * 1;
+      const cy = 49.5 + (rng.next() - 0.5) * 1;
+      for (let i = 0; i < N; i++) {
+        const isCenter = i === 0;
+        const angle = isCenter ? 0 : ((i - 1) / (N - 1)) * 2 * Math.PI;
+        const radius = isCenter
+          ? rng.next() * 2        //  0-2% — center
+          : 35 + (rng.next() - 0.5) * 3;  // 33.5-36.5% — outer ellipse
+        positions.push({
+          x: cx + Math.cos(angle) * radius,
+          y: cy + Math.sin(angle) * radius * aspectNorm,
+          r: (rng.next() - 0.5) * 20
+        });
+      }
+      rng.shuffle(positions);
+      return positions;
     });
   }
 

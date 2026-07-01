@@ -1,7 +1,7 @@
 {
   "rules": {
     ".read": true,
-    ".write": false,
+    ".write": true,
 
     "scanMatchSessions": {
       ".write": true,
@@ -19,33 +19,26 @@
     },
 
     "southeastMaintenance": {
-      ".write": "newData.hasChildren(['clientTimestamp', 'submitterName', 'requestType', 'equipmentName', 'requestDetails', 'status'])",
       ".indexOn": ["firebaseTimestamp"]
     },
     "southeastSupply": {
-      ".write": "newData.hasChildren(['clientTimestamp', 'submitterName', 'supplyList', 'status'])",
       ".indexOn": ["firebaseTimestamp"]
     },
     "southeastWishlist": {
-      ".write": "newData.hasChildren(['clientTimestamp', 'submitterName', 'requestEquipment', 'requestDetails', 'status'])",
       ".indexOn": ["firebaseTimestamp"]
     },
 
     "moursundMaintenance": {
-      ".write": "newData.hasChildren(['clientTimestamp', 'submitterName', 'requestType', 'equipmentName', 'requestDetails', 'status'])",
       ".indexOn": ["firebaseTimestamp"]
     },
     "moursundSupply": {
-      ".write": "newData.hasChildren(['clientTimestamp', 'submitterName', 'supplyList', 'status'])",
       ".indexOn": ["firebaseTimestamp"]
     },
     "moursundWishlist": {
-      ".write": "newData.hasChildren(['clientTimestamp', 'submitterName', 'requestEquipment', 'requestDetails', 'status'])",
       ".indexOn": ["firebaseTimestamp"]
     },
 
     "fesBike": {
-      ".write": true,
       "currentSchedule": { ".indexOn": ["firebaseTimestamp"] },
       "pastSchedule": { ".indexOn": ["firebaseTimestamp"] },
       "futureSchedule": { ".indexOn": ["firebaseTimestamp"] }

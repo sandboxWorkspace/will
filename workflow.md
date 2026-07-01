@@ -203,6 +203,17 @@ Used in every renderer:
 
 **Rules are managed in Firebase Console, not in this repo.** There is no `database.rules.json` file checked in — they must be updated manually or via the Firebase CLI.
 
+### Open Issue: `newData.hasChildren()` evaluates false incorrectly
+
+`hasChildren()` in `.write` rules mysteriously rejects writes even when all required children exist. This was encountered on `southeastSupply` — the rule `"newData.hasChildren(['clientTimestamp', 'submitterName', 'status'])"` returned `permission_denied` despite all three fields being present in the data. Setting `".write": true` (no condition) resolved it immediately, confirming the data shape was correct.
+
+**Root cause unknown.** Suspected:
+- Conflict with `push()` + `set()` writing at auto-generated child keys (`southeastSupply/-PUSH_KEY`)
+- Firebase rules engine version quirk
+- Some child value (empty string, array, object) being interpreted as absent
+
+**Temporary workaround:** Root `.write: true` — wide open. Re-tighten once the cause is found. See `firebase-rules.json` in repo root for the current deployed state.
+
 ---
 
 ## Location Detection
