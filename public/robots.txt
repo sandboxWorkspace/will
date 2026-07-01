@@ -1,4 +1,18 @@
-User-agent: *
-Allow: /
+# robots.txt — Will Clinic Hub
+#
+# IMPORTANT: This file only blocks well-behaved crawlers (Googlebot, Bingbot, etc.).
+# Malicious scrapers and attackers ignore robots.txt entirely.
+# robots.txt is NOT a security measure — it's a voluntary courtesy signal.
+#
+# Security comes from:
+#   - Firebase Realtime Database .validate rules (server-side)
+#   - Client-side XSS escaping (escapeHtml)
+#   - No sensitive data in client-side code
+#
+# This site is internal/clinic-use only. We disallow all crawling
+# to prevent the pages from appearing in search results.
 
-Sitemap: https://sandboxworkspace.github.io/will/sitemap.xml
+User-agent: *
+Disallow: /
+
+# No sitemap — this is not a public-facing site

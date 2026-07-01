@@ -1,15 +1,9 @@
-import { DatabaseInterface } from '../database/databaseInterface.js';
-
 export class DataManager {
     /**
-     * @param {object} databaseAdapter - An instance conforming to DatabaseInterface.
+     * @param {object} databaseAdapter - FirebaseAdapter instance.
      * @param {string} [location='southeast'] - Location prefix ('southeast' or 'moursund').
      */
     constructor(databaseAdapter, location = 'southeast') {
-        if (!(databaseAdapter instanceof DatabaseInterface)) {
-            console.error("Provided databaseAdapter:", databaseAdapter);
-            throw new Error("databaseAdapter does not conform to the expected DatabaseInterface structure.");
-        }
         this.databaseAdapter = databaseAdapter;
         this.location = location;
 

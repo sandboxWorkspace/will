@@ -1,11 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get, push, serverTimestamp, query, orderByChild, limitToLast } from "firebase/database";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInAnonymously, signOut } from "firebase/auth";
-import { DatabaseInterface } from "../databaseInterface.js";
 
-class FirebaseAdapter extends DatabaseInterface {
+class FirebaseAdapter {
     constructor(firebaseConfig) {
-        super(); // Call the parent constructor
         if (!firebaseConfig) {
             throw new Error("Firebase configuration is required for FirebaseAdapter.");
         }

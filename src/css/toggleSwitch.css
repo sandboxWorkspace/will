@@ -67,3 +67,17 @@ input:checked + .slider:before {
 .slider.round:before {
     border-radius: 50%;
 }
+
+/* Theme/brightness toggle — sun/moon SVG backgrounds on slider */
+.switch.theme-switch .slider {
+    background-color: #555;
+    background-image: url('/assets/moon.svg');
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 16px;
+}
+.switch.theme-switch input:checked + .slider {
+    background-color: var(--primary-color, #2196F3);
+    background-image: url('/assets/sun.svg');
+    background-position: left 6px center;
+}
