@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quick Restock QR — generate scannable QR codes for one-tap supply restock requests.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <title>Quick Restock QR | Will Clinic Hub</title>
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <style>
+        .wireframe-container {
+            max-width: 480px; margin: 14px auto;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block; font-size: 0.85em; font-weight: 600;
+            color: var(--text-heading, #333); margin-bottom: 4px;
+        }
+        .form-group select, .form-group input {
+            width: 100%; padding: 10px 12px; border: 1.5px solid var(--border, #ddd);
+            border-radius: 8px; font-size: 0.9em; background: var(--surface, #fff);
+            color: var(--text, #333); box-sizing: border-box;
+        }
+        .qr-preview {
+            width: 200px; height: 200px; margin: 16px auto;
+            background: var(--surface, #fff); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px dashed var(--border, #ddd);
+            font-size: 0.8em; color: var(--text-subtle, #888);
+        }
+        .mock-qr {
+            display: grid; grid-template-columns: repeat(11, 1fr);
+            gap: 2px; width: 160px; height: 160px;
+        }
+        .mock-qr span {
+            aspect-ratio: 1; border-radius: 1px;
+        }
+        .mock-qr .b { background: #222; }
+        .mock-qr .w { background: #fff; }
+        .result-url {
+            background: #1a1a2e; color: #e8e8ea; border-radius: 8px;
+            padding: 10px; font-size: 0.78em; word-break: break-all;
+            margin-top: 10px;
+        }
+        .how-it-works {
+            margin-top: 20px;
+        }
+        .how-it-works ol {
+            padding-left: 20px; font-size: 0.88em;
+            color: var(--text, #333);
+        }
+        .how-it-works ol li { margin-bottom: 6px; }
+        .tag {
+            display: inline-block; font-size: 0.7em; padding: 2px 8px;
+            border-radius: 999px; background: #f59e0b20; color: #b45309;
+            font-weight: 600; margin-right: 4px;
+        }
+    </style>
+  <script type="module" crossorigin src="/will/assets/scripts-d3BtnBGw.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-DBH1DUSb.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-B5V2Wh3s.css">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/will/assets/logo.svg" alt="Logo" class="logo">
+        </a>
+        <h1>Quick Restock QR</h1>
+    </header>
+
+    <main>
+        <p style="color:var(--text-subtle,#888);font-size:0.9em;text-align:center">
+            Generate scannable QR codes for one-tap supply restock requests.
+        </p>
+
+        <div class="wireframe-container">
+
+            <!-- Form wireframe -->
+            <div class="form-group">
+                <label>Item</label>
+                <select>
+                    <option>— Select item —</option>
+                    <option>Gloves — Nitrile, Small</option>
+                    <option>Gloves — Nitrile, Medium</option>
+                    <option>Gloves — Nitrile, Large</option>
+                    <option>Wipes — Disinfectant</option>
+                    <option>Linens — Bath Towel</option>
+                    <option>Linens — Flat Sheet</option>
+                    <option>Hand Sanitizer</option>
+                    <option>Tape — Medical</option>
+                    <option>Gauze — 4×4</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Room / Area</label>
+                <select>
+                    <option>— Select location —</option>
+                    <option>Room 1</option>
+                    <option>Room 2</option>
+                    <option>Room 3</option>
+                    <option>Room 4</option>
+                    <option>Gym — South</option>
+                    <option>Gym — North</option>
+                    <option>Storage Closet</option>
+                    <option>Front Desk</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantity (optional)</label>
+                <input type="text" placeholder="e.g. 1 box, 2 packs" disabled>
+            </div>
+
+            <button class="button blue-button" style="width:100%;text-align:center;pointer-events:none;opacity:0.6;">
+                Generate QR Code
+            </button>
+
+            <!-- QR preview wireframe -->
+            <div class="qr-preview">
+                <div class="mock-qr">
+                    <span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span>
+                    <span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span>
+                    <span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span>
+                    <span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span>
+                    <span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="w"></span><span class="b"></span>
+                    <span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span>
+                    <span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+                    <span class="b"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span>
+                    <span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="w"></span>
+                    <span class="w"></span><span class="b"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span>
+                    <span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span><span class="b"></span><span class="b"></span><span class="w"></span>
+                </div>
+            </div>
+
+            <div class="result-url">
+                <span class="tag">URL</span>
+                /will/southeast-requestSupply.html?item=Gloves&room=Room3&qty=1
+            </div>
+
+            <div class="how-it-works">
+                <div class="collapse-button-container">
+                    <button class="collapse-button red-button" data-target="restockSpec" data-default-open="true">
+                        How It Works + Integration Spec
+                    </button>
+                    <div id="restockSpec" class="collapse-content">
+                        <ol>
+                            <li><strong>Generate</strong> — Pick an item and room. The tool builds a URL with query params.</li>
+                            <li><strong>Print QR</strong> — Post the QR code on the supply cabinet, shelf, or room door.</li>
+                            <li><strong>Scan & Submit</strong> — Staff scan the QR, the supply form opens <em>pre-filled</em> with the item and location. Tap submit.</li>
+                        </ol>
+
+                        <h4>URL format</h4>
+                        <pre>southeast-requestSupply.html?item=Gloves&room=Room3&qty=1box</pre>
+
+                        <h4>Required changes to supply form</h4>
+                        <p>The <code>requestSupply.js</code> handler reads <code>URLSearchParams</code> on init:</p>
+                        <pre>// In SupplyRequestHandler.initialize():
+const params = new URLSearchParams(location.search);
+if (params.has('item')) {
+  this.itemInput.value = params.get('item');
+  // trigger autocomplete or set field
+}
+if (params.has('room')) {
+  this.roomInput.value = params.get('room');
+}
+if (params.has('qty')) {
+  this.qtyInput.value = params.get('qty');
+}</pre>
+
+                        <h4>Files</h4>
+                        <pre>toolQuickRestock.html   → This page (wireframe)
+src/js/quickRestock.js   → QR generation logic (future)
+src/js/requestSupply.js  → + param parsing (~6 lines)
+public/data/supplyItems.json → Items list (already exists)</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="button-container">
+            <a href="v2index.html" class="button purple-button">
+                <img src="/will/assets/experimentalicon.svg" alt="Experimental" class="icon">
+                Experimental
+            </a>
+            <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">Contact Me</a>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Equipment reservation boards — FES Bike, Bertec, XCite and more.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <title>Equipment Reservations | Will Clinic Hub</title>
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <style>
+        /* ── Wireframe layout ──────────────────────────── */
+        .equipment-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px; margin: 14px 0;
+        }
+        .equipment-card {
+            background: var(--surface, #fff); border-radius: 12px;
+            padding: 18px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            border: 1px solid var(--border, #ddd);
+            transition: box-shadow 0.15s;
+        }
+        .equipment-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+        .equipment-card h3 { margin: 0 0 4px; font-size: 1.1em; color: var(--text-heading, #333); }
+        .equipment-card .status {
+            font-size: 0.75em; color: var(--text-subtle, #888);
+            margin-bottom: 10px;
+        }
+        .equipment-card .status.active { color: #22c55e; }
+        .equipment-card .status.wireframe { color: #f59e0b; }
+        .equipment-card .status.coming-soon { color: #888; }
+        .equipment-card .preview-row {
+            display: flex; gap: 4px; margin-top: 10px;
+        }
+        .equipment-card .slot {
+            flex: 1; height: 8px; border-radius: 4px;
+            background: var(--border, #ddd);
+        }
+        .equipment-card .slot.filled { background: var(--accent, #2563eb); }
+        .wireframe-badge {
+            display: inline-block; font-size: 0.65em;
+            background: #f59e0b; color: #fff; border-radius: 999px;
+            padding: 2px 8px; margin-top: 6px;
+        }
+        .note-box {
+            background: var(--surface, #fff8f0); border-left: 3px solid #f59e0b;
+            padding: 12px 16px; border-radius: 0 8px 8px 0;
+            margin: 18px 0; font-size: 0.85em;
+            color: var(--text-subtle, #666);
+        }
+        .shared-class { margin-top: 24px; }
+        .shared-class pre {
+            background: #1a1a2e; color: #e8e8ea; border-radius: 8px;
+            padding: 14px; font-size: 0.8em; overflow-x: auto;
+        }
+    </style>
+  <script type="module" crossorigin src="/will/assets/scripts-d3BtnBGw.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-DBH1DUSb.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-B5V2Wh3s.css">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/will/assets/logo.svg" alt="Logo" class="logo">
+        </a>
+        <h1>Equipment Reservations</h1>
+    </header>
+
+    <main>
+        <p style="color:var(--text-subtle,#888);font-size:0.9em">
+            Each equipment type has its own sign-up board. Select one to view available slots.
+        </p>
+
+        <div class="equipment-grid">
+
+            <!-- FES Bike — active -->
+            <div class="equipment-card">
+                <h3>FES Bike</h3>
+                <div class="status active">● Active</div>
+                <div class="preview-row">
+                    <span class="slot filled"></span>
+                    <span class="slot"></span>
+                    <span class="slot filled"></span>
+                    <span class="slot"></span>
+                    <span class="slot filled"></span>
+                </div>
+                <a href="fesBike.html" class="button blue-button" style="margin-top:10px;display:inline-block;">
+                    Open Board →
+                </a>
+            </div>
+
+            <!-- Bertec — wireframe -->
+            <div class="equipment-card">
+                <h3>Bertec</h3>
+                <div class="status wireframe">● Wireframe</div>
+                <div class="preview-row">
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                </div>
+                <span class="wireframe-badge">Spec ready</span>
+                <p style="font-size:0.78em;color:var(--text-subtle,#888);margin:8px 0 0">
+                    Weekly schedule — 4 time slots/day, reserve 30-min blocks.
+                </p>
+            </div>
+
+            <!-- XCite — wireframe -->
+            <div class="equipment-card">
+                <h3>XCite</h3>
+                <div class="status wireframe">● Wireframe</div>
+                <div class="preview-row">
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                    <span class="slot"></span>
+                </div>
+                <span class="wireframe-badge">Spec ready</span>
+                <p style="font-size:0.78em;color:var(--text-subtle,#888);margin:8px 0 0">
+                    Same shared class — configure time slots per equipment.
+                </p>
+            </div>
+
+            <!-- Future equipment placeholder -->
+            <div class="equipment-card" style="opacity:0.5">
+                <h3>+ Add Equipment</h3>
+                <div class="status coming-soon">Coming soon</div>
+                <p style="font-size:0.78em;color:var(--text-subtle,#888);margin:8px 0 0">
+                    New equipment types use the same shared <code>EquipmentBoard</code> class.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Shared class spec ─────────────────────────── -->
+        <div class="shared-class">
+            <div class="collapse-button-container">
+                <button class="collapse-button red-button" data-target="sharedClassSpec" data-default-open="true">
+                    Shared Class — Architecture
+                </button>
+                <div id="sharedClassSpec" class="collapse-content">
+                    <div class="note-box">
+                        <strong>Wireframe note:</strong> The FES Bike schedule table already follows this pattern.
+                        The <code>ScheduleTable</code> class takes a <code>scheduleType</code> parameter.
+                        New equipment types just pass a different type string.
+                    </div>
+
+                    <h3>EquipmentBoard — Shared Reservation Class</h3>
+                    <p><strong>Input:</strong> <code>equipmentType</code> (string), <code>timeSlots</code> (array), <code>days</code> (array)</p>
+                    <p><strong>Firebase path pattern:</strong> <code>equipment/{type}/schedule/{weekKey}/{day}/{timeSlot}</code></p>
+                    <p><strong>Flow:</strong> Load → Render grid → Click slot → Confirm → Save → Re-render</p>
+
+                    <h3>Integration per equipment type</h3>
+                    <pre>// 1. Define config per equipment
+const bertecConfig = {
+  type: 'bertec',
+  timeSlots: ['8am','9am','10am','11am','1pm','2pm','3pm'],
+  days: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
+  slotDuration: 30,        // minutes
+  maxPerSlot: 1,           // one person per slot
+};
+
+// 2. Instantiate shared class
+const board = new EquipmentBoard(dataManager, bertecConfig);
+board.mount(document.getElementById('bertecBoard'));</pre>
+
+                    <h3>File plan</h3>
+                    <pre>src/js/ui/equipmentBoard.js    → Shared EquipmentBoard class
+equipment.html                 → Hub page (this page)
+fesBike.html                   → Already built, uses ScheduleTable
+equipment-bertec.html          → New (wireframe)
+equipment-xcite.html           → New (wireframe)
+</pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="button-container">
+            <a href="v2index.html" class="button purple-button">
+                <img src="/will/assets/experimentalicon.svg" alt="Experimental" class="icon">
+                Experimental
+            </a>
+            <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">Contact Me</a>
+        </div>
+    </footer>
+
+</body>
+</html>

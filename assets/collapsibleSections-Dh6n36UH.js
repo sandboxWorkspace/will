@@ -1,0 +1,1 @@
+import{t as a}from"./utils-DL4mckC_.js";function n(){document.querySelectorAll(".collapse-button[data-target]").forEach(e=>{const t=e.dataset.target;t&&(e.addEventListener("click",()=>a(e,t)),e.dataset.defaultOpen==="true"&&document.getElementById(t)&&a(e,t))})}export{n as default};
