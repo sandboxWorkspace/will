@@ -12,8 +12,10 @@
         /* ── Reset base.css for full-screen app ──────────── */
         html, body { height: 100%; overflow: hidden; margin: 0; overscroll-behavior: none; }
         body {
-            display: block !important;
-            min-height: 100dvh;
+            display: flex !important;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
             padding: 0 !important;
             background: var(--bg, #f5f5f7);
             color: var(--text, #333);
@@ -38,6 +40,18 @@
             --success-dark: #16a34a;
             --surface: #fff;
             --surface-hover: #f0f0f0;
+
+            /* ── Fluid scale tokens (320px phones → desktop) ── */
+            --space-xs: clamp(4px, 1vw, 8px);
+            --space-s: clamp(6px, 1.6vw, 12px);
+            --space-m: clamp(10px, 2.5vw, 16px);
+            --space-l: clamp(14px, 3.5vw, 24px);
+            --space-xl: clamp(18px, 4.5vw, 30px);
+            --font-xs: clamp(0.66rem, 0.6rem + 0.3vw, 0.75rem);
+            --font-s: clamp(0.78rem, 0.65rem + 0.6vw, 0.92rem);
+            --font-m: clamp(0.88rem, 0.72rem + 0.8vw, 1.05rem);
+            --font-l: clamp(1rem, 0.85rem + 0.9vw, 1.2rem);
+            --touch-min: 44px;
         }
         body.dark {
             --bg: #1a1a1e;
@@ -56,10 +70,17 @@
         }
 
         /* ── Screens ─────────────────────────────────────── */
+        #appRoot {
+            flex: 1; min-height: 0;
+            display: flex; flex-direction: column;
+            align-items: stretch; justify-content: flex-start; /* override base.css main */
+            width: 100%;
+            position: relative;
+        }
         .screen { display: none; }
         .screen.active {
             display: flex; flex-direction: column;
-            height: 100vh; height: 100dvh; overflow: hidden;
+            flex: 1; min-height: 0; overflow: hidden;
         }
 
         /* ── Top bar (home + toggle) ──────────────────────── */
@@ -68,17 +89,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 10px;
+            padding: calc(var(--space-xs) + env(safe-area-inset-top)) var(--space-m) var(--space-xs);
             position: relative;
             z-index: 10;
         }
         #homeBtn {
             text-decoration: none;
-            font-size: 1.3em;
+            font-size: var(--font-l);
             color: var(--text-subtle);
             line-height: 1;
-            padding: 4px 8px;
-            border-radius: 8px;
+            min-width: var(--touch-min); min-height: var(--touch-min);
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 10px;
             transition: background 0.15s;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
@@ -89,10 +111,10 @@
             border: none;
             background: transparent;
             gap: 2px;
-            padding: 2px 4px;
+            padding: var(--space-s) var(--space-xs);
         }
-        #themeToggle .switch { width: 48px; height: 26px; }
-        #themeToggle .slider:before { height: 20px; width: 20px; }
+        #themeToggle .switch { width: 52px; height: 30px; }
+        #themeToggle .slider:before { height: 24px; width: 24px; }
         #themeToggle input:checked + .slider:before { transform: translateX(22px); }
         /* Fix: use page theme vars instead of toggleSwitch.css hardcoded colors */
         .switch.theme-switch .slider {
@@ -112,19 +134,13 @@
 
         /* ── Lobby ───────────────────────────────────────── */
         #lobbyScreen {
-            align-items: center; justify-content: center;
-            padding: 16px; gap: 8px;
-        }
-        @media (max-width: 400px) {
-            #lobbyScreen { padding: 10px; gap: 6px; }
-            .option-group button { padding: 4px 10px; font-size: 0.75em; }
-            #pinInput { font-size: 1.1em; letter-spacing: 4px; padding: 10px; }
-            #joinBtn { padding: 10px; font-size: 0.9em; }
-            .join-btn { padding: 8px 16px; font-size: 0.9em; }
+            align-items: center; justify-content: safe center;
+            padding: var(--space-l); gap: var(--space-m);
+            overflow-y: auto; /* fallback for very short viewports */
         }
         #lobbyScreen h1 {
-            font-size: 1.2em; font-weight: 600;
-            color: var(--text-heading); margin-bottom: 4px;
+            font-size: clamp(1.25rem, 1rem + 1.2vw, 1.6rem); font-weight: 600;
+            color: var(--text-heading); margin-bottom: var(--space-xs);
         }
         /* ── Mode pill ──────────────────────────────── */
         .pill {
@@ -133,11 +149,15 @@
             background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
         .pill button {
-            padding: 6px 20px; border: none; background: transparent;
-            font-size: 0.82em; cursor: pointer; color: var(--text-subtle);
+            padding: var(--space-s) var(--space-l); border: none; background: transparent;
+            font-size: var(--font-s); cursor: pointer; color: var(--text-subtle);
             transition: all 0.18s; position: relative;
             white-space: nowrap;
+            min-height: var(--touch-min);
+            display: inline-flex; align-items: center; justify-content: center;
         }
+        /* Difficulty pill holds 7 numeric options — tighter horizontal padding */
+        #diffPill button { padding: var(--space-s) clamp(10px, 2.5vw, 14px); }
         .pill button:not(:last-child)::after {
             content: ''; position: absolute; right: 0; top: 20%;
             height: 60%; width: 1px; background: var(--border);
@@ -149,24 +169,26 @@
         .pill button.active + button::after,
         .pill button.active::after { display: none; }
         .pill-label {
-            font-size: 0.7em; color: var(--text-subtle);
+            font-size: var(--font-xs); color: var(--text-subtle);
             letter-spacing: 0.04em; text-transform: uppercase;
         }
         .pill-group {
             display: flex; flex-direction: column; align-items: center;
-            gap: 5px; width: 100%;
+            gap: var(--space-xs); width: 100%;
         }
 
         /* ── Option buttons (count/timer presets) ────────── */
         .option-group {
-            display: flex; gap: 5px; justify-content: center;
-            flex-wrap: wrap; align-items: center; margin: 4px 0;
+            display: flex; gap: var(--space-xs); justify-content: center;
+            flex-wrap: wrap; align-items: center; margin: var(--space-xs) 0;
         }
         .option-group button {
-            padding: 5px 12px; border: 1.5px solid var(--border);
+            padding: var(--space-s) var(--space-m); border: 1.5px solid var(--border);
             border-radius: 8px; background: var(--surface);
-            font-size: 0.78em; cursor: pointer; color: var(--text-subtle);
+            font-size: var(--font-s); cursor: pointer; color: var(--text-subtle);
             transition: all 0.12s;
+            min-height: var(--touch-min);
+            display: inline-flex; align-items: center; justify-content: center;
         }
         .option-group button.active {
             border-color: var(--text-muted);
@@ -205,51 +227,53 @@
             font-style: italic; color: var(--text-subtle);
         }
         .option-group .custom-input {
-            width: 72px; padding: 6px 8px; font-size: 0.85em;
+            width: clamp(72px, 22vw, 92px); padding: var(--space-s); font-size: var(--font-m);
             border: 1.5px solid var(--border); border-radius: 8px;
             outline: none; background: var(--surface); color: var(--text);
-            text-align: center;
+            text-align: center; min-height: var(--touch-min); box-sizing: border-box;
         }
         .option-group .custom-input:focus { border-color: var(--accent); }
         #pinInput {
-            width: 100%; max-width: 280px; font-size: 1.3em;
-            letter-spacing: 6px; text-align: center;
-            padding: 12px; border: 1.5px solid var(--border);
+            width: 100%; max-width: 280px;
+            font-size: clamp(1.3rem, 1rem + 1.8vw, 1.7rem);
+            letter-spacing: clamp(4px, 1.4vw, 8px); text-align: center;
+            padding: var(--space-m); border: 1.5px solid var(--border);
             border-radius: 10px; outline: none;
             background: var(--surface); color: var(--text);
+            min-height: 48px;
             box-sizing: border-box;
         }
         #pinInput:focus { border-color: var(--accent); }
         #joinBtn {
-            width: 100%; max-width: 280px; padding: 12px;
+            width: 100%; max-width: 280px; padding: var(--space-m);
             border: none; border-radius: 10px;
-            background: var(--success); color: #fff; font-size: 1em;
-            font-weight: 600; cursor: pointer;
+            background: var(--success); color: #fff; font-size: var(--font-l);
+            font-weight: 600; cursor: pointer; min-height: 48px;
         }
         #joinBtn:disabled { opacity: 0.5; }
         .lobby-divider {
-            color: var(--text-subtle); font-size: 0.85em;
-            margin: 6px 0;
+            color: var(--text-subtle); font-size: var(--font-m);
+            margin: var(--space-xs) 0;
         }
         .create-btn {
-            width: 100%; max-width: 280px; padding: 12px;
+            width: 100%; max-width: 280px; padding: var(--space-m);
             border: none; border-radius: 10px;
-            background: var(--accent); color: #fff; font-size: 1em;
-            font-weight: 600; cursor: pointer;
+            background: var(--accent); color: #fff; font-size: var(--font-l);
+            font-weight: 600; cursor: pointer; min-height: 48px;
         }
         .create-btn:disabled { opacity: 0.5; }
         #lobbyStatus {
-            text-align: center; font-size: 0.85em;
+            text-align: center; font-size: var(--font-m);
             color: var(--text-subtle);
             min-height: 1.2em; font-style: italic;
         }
 
         /* ── Host area (after create) ─────────────────────── */
         #hostArea { display: none; }
-        #hostArea.show { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        #pinLabel { font-size: 0.8em; color: var(--text-subtle); }
+        #hostArea.show { display: flex; flex-direction: column; align-items: center; gap: var(--space-s); }
+        #pinLabel { font-size: var(--font-m); color: var(--text-subtle); }
         #pinDisplay {
-            font-size: 2.4em; font-weight: 800; letter-spacing: 4px;
+            font-size: clamp(2rem, 1.5rem + 2.5vw, 2.8rem); font-weight: 800; letter-spacing: clamp(4px, 1vw, 8px);
             color: var(--accent); text-align: center;
             display: inline-block; width: auto;
         }
@@ -258,29 +282,31 @@
             border-radius: 12px;
             box-shadow: 0 2px 16px rgba(0,0,0,0.1);
         }
-        #waitingMsg { font-size: 0.85em; color: var(--text-subtle); font-style: italic; }
+        #waitingMsg { font-size: var(--font-m); color: var(--text-subtle); font-style: italic; }
         .cancel-btn {
-            padding: 8px 20px; border: 1px solid var(--border);
+            padding: var(--space-s) var(--space-l); border: 1px solid var(--border);
             border-radius: 8px; background: var(--surface);
-            color: var(--text-subtle); font-size: 0.85em; cursor: pointer;
+            color: var(--text-subtle); font-size: var(--font-m); cursor: pointer;
+            min-height: var(--touch-min);
+            display: inline-flex; align-items: center; justify-content: center;
         }
 
         /* ── Game ─────────────────────────────────────────── */
         #gameHeader {
             flex-shrink: 0; display: flex; justify-content: space-between;
-            align-items: center; padding: 6px 14px;
-            font-size: 0.8em; color: var(--text-subtle);
-            gap: 10px;
+            align-items: center; padding: var(--space-xs) var(--space-m);
+            font-size: var(--font-s); color: var(--text-subtle);
+            gap: var(--space-s);
         }
         #countSection {
-            display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;
+            display: flex; align-items: center; gap: var(--space-xs); flex: 1; min-width: 0;
         }
         #countSymbol {
-            font-size: 1.3em; font-weight: 300; color: var(--text-subtle);
+            font-size: clamp(1.2rem, 1rem + 0.8vw, 1.5rem); font-weight: 300; color: var(--text-subtle);
             line-height: 1; opacity: 0.6;
         }
         #countNumber {
-            font-size: 1.6em; font-weight: 700; color: var(--accent);
+            font-size: clamp(1.4rem, 1.2rem + 1vw, 1.75rem); font-weight: 700; color: var(--accent);
             min-width: 2ch; text-align: right; line-height: 1; font-variant-numeric: tabular-nums;
         }
         #countTrack {
@@ -292,77 +318,106 @@
             border-radius: 4px; transition: width 0.25s ease;
         }
         #countMax {
-            font-size: 0.85em; color: var(--text-subtle); margin-left: -4px;
+            font-size: var(--font-s); color: var(--text-subtle); margin-left: -4px;
         }
         #timerDisplay {
             display: flex; align-items: center; gap: 4px;
-            font-size: 1em; color: var(--text-subtle);
+            font-size: var(--font-m); color: var(--text-subtle);
         }
         #timerDisplay svg { width: 16px; height: 16px; flex-shrink: 0; }
         #cardArea {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 4px 10px; overflow: hidden;
+            flex: 1; min-height: 0; display: flex; align-items: stretch; justify-content: stretch;
+            padding: 8px 10px; overflow: hidden;
+            gap: 8px;
         }
-        #myCard {
-            container-type: inline-size;
-            position: relative; width: 100%;
-            max-width: min(85vw, 440px);
-            aspect-ratio: 5 / 7;
-            max-height: 82vh;
+        /* One-device mode: stacked face-to-face in portrait (top card rotated
+           180°), side-by-side in landscape / wide desktop. The rotation rides
+           in --flip so EVERY transform consumer (press state, pulse animation)
+           keeps it — animations override normal transform rules otherwise. */
+        #cardArea.local-split { flex-direction: column; }
+        #cardArea.local-split #cardB { order: -1; --flip: rotate(180deg); }
+        @media (orientation: landscape) {
+            #cardArea.local-split { flex-direction: row; }
+            #cardArea.local-split #cardB { order: 0; --flip: rotate(0deg); }
+        }
+        .game-card {
+            --flip: rotate(0deg);
+            position: relative;
+            flex: 1 1 0; min-width: 0; min-height: 0;
             overflow: hidden;
-            background: var(--card-bg); border-radius: 20px;
+            transform: var(--flip);
+            background: var(--card-bg); border-radius: 5%;
             box-shadow: 0 2px 20px rgba(0,0,0,0.08);
             cursor: pointer;
             transition: opacity 0.18s ease, box-shadow 0.15s, transform 0.15s;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
-        #myCard:active {
+        .game-card:active {
             box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            transform: scale(0.98);
+            transform: var(--flip) scale(0.98);
         }
-        #myCard .cell {
+        .game-card .cell {
             position: absolute; display: flex;
             align-items: center; justify-content: center;
-            font-size: 16cqi; user-select: none; line-height: 1;
+            font-size: 16px; /* fallback — paintCard always sets px explicitly */
+            user-select: none; line-height: 1;
             pointer-events: none;
             opacity: 0; animation: cellIn 0.28s ease forwards;
             will-change: opacity, filter;
         }
-        #myCard .cell:nth-child(1) { animation-delay: 0.00s; }
-        #myCard .cell:nth-child(2) { animation-delay: 0.03s; }
-        #myCard .cell:nth-child(3) { animation-delay: 0.06s; }
-        #myCard .cell:nth-child(4) { animation-delay: 0.09s; }
-        #myCard .cell:nth-child(5) { animation-delay: 0.12s; }
-        #myCard .cell:nth-child(6) { animation-delay: 0.15s; }
-        #myCard .cell:nth-child(7) { animation-delay: 0.18s; }
-        #myCard .cell:nth-child(8) { animation-delay: 0.21s; }
-        #myCard .cell:nth-child(9) { animation-delay: 0.24s; }
-        #myCard .cell:nth-child(10) { animation-delay: 0.27s; }
+        .game-card .cell:nth-child(1) { animation-delay: 0.00s; }
+        .game-card .cell:nth-child(2) { animation-delay: 0.03s; }
+        .game-card .cell:nth-child(3) { animation-delay: 0.06s; }
+        .game-card .cell:nth-child(4) { animation-delay: 0.09s; }
+        .game-card .cell:nth-child(5) { animation-delay: 0.12s; }
+        .game-card .cell:nth-child(6) { animation-delay: 0.15s; }
+        .game-card .cell:nth-child(7) { animation-delay: 0.18s; }
+        .game-card .cell:nth-child(8) { animation-delay: 0.21s; }
+        .game-card .cell:nth-child(9) { animation-delay: 0.24s; }
+        .game-card .cell:nth-child(10) { animation-delay: 0.27s; }
         @keyframes cellIn {
             from { opacity: 0; }
             to   { opacity: 1; }
         }
-        #myCard .cell.size-xl { font-size: 20cqi; }
-        #myCard .cell.size-lg { font-size: 18cqi; }
-        #myCard .cell.size-md { font-size: 15cqi; }
-        #myCard .cell.size-sm { font-size: 12cqi; }
-        /* ── Match: all others vanish, match stays ───────── */
-        @keyframes vanish {
-            to { opacity: 0; }
+        /* ── Match reveal: halo + pop on the match, others dim ── */
+        @keyframes cellDim {
+            from { opacity: 1; }
+            to   { opacity: 0.15; }
         }
-        #myCard .cell.cell-hide { animation: vanish 0.18s ease forwards; }
-        @keyframes foundPop {
-            50%  { filter: brightness(1.2); }
-            100% { filter: none; }
+        .game-card .cell.cell-dim { animation: cellDim 0.25s ease forwards; }
+        @keyframes matchPop {
+            0%   { transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(1); }
+            35%  { transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(1.22); }
+            100% { transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(1); }
         }
-        #myCard .cell.match-highlight { animation: foundPop 0.22s ease-out; }
+        .game-card .cell.match-highlight {
+            z-index: 2;
+            opacity: 1; /* matchPop replaces cellIn's forwards fill — re-anchor visibility */
+            animation: matchPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .game-card .cell.match-highlight::before {
+            content: '';
+            position: absolute;
+            inset: -16%;
+            border-radius: 50%;
+            background: var(--success);
+            opacity: 0;
+            animation: haloPulse 0.7s ease-out forwards;
+            z-index: -1;
+        }
+        @keyframes haloPulse {
+            0%   { opacity: 0;   transform: scale(0.6); }
+            25%  { opacity: 0.28; transform: scale(1.1); }
+            60%  { opacity: 0.22; transform: scale(1); }
+            100% { opacity: 0.16; transform: scale(1); }
+        }
         @keyframes cardPulse {
-            0%   { transform: scale(1); }
-            50%  { transform: scale(1.015); }
-            100% { transform: scale(1); }
+            0%   { transform: var(--flip) scale(1); }
+            50%  { transform: var(--flip) scale(1.015); }
+            100% { transform: var(--flip) scale(1); }
         }
-        #myCard.match-pulse { animation: cardPulse 0.3s ease; }
+        .game-card.match-pulse { animation: cardPulse 0.3s ease; }
 
         /* ── Timer bar ───────────────────────────────────── */
         #timerBar {
@@ -388,56 +443,200 @@
 
         /* ── Controls ─────────────────────────────────────── */
         #bottomArea {
-            flex-shrink: 0; padding: 4px 14px calc(12px + env(safe-area-inset-bottom));
+            flex-shrink: 0; padding: var(--space-xs) var(--space-m) calc(var(--space-m) + env(safe-area-inset-bottom));
         }
         .bottom-row {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 4px;
+            margin-top: var(--space-xs);
         }
+        .bottom-actions { display: flex; gap: var(--space-xs); }
+        #undoBtn:disabled { opacity: 0.4; cursor: default; }
         #gameStatus {
-            font-size: 0.8em; color: var(--text-subtle);
+            font-size: var(--font-s); color: var(--text-subtle);
             font-style: italic; line-height: 1.3;
         }
         .end-btn {
-            padding: 6px 14px; border: 1px solid var(--border);
+            padding: var(--space-s) var(--space-m); border: 1px solid var(--border);
             border-radius: 8px; background: var(--surface);
-            color: var(--text-subtle); font-size: 0.8em; cursor: pointer;
+            color: var(--text-subtle); font-size: var(--font-s); cursor: pointer;
+            min-height: var(--touch-min);
+            display: inline-flex; align-items: center; justify-content: center;
         }
 
         /* ── Results ──────────────────────────────────────── */
         #resultsScreen {
-            align-items: center; justify-content: center; text-align: center;
-            padding: 20px; gap: 12px;
+            align-items: center; justify-content: safe center; text-align: center;
+            padding: var(--space-xl); gap: var(--space-m);
+            overflow-y: auto;
         }
         #resultsScreen h2 {
-            font-size: 1.5em;
+            font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
             color: var(--text-heading);
             background: none;
             -webkit-text-fill-color: initial;
             animation: fadeUp 0.4s ease both;
         }
         .result-stat {
-            font-size: 1em; color: var(--text-subtle);
+            font-size: var(--font-s); color: var(--text-subtle);
+            background: var(--card-bg); border: 1.5px solid var(--border);
+            border-radius: 12px; padding: var(--space-s) var(--space-m);
+            text-align: center;
             animation: fadeUp 0.4s ease 0.1s both;
         }
         .result-stat .num {
-            display: block; font-size: 2.5em; font-weight: 800;
+            display: block; font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem); font-weight: 800;
             color: var(--accent); margin-top: 2px;
         }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--space-s);
+            width: 100%; max-width: 420px;
+        }
+        #roundChart {
+            display: flex; align-items: flex-end; justify-content: center;
+            gap: 3px; height: 110px; width: 100%; max-width: 420px;
+            padding: var(--space-s); box-sizing: border-box;
+            border: 1.5px solid var(--border); border-radius: 12px;
+            background: var(--card-bg);
+            animation: fadeUp 0.4s ease 0.15s both;
+        }
+        #roundChart .bar {
+            flex: 1 1 0; max-width: 18px; min-height: 3px;
+            border-radius: 2px 2px 0 0;
+            background: var(--accent);
+        }
+        #roundChart .bar.best { background: var(--success); }
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: translateY(0); }
         }
         #newBtn {
-            margin-top: 16px; padding: 12px 40px; border: none; border-radius: 40px;
+            margin-top: var(--space-l); padding: var(--space-m) var(--space-xl);
+            border: none; border-radius: 40px;
             background: var(--accent); color: #fff;
-            font-size: 1em; font-weight: 600; cursor: pointer;
+            font-size: var(--font-l); font-weight: 600; cursor: pointer;
+            min-height: 48px;
             animation: fadeUp 0.4s ease 0.2s both;
             transition: transform 0.12s, box-shadow 0.12s;
         }
         #newBtn:active { transform: scale(0.96); box-shadow: none; }
+
+        /* ── Exit confirm modal ──────────────────────────── */
+        #exitConfirm {
+            display: none; position: fixed; inset: 0; z-index: 50;
+            align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.45);
+            padding: 24px;
+        }
+        #exitConfirm.show { display: flex; }
+        #exitConfirm .modal-card {
+            background: var(--card-bg); border-radius: 16px;
+            padding: 22px 24px; max-width: 320px; width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+            animation: fadeUp 0.2s ease both;
+        }
+        #exitConfirm h3 {
+            margin: 0 0 4px; font-size: 1.05em; font-weight: 600;
+            color: var(--text-heading);
+        }
+        #exitConfirm .modal-text {
+            margin: 0 0 18px; font-size: 0.85em; color: var(--text-subtle);
+        }
+        #exitConfirm .modal-actions { display: flex; gap: 10px; }
+        #exitConfirm .modal-btn {
+            flex: 1; min-height: 44px; padding: 10px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            background: var(--surface); color: var(--text);
+            font-size: 0.95em; cursor: pointer;
+        }
+        #exitConfirm .modal-btn.primary {
+            background: var(--accent); border-color: var(--accent);
+            color: #fff; font-weight: 600;
+        }
+
+        /* ── Landscape (short viewports): compact chrome ──── */
+        @media (orientation: landscape) and (max-height: 500px) {
+            #topBar { padding-top: calc(4px + env(safe-area-inset-top)); padding-bottom: 2px; }
+            #lobbyScreen { padding: var(--space-s); gap: var(--space-xs); }
+            #gameHeader { padding: 2px var(--space-s); }
+            #bottomArea { padding: 2px var(--space-s) calc(6px + env(safe-area-inset-bottom)); }
+            .bottom-row { margin-top: 0; }
+        }
+
+        /* ── Desktop card-size stepper (zoom-style − / +) ─── */
+        .topbar-right { display: flex; align-items: center; gap: var(--space-s); }
+        #sizeStep {
+            display: none;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--surface);
+        }
+        #sizeStep button {
+            min-width: 44px; min-height: 44px;
+            border: none; background: transparent;
+            font-size: var(--font-l); color: var(--text-subtle); cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        #sizeStep button:hover { color: var(--accent); }
+        #sizeStep button:active { background: var(--surface-hover); }
+        /* Native slider between the buttons — styled to match: 4px track, accent dot */
+        #sizeRange {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 110px; height: 44px;
+            background: transparent;
+            cursor: pointer;
+            margin: 0;
+        }
+        #sizeRange::-webkit-slider-runnable-track {
+            height: 4px; border-radius: 2px;
+            background: var(--border);
+        }
+        #sizeRange::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent);
+            margin-top: -5px;               /* center the dot on the 4px track */
+            border: none;
+        }
+        #sizeRange::-moz-range-track {
+            height: 4px; border-radius: 2px;
+            background: var(--border);
+        }
+        #sizeRange::-moz-range-thumb {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent);
+            border: none;
+        }
+        #sizeRange:focus-visible {
+            outline: 1.5px solid var(--accent);
+            outline-offset: -3px;
+            border-radius: 8px;
+        }
+
+        /* ── 1-device mode needs room — desktop / large displays only ── */
+        @media (max-width: 699px) {
+            #playersGroup, #startLocalBtn { display: none !important; }
+        }
+
+        /* ── Desktop: app width follows the slider (--app-max; 100% = full).
+           The topbar stays full-width so the slider never moves — only the
+           app column below it resizes. Fully continuous: no mode classes. ── */
+        @media (min-width: 700px) {
+            #sizeStep { display: inline-flex; }
+            #topBar { border-bottom: 1px solid var(--border); }
+            body { align-items: center; }
+            #topBar, #appRoot { width: 100%; }
+            #appRoot { max-width: var(--app-max, 100%); }
+        }
     </style>
-  <script type="module" crossorigin src="/will/assets/scripts-CC4F18fF.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-Z_PwQvXb.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-DBH1DUSb.css">
   <link rel="stylesheet" crossorigin href="/will/assets/toggleSwitch-BrWqXYZC.css">
 </head>
@@ -445,13 +644,24 @@
     <!-- TOP BAR -->
     <div id="topBar">
         <a id="homeBtn" href="/will/" aria-label="Home">←</a>
-        <div id="themeToggle" class="color-toggle-container">
-            <label class="switch theme-switch">
-                <input type="checkbox" id="themeToggleInput">
-                <span class="slider round"></span>
-            </label>
+        <div class="topbar-right">
+            <div id="sizeStep" role="group" aria-label="Card size">
+                <button id="sizeMinus" aria-label="Shrink card" title="Shrink card">−</button>
+                <input type="range" id="sizeRange" min="0" max="100" step="1"
+                       aria-label="Card size level" tabindex="-1">
+                <button id="sizePlus" aria-label="Grow card" title="Grow card">+</button>
+            </div>
+            <div id="themeToggle" class="color-toggle-container">
+                <label class="switch theme-switch">
+                    <input type="checkbox" id="themeToggleInput">
+                    <span class="slider round"></span>
+                </label>
+            </div>
         </div>
     </div>
+
+    <!-- APP ROOT (flex-fills remaining height below topBar) -->
+    <main id="appRoot">
 
     <!-- LOBBY -->
     <div id="lobbyScreen" class="screen active">
@@ -481,20 +691,33 @@
                    placeholder="Min" min="1" max="30" style="display:none">
         </div>
         <div class="pill-group">
-            <span class="pill-label">Difficulty</span>
-            <div class="pill">
-                <button data-n="6">Easy</button>
-                <button data-n="8" class="active">Medium</button>
-                <button data-n="10">Hard</button>
+            <span class="pill-label">Difficulty (symbols per card)</span>
+            <div class="pill" id="diffPill">
+                <button data-n="3">3</button>
+                <button data-n="4">4</button>
+                <button data-n="5">5</button>
+                <button data-n="6">6</button>
+                <button data-n="8" class="active">8</button>
+                <button data-n="9">9</button>
+                <button data-n="10">10</button>
             </div>
             <div id="diffPreview" class="diff-preview"></div>
         </div>
+        <div class="pill-group" id="playersGroup">
+            <span class="pill-label">Players</span>
+            <div class="pill" id="playersPill">
+                <button class="players-btn active" data-players="2">2 Devices</button>
+                <button class="players-btn" data-players="1">1 Device</button>
+            </div>
+        </div>
+
+        <button id="startLocalBtn" class="create-btn" style="display:none">Start Game</button>
 
         <button id="createBtn" class="create-btn">Create Room</button>
 
         <div class="lobby-divider">— or —</div>
 
-        <input type="text" id="pinInput" placeholder="Enter PIN" maxlength="6"
+        <input type="text" id="pinInput" placeholder="Enter PIN" maxlength="4"
                inputmode="numeric" pattern="[0-9]*" autocomplete="off">
         <button id="joinBtn" class="join-btn">Join Room</button>
 
@@ -530,12 +753,16 @@
             </span>
         </div>
         <div id="cardArea">
-            <div id="myCard"></div>
+            <div id="myCard" class="game-card"></div>
+            <div id="cardB" class="game-card" hidden></div>
         </div>
         <div id="bottomArea">
             <div class="bottom-row">
                 <span id="gameStatus">Tap the card to find it</span>
-                <button id="endBtn" class="end-btn">End</button>
+                <div class="bottom-actions">
+                    <button id="undoBtn" class="end-btn" title="Undo last round" aria-label="Undo last round">↺</button>
+                    <button id="endBtn" class="end-btn">End</button>
+                </div>
             </div>
         </div>
     </div>
@@ -543,13 +770,29 @@
     <!-- RESULTS -->
     <div id="resultsScreen" class="screen">
         <h2>Done!</h2>
-        <div class="result-stat">
-            Rounds <span class="num" id="resultRounds">0</span>
+        <div class="stat-grid">
+            <div class="result-stat">Rounds<span class="num" id="resultRounds">0</span></div>
+            <div class="result-stat">Total time<span class="num" id="resultTotal">–</span></div>
+            <div class="result-stat">Avg find<span class="num" id="resultAvg">–</span></div>
+            <div class="result-stat">Best find<span class="num" id="resultBest">–</span></div>
+            <div class="result-stat">Finds / min<span class="num" id="resultRate">–</span></div>
         </div>
-        <div class="result-stat" id="resultTimerRow" style="display:none">
-            Time <span class="num" id="resultTime">0</span>s
-        </div>
+        <div id="roundChart" aria-label="Find time per round"></div>
         <button id="newBtn">Play Again</button>
+    </div>
+
+    </main>
+
+    <!-- EXIT CONFIRM -->
+    <div id="exitConfirm" role="dialog" aria-modal="true" aria-labelledby="exitConfirmTitle">
+        <div class="modal-card">
+            <h3 id="exitConfirmTitle">Exit current game?</h3>
+            <p class="modal-text">Your partner will be disconnected.</p>
+            <div class="modal-actions">
+                <button id="exitNo" class="modal-btn">Cancel</button>
+                <button id="exitYes" class="modal-btn primary">Exit</button>
+            </div>
+        </div>
     </div>
 
     <script>
