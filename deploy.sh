@@ -4,6 +4,7 @@ set -euo pipefail
 # Cleanup function: remove temp files and return to main branch
 cleanup() {
     rm -rf ../temp_gh_pages
+    rm -f ../AGENTS.keep
     git checkout main 2>/dev/null || true
 }
 trap cleanup EXIT
@@ -22,6 +23,10 @@ git push origin main
 mkdir -p ../temp_gh_pages
 cp -r dist/* ../temp_gh_pages/
 
+# Preserve gitignored local-only files (AGENTS.md) across the working-tree
+# swap below — rm -rf doesn't respect .gitignore
+[ -f AGENTS.md ] && cp AGENTS.md ../AGENTS.keep || true
+
 git checkout gh-pages
 
 # Clean up the current gh-pages directory (keep .git)
@@ -29,6 +34,7 @@ rm -rf ./* 2>/dev/null || true
 
 # Copy the built files to the gh-pages branch
 cp -r ../temp_gh_pages/* .
+[ -f ../AGENTS.keep ] && mv ../AGENTS.keep AGENTS.md || true
 
 read -p "Do you want to push to gh-pages? (y/n): " confirm_push
 

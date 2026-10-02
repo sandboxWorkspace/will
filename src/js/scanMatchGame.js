@@ -19,9 +19,18 @@ const REVEAL_MS = 700;
 const PIN_MIN = 1000;
 const PIN_MAX = 9999;
 
-// Desktop card-size stepper: smallest centered app column + step size (px)
-const APP_MIN_W = 420;
-const APP_STEP_PX = 120;
+// How long a Firebase room operation may hang before failing with a
+// readable message (flaky sockets otherwise stall "Creating…" forever)
+const FB_TIMEOUT_MS = 12000;
+
+/** Reject with `message` if the promise hasn't settled within `ms`. */
+function withTimeout(promise, ms, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 // ── 91 Emoji Symbols (supports N=6,8,10 projective planes) ────────────
 const EMOJI = [
@@ -138,26 +147,36 @@ export class ScanMatchGame {
     this.timerInterval = null;
     this.maxRounds = 25;
     this.symbolsPerCard = 8;
+
+    // Connection state: emits 'connChanged' (true|false) via the pub-sub.
+    // `.info/connected` is a standard RTDB presence node (no auth needed).
+    onValue(ref(this.db, '.info/connected'), (snap) => {
+      this._notify('connChanged', !!snap.val());
+    });
   }
 
   // ── Room Management ─────────────────────────────────────────────────
 
-  /** Create a room. Returns the PIN string. */
-  async createRoom(mode = 'count', timerDuration = 60, maxRounds = 25, symbolsPerCard = 8) {
+  /** Create a room. Returns the PIN string. `attempt` varies the retry seed
+   * so a same-millisecond collision retry can't regenerate the same PIN. */
+  async createRoom(mode = 'count', timerDuration = 60, maxRounds = 25, symbolsPerCard = 8, attempt = 0) {
     this.mode = mode;
     this.timerDuration = timerDuration;
     this.maxRounds = maxRounds;
     this.symbolsPerCard = symbolsPerCard;
 
-    const rng = new SeededRNG(Date.now());
+    const rng = new SeededRNG(Date.now() + attempt * 7919);
     this.pin = String(PIN_MIN + Math.floor(rng.next() * (PIN_MAX - PIN_MIN + 1)));
     this.role = 'host';
 
     const roomRef = ref(this.db, `scanMatchSessions/${this.pin}`);
-    const existing = await get(roomRef);
-    if (existing.exists()) return this.createRoom(mode, timerDuration, maxRounds, symbolsPerCard);
+    const existing = await withTimeout(get(roomRef), FB_TIMEOUT_MS,
+      'Couldn\u2019t reach the game server \u2014 check your connection.');
+    if (existing.exists()) {
+      return this.createRoom(mode, timerDuration, maxRounds, symbolsPerCard, attempt + 1);
+    }
 
-    await set(roomRef, {
+    await withTimeout(set(roomRef, {
       status: 'waiting',
       round: 0,
       mode,
@@ -165,7 +184,8 @@ export class ScanMatchGame {
       maxRounds: this.maxRounds,
       symbolsPerCard: this.symbolsPerCard,
       createdAt: serverTimestamp()
-    });
+    }), FB_TIMEOUT_MS,
+      'Couldn\u2019t reach the game server \u2014 check your connection.');
 
     // Auto-cleanup: delete room when host disconnects
     onDisconnect(roomRef).remove();
@@ -182,16 +202,18 @@ export class ScanMatchGame {
     this.role = 'guest';
 
     const roomRef = ref(this.db, `scanMatchSessions/${pin}`);
-    const snap = await get(roomRef);
+    const snap = await withTimeout(get(roomRef), FB_TIMEOUT_MS,
+      'Couldn\u2019t reach the game server \u2014 check your connection.');
     if (!snap.exists()) throw new Error('Room not found. Check the PIN.');
 
     const data = snap.val();
     if (data.status !== 'waiting') throw new Error('Room is not available.');
 
-    await update(roomRef, {
+    await withTimeout(update(roomRef, {
       status: 'playing',
       startedAt: serverTimestamp()
-    });
+    }), FB_TIMEOUT_MS,
+      'Couldn\u2019t reach the game server \u2014 check your connection.');
 
     this.mode = data.mode || 'count';
     this.timerDuration = data.timerDuration !== undefined ? data.timerDuration : 60;
@@ -337,42 +359,14 @@ export class ScanMatchGame {
 
   // ── Card Data ────────────────────────────────────────────────────────
 
-  /** Find the common symbol index between the two current cards. */
-  getMatchSymbolIndex() {
+  /** Find the common symbol index between the two cards of a round. */
+  getMatchSymbolIndex(round = this.round) {
     if (this.deck.length === 0) return -1;
-    const idx = this.round * 2;
+    const idx = round * 2;
     const left = this.deck[idx % this.deck.length];
     const right = this.deck[(idx + 1) % this.deck.length];
     const rightSet = new Set(right);
     return left.find(i => rightSet.has(i)) ?? -1;
-  }
-
-  /** Get the two cards for the current round: [leftCard, rightCard] (emoji strings). */
-  getCurrentPair() {
-    if (this.deck.length === 0) return [[], []];
-    const idx = this.round * 2;
-    const left = this.deck[idx % this.deck.length];
-    const right = this.deck[(idx + 1) % this.deck.length];
-    return [
-      left.map(i => this.emojiMap[i]),
-      right.map(i => this.emojiMap[i])
-    ];
-  }
-
-  /** Get emojis for this device's card. */
-  getMyCard() {
-    if (this.deck.length === 0) return [];
-    const idx = this.round * 2 + (this.role === 'guest' ? 1 : 0);
-    const card = this.deck[idx % this.deck.length];
-    return card.map(i => this.emojiMap[i]);
-  }
-
-  /** Get emojis for the partner's card. */
-  getPartnerCard() {
-    if (this.deck.length === 0) return [];
-    const idx = this.round * 2 + (this.role === 'guest' ? 0 : 1);
-    const card = this.deck[idx % this.deck.length];
-    return card.map(i => this.emojiMap[i]);
   }
 
   // ── Internal ─────────────────────────────────────────────────────────
@@ -464,7 +458,6 @@ export class ScanMatchUI {
 
     // Restore theme + desktop layout preference from localStorage
     this._restoreTheme();
-    this._restoreLayout();
 
     // Show initial difficulty preview
     this._updateDiffPreview();
@@ -508,22 +501,23 @@ export class ScanMatchUI {
     this.waitingMsg = document.getElementById('waitingMsg');
     this.cancelBtn = document.getElementById('cancelBtn');
     this.lobbyStatus = document.getElementById('lobbyStatus');
-    this.playersBtns = document.querySelectorAll('.players-btn');
+    this.startGameBtn = document.getElementById('startGameBtn');
+    this.startModal = document.getElementById('startModal');
+    this.startCancel = document.getElementById('startCancel');
     this.startLocalBtn = document.getElementById('startLocalBtn');
+    this.modeSection = document.getElementById('modeSection');
+    this.difficultySection = document.getElementById('difficultySection');
+    this.playSection = document.getElementById('playSection');
     this.selectedMode = 'count';
     this.selectedDiff = 8;
     this.selectedCount = 25;
     this.selectedTimer = 120;
-    this.selectedPlayers = '2';
 
     // Theme toggle
     this.themeToggle = document.getElementById('themeToggleInput');
 
-    // Desktop card-size stepper
-    this.sizeStep = document.getElementById('sizeStep');
-    this.sizeMinus = document.getElementById('sizeMinus');
-    this.sizePlus = document.getElementById('sizePlus');
-    this.sizeRange = document.getElementById('sizeRange');
+    // Connection indicator
+    this.connDot = document.getElementById('connDot');
 
     // Game
     this.countNumber = document.getElementById('countNumber');
@@ -551,6 +545,7 @@ export class ScanMatchUI {
     // Per-round timing (paint-ready → tap; excludes reveal + render time)
     this._paintedRound = -1;
     this._readyAt = null;
+    this._revealUntil = 0;      // timestamp: reveal animation active until
 
     // Back / exit
     this.homeBtn = document.getElementById('homeBtn');
@@ -566,7 +561,7 @@ export class ScanMatchUI {
       if (e.key === 'Enter') this._onJoin();
     });
     this.joinBtn.addEventListener('click', () => this._onJoin());
-    this.createBtn.addEventListener('click', () => this._onCreate());
+    this.createBtn.addEventListener('click', () => { this._hideStartModal(); this._onCreate(); });
     this.cancelBtn.addEventListener('click', () => this._reset());
 
     // Mode toggles
@@ -628,16 +623,17 @@ export class ScanMatchUI {
       this.selectedTimer = (parseInt(this.timerCustomInput.value, 10) || 1) * 60;
     });
 
-    // Players: 2 devices (pair by PIN/QR) vs 1 device (two players, one screen)
-    this.playersBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.playersBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.selectedPlayers = btn.dataset.players;
-        this._applyPlayersVisibility();
-      });
+    // Start Game → mode popup (Create Room = 2 devices, Play on 1 Device)
+    this.startGameBtn.addEventListener('click', () => this._showStartModal());
+    this.startCancel.addEventListener('click', () => this._hideStartModal());
+    this.startModal.addEventListener('click', (e) => {
+      if (e.target === this.startModal) this._hideStartModal();   // backdrop tap
     });
-    this.startLocalBtn.addEventListener('click', () => this._onStartLocal());
+    // One-device game (1-device option — CSS-gated nowhere: available everywhere)
+    this.startLocalBtn.addEventListener('click', () => {
+      this._hideStartModal();
+      this._onStartLocal();
+    });
 
     // Game — cards ARE the Found It button (either card in one-device mode)
     this.myCard.addEventListener('click', () => this._onFoundIt());
@@ -649,15 +645,6 @@ export class ScanMatchUI {
     // Re-layout on resize/rotation (same seed → same arrangement, rescaled)
     let resizeTimer = null;
     window.addEventListener('resize', () => {
-      // Keep the Players gating in sync with the new viewport size
-      this._applyPlayersVisibility();
-      // Re-clamp the desktop app width to the new viewport
-      const saved = localStorage.getItem('scanMatchWidth');
-      if (saved && saved !== 'full') {
-        const px = Math.max(APP_MIN_W, Math.min(window.innerWidth,
-          parseInt(saved, 10) || APP_MIN_W));
-        this._applyAppWidth(this._pxToPct(px), { persist: false, relayout: false });
-      }
       if (!this.screens.game.classList.contains('active')) return;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => this._layoutCard(), 150);
@@ -684,9 +671,6 @@ export class ScanMatchUI {
       document.body.classList.toggle('dark', isDark);
       localStorage.setItem('scanMatchTheme', isDark ? 'dark' : 'light');
     });
-
-    // Desktop card-size stepper — zoom-style − / + with hold-to-repeat
-    this._initSizeStepper();
   }
 
   _listenGame() {
@@ -703,12 +687,27 @@ export class ScanMatchUI {
       }
       this._renderRound();
     });
-    this.game.on('roundChanged', () => {
-      this._renderRound();
+    this.game.on('roundChanged', (newRound) => {
+      this._onRoundChanged(newRound);
     });
     this.game.on('gameFinished', () => {
-      this._renderResults();
-      this._showScreen('results');
+      // Both devices show the final round's reveal before the results screen
+      const revealing = performance.now() < this._revealUntil;
+      const behind = this.game.round > this._paintedRound;
+      if (behind && !revealing) {
+        // Partner device: the final match hasn't been revealed here yet
+        this._highlightMatch(this._paintedRound);
+        if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) { /* ignore */ } }
+      }
+      const wait = revealing
+        ? Math.max(0, this._revealUntil - performance.now())
+        : (behind ? REVEAL_MS : 0);
+      setTimeout(() => {
+        this._revealUntil = 0;
+        this._tapping = false;
+        this._renderResults();
+        this._showScreen('results');
+      }, wait);
     });
     this.game.on('roomDeleted', () => {
       this.game.stopTimer();
@@ -721,6 +720,27 @@ export class ScanMatchUI {
         ? (remaining / this.game.timerDuration) * 100 : 100;
       if (this.timerBarFill) this.timerBarFill.style.width = `${pct}%`;
     });
+
+    // Connection indicator: dot reflects Firebase reachability; the lobby
+    // status line explains what offline means (retries are automatic).
+    this.game.on('connChanged', (connected) => {
+      const OFFLINE_MSG = 'No server connection \u2014 will retry automatically.';
+      if (this.connDot) {
+        this.connDot.classList.toggle('on', connected);
+        this.connDot.classList.toggle('off', !connected);
+        this.connDot.title = connected
+          ? 'Connected to game server'
+          : 'No server connection \u2014 will retry automatically';
+      }
+      if (this.screens.lobby.classList.contains('active') && this.lobbyStatus) {
+        const current = this.lobbyStatus.textContent;
+        if (!connected && current === '') {
+          this.lobbyStatus.textContent = OFFLINE_MSG;
+        } else if (connected && current === OFFLINE_MSG) {
+          this.lobbyStatus.textContent = '';
+        }
+      }
+    });
   }
 
   // ── Theme ──────────────────────────────────────────────────
@@ -731,94 +751,6 @@ export class ScanMatchUI {
       document.body.classList.add('dark');
       if (this.themeToggle) this.themeToggle.checked = true;
     }
-  }
-
-  _restoreLayout() {
-    const saved = localStorage.getItem('scanMatchWidth');
-    if (saved === 'full' || saved === null) {
-      this._applyAppWidth(100, { persist: false, relayout: false });
-    } else {
-      const px = Math.max(APP_MIN_W,
-        Math.min(window.innerWidth, parseInt(saved, 10) || APP_MIN_W));
-      this._applyAppWidth(this._pxToPct(px), { persist: false, relayout: false });
-    }
-  }
-
-  _pxToPct(px) {
-    const range = Math.max(1, window.innerWidth - APP_MIN_W);
-    return Math.max(0, Math.min(100, (px - APP_MIN_W) / range * 100));
-  }
-
-  _pctToPx(pct) {
-    return Math.round(APP_MIN_W + (window.innerWidth - APP_MIN_W) * pct / 100);
-  }
-
-  /** Apply app width from percent (100 = full-width). The stepper calls this
-   * with defaults (persist + crisp relayout per step); restore and window
-   * re-clamp pass { persist: false, relayout: false }. */
-  _applyAppWidth(pct, opts = {}) {
-    const persist = opts.persist !== false;
-    const relayout = opts.relayout !== false;
-    pct = Math.max(0, Math.min(100, Number(pct) || 0));
-    this._appPct = pct;
-
-    // Keep the slider in sync — this function is the single source of truth
-    this.sizeRange.value = String(Math.round(pct));
-
-    // App width — px value, or 100% at the exact top of the range
-    const px = Math.round(Math.min(window.innerWidth, this._pctToPx(pct)));
-    document.body.style.setProperty('--app-max', pct >= 100 ? '100%' : px + 'px');
-    if (persist) {
-      localStorage.setItem('scanMatchWidth', pct >= 99.5 ? 'full' : String(px));
-    }
-
-    if (relayout && this.screens.game.classList.contains('active')) {
-      this._layoutCard();
-    }
-  }
-
-  _initSizeStepper() {
-    this._bindHoldRepeat(this.sizeMinus, -1);
-    this._bindHoldRepeat(this.sizePlus, 1);
-
-    // Slider: input = CSS-only tracking while dragging (60fps, no optimizer
-    // work); change (release) = persist + one crisp relayout
-    this.sizeRange.addEventListener('input', () =>
-      this._applyAppWidth(this.sizeRange.value, { persist: false, relayout: false }));
-    this.sizeRange.addEventListener('change', () =>
-      this._applyAppWidth(this.sizeRange.value));
-  }
-
-  /** Zoom-style stepper: click = one ±APP_STEP_PX step; hold = repeat.
-   * Pointer path handles mouse/touch; the click handler serves keyboard
-   * (Enter/Space) and is suppressed when the pointer already stepped. */
-  _bindHoldRepeat(btn, dir) {
-    let repeatTimer = null, repeatInterval = null, fromPointer = false;
-    const step = () => this._stepAppWidth(dir);
-    const stop = () => {
-      clearTimeout(repeatTimer);
-      clearInterval(repeatInterval);
-      repeatTimer = repeatInterval = null;
-    };
-    btn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      fromPointer = true;
-      step();
-      repeatTimer = setTimeout(() => { repeatInterval = setInterval(step, 120); }, 400);
-    });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
-    btn.addEventListener('click', () => {
-      if (fromPointer) { fromPointer = false; stop(); return; }  // mouse path already handled
-      step();                                                    // keyboard Enter/Space
-    });
-  }
-
-  _stepAppWidth(dir) {
-    const curPx = Math.round(this._pctToPx(this._appPct || 0));
-    const nextPx = Math.max(APP_MIN_W,
-      Math.min(window.innerWidth, curPx + dir * APP_STEP_PX));
-    // Round to 10px so stepped widths stay tidy
-    this._applyAppWidth(this._pxToPct(Math.round(nextPx / 10) * 10));
   }
 
   // ── Actions ────────────────────────────────────────────────
@@ -867,11 +799,50 @@ export class ScanMatchUI {
     const t = this._readyAt != null
       ? Math.max(0, Math.round(performance.now() - this._readyAt))
       : null;
+    // Instant local reveal — the round update drives BOTH devices' repaint
+    // timing via _onRoundChanged, so the partner sees the reveal too.
     this._highlightMatch();
     if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) { /* ignore */ } }
-    await new Promise(r => setTimeout(r, REVEAL_MS));
-    await this.game.advanceRound(t);
-    this._tapping = false;
+    this._revealUntil = performance.now() + REVEAL_MS;
+    try {
+      await this.game.advanceRound(t);
+    } catch (e) {
+      this._tapping = false;       // write failed — allow retry
+      this._revealUntil = 0;
+    }
+  }
+
+  /** Round updates arrive on BOTH devices. Each shows the reveal of the
+   * still-painted old round, then repaints: the tapper's reveal is already
+   * running (only waits out the remainder); the partner starts its own.
+   * Lower/same rounds (undo) repaint immediately. */
+  _onRoundChanged(newRound) {
+    const revealing = performance.now() < this._revealUntil;
+    if (newRound > this._paintedRound && this._paintedRound >= 0) {
+      if (!revealing) {
+        // Partner path: reveal the match on the still-painted old card
+        this._highlightMatch(this._paintedRound);
+        if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) { /* ignore */ } }
+        this._revealUntil = performance.now() + REVEAL_MS;
+        setTimeout(() => {
+          this._renderRound();
+          this._revealUntil = 0;
+          this._tapping = false;
+        }, REVEAL_MS);
+        return;
+      }
+      // Tapper path: local reveal already visible — repaint when it completes
+      const wait = Math.max(0, this._revealUntil - performance.now());
+      setTimeout(() => {
+        this._renderRound();
+        this._revealUntil = 0;
+        this._tapping = false;
+      }, wait);
+      return;
+    }
+    // Undo / same-round updates: paint immediately
+    this._renderRound();
+    this._revealUntil = 0;
   }
 
   async _onUndo() {
@@ -882,10 +853,10 @@ export class ScanMatchUI {
     setTimeout(() => { this._tapping = false; }, 150);
   }
 
+  _showStartModal() { if (this.startModal) this.startModal.classList.add('show'); }
+  _hideStartModal() { if (this.startModal) this.startModal.classList.remove('show'); }
+
   _onStartLocal() {
-    // Always start one-device games at the largest card size — the zoom
-    // controls are for shrinking / fine-tuning during play
-    this._applyAppWidth(100, { persist: false, relayout: false });
     if (this.selectedMode === 'count') {
       this.game.startLocalGame('count', 0, this.selectedCount, this.selectedDiff);
     } else {
@@ -899,16 +870,6 @@ export class ScanMatchUI {
   /** Show/hide lobby controls per the selected Players mode.
    * One-device mode is a large-display feature (≥700px viewport) — on
    * smaller screens the lobby always shows the 2-device flow. */
-  _applyPlayersVisibility() {
-    const oneDevice = this.selectedPlayers === '1' && window.innerWidth >= 700;
-    this.startLocalBtn.style.display = oneDevice ? '' : 'none';
-    this.createBtn.style.display = oneDevice ? 'none' : '';
-    this.pinInput.style.display = oneDevice ? 'none' : '';
-    this.joinBtn.style.display = oneDevice ? 'none' : '';
-    const divider = document.querySelector('.lobby-divider');
-    if (divider) divider.style.display = oneDevice ? 'none' : '';
-  }
-
   async _onEnd() {
     await this.game.leaveRoom();
     this._reset();
@@ -957,26 +918,29 @@ export class ScanMatchUI {
   // ── Host Area (PIN + QR Code) ─────────────────────────────
 
   _hideLobbyControls() {
-    this.createBtn.style.display = 'none';
-    this.startLocalBtn.style.display = 'none';
+    this.startGameBtn.style.display = 'none';
     this.pinInput.style.display = 'none';
     this.joinBtn.style.display = 'none';
-        const divider = document.querySelector('.lobby-divider');
-        if (divider) divider.style.display = 'none';
     this.modeBtns.forEach(b => b.style.display = 'none');
-    this.playersBtns.forEach(b => b.style.display = 'none');
     this.diffBtns.forEach(b => b.style.display = 'none');
     this.countOptions.style.display = 'none';
     this.timerOptions.style.display = 'none';
+    this.modeSection.querySelector('.pill-label').style.display = 'none';
+    this.difficultySection.querySelector('.pill-label').style.display = 'none';
+    this.playSection.querySelector('.pill-label').style.display = 'none';
   }
 
   _showLobbyControls() {
     this.modeBtns.forEach(b => b.style.display = '');
-    this.playersBtns.forEach(b => b.style.display = '');
     this.diffBtns.forEach(b => b.style.display = '');
+    this.startGameBtn.style.display = '';
+    this.pinInput.style.display = '';
+    this.joinBtn.style.display = '';
     this.countOptions.style.display = this.selectedMode === 'count' ? 'flex' : 'none';
     this.timerOptions.style.display = this.selectedMode === 'timed' ? 'flex' : 'none';
-    this._applyPlayersVisibility();
+    if (this.modeSection) this.modeSection.querySelector('.pill-label').style.display = '';
+    if (this.difficultySection) this.difficultySection.querySelector('.pill-label').style.display = '';
+    if (this.playSection) this.playSection.querySelector('.pill-label').style.display = '';
   }
 
   async _showHostArea(pin) {
@@ -1052,11 +1016,12 @@ export class ScanMatchUI {
     const g = this.game;
     if (!g.deck.length) return;
     const offsetA = (g.role === 'guest' && !g.local) ? 1 : 0;
-    this._paintCardInto(this.myCard, g.round * 2 + offsetA);
-    if (g.local) this._paintCardInto(this.cardB, g.round * 2 + 1);
+    let painted = this._paintCardInto(this.myCard, g.round * 2 + offsetA);
+    if (g.local) painted = this._paintCardInto(this.cardB, g.round * 2 + 1) || painted;
     // Per-round clock: starts when this round's card(s) are actually painted
-    // (reveal hold + render time fall between rounds → excluded from stats)
-    if (g.round !== this._paintedRound) {
+    // (reveal hold + render time fall between rounds → excluded from stats;
+    // skipped paints — e.g. hidden screen — don't count as "ready")
+    if (painted && g.round !== this._paintedRound) {
       this._paintedRound = g.round;
       this._readyAt = performance.now();
     }
@@ -1065,25 +1030,25 @@ export class ScanMatchUI {
   _paintCardInto(container, cardIdx) {
     const g = this.game;
     const w = container.clientWidth, h = container.clientHeight;
-    if (w < 50 || h < 50) return; // hidden or not laid out yet
+    if (w < 50 || h < 50) return false; // hidden or not laid out yet
     const idx = cardIdx % g.deck.length;
     const card = g.deck[idx];
     const seed = (((g.sessionSeed || parseInt(g.pin, 10) || 12345) * 31) + idx * 7919) | 0;
     const layout = computeCardLayout(card.length, { w, h }, new SeededRNG(seed));
     paintCard(container, card.map(i => g.emojiMap[i]), layout);
+    return true;
   }
 
   _updateDiffPreview() {
     if (!this.diffPreview) return;
     const n = this.selectedDiff || 8;
-    // Pick first n emoji from the game's EMOJI array (hardcoded for preview)
-    const previewEmoji = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯'].slice(0, n);
-    this.diffPreview.innerHTML = previewEmoji.map(e => `<span>${e}</span>`).join('');
+    this.diffPreview.innerHTML = EMOJI.slice(0, n)
+      .map(e => `<span>${e}</span>`).join('');
   }
 
-  _highlightMatch() {
+  _highlightMatch(round = this.game.round) {
     const g = this.game;
-    const matchIdx = g.getMatchSymbolIndex();
+    const matchIdx = g.getMatchSymbolIndex(round);
     if (matchIdx === -1) return;
 
     const highlightIn = (cardEl, cardIdx) => {
@@ -1177,12 +1142,14 @@ export class ScanMatchUI {
   _reset() {
     this._tapping = false;
     this._hideExitConfirm();
+    this._hideStartModal();
     this.game.stopTimer();
     this.game.leaveRoom();
 
     // Reset per-round timing state
     this._paintedRound = -1;
     this._readyAt = null;
+    this._revealUntil = 0;
 
     // Clean up the swipe-back history guard
     if (this._historyPushed) {

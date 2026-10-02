@@ -10,7 +10,6 @@ class FirebaseAdapter {
         this.firebaseConfig = firebaseConfig;
         this.app = null;
         this.database = null; // Renamed from 'db' for consistency
-        console.log("FirebaseAdapter created.");
     }
 
     /**
@@ -19,15 +18,10 @@ class FirebaseAdapter {
      */
     async initialize() {
         try {
-            console.log("Initializing Firebase app...");
             this.app = initializeApp(this.firebaseConfig);
-            console.log("Firebase app initialized.");
-            console.log("Getting Firebase database instance...");
             this.database = getDatabase(this.app);
-            console.log("Firebase database instance obtained.");
             // Optional: Test connection
             // await get(ref(this.database, '.info/connected'));
-            console.log("FirebaseAdapter initialized successfully.");
         } catch (error) {
             console.error("Firebase initialization failed:", error);
             throw new Error(`Firebase initialization failed: ${error.message}`);
@@ -44,7 +38,6 @@ class FirebaseAdapter {
         try {
             const dataRef = ref(this.database, path);
             await set(dataRef, value);
-            console.log(`Data saved successfully at path: ${path}`);
         } catch (error) {
             console.error(`Firebase saveData error at path ${path}:`, error);
             throw new Error("Failed to save data to Firebase.");
@@ -88,7 +81,6 @@ class FirebaseAdapter {
                 oldValue: oldValue,
                 newValue: newValue
             });
-            console.log(`Change logged successfully at path: ${path}`);
         } catch (error) {
             console.error(`Firebase logChange error at path ${path}:`, error);
             throw new Error("Failed to log change to Firebase.");
@@ -129,7 +121,6 @@ class FirebaseAdapter {
         try {
             const auth = getAuth(this.app);
             const credential = await signInAnonymously(auth);
-            console.log("FirebaseAdapter: signed in anonymously as", credential.user.uid);
             return credential;
         } catch (error) {
             console.error("FirebaseAdapter anonymous sign-in failed:", error.message);
@@ -143,7 +134,6 @@ class FirebaseAdapter {
         try {
             const auth = getAuth(this.app);
             const credential = await signInWithEmailAndPassword(auth, email, password);
-            console.log("FirebaseAdapter: signIn successful for", email);
             return credential;
         } catch (error) {
             console.error("FirebaseAdapter signIn error:", error.message);
@@ -161,7 +151,6 @@ class FirebaseAdapter {
         try {
             const auth = getAuth(this.app);
             await signOut(auth);
-            console.log("FirebaseAdapter: signOut successful.");
         } catch (error) {
             console.error("FirebaseAdapter signOut error:", error.message);
             throw new Error('Failed to sign out. Please try again.');
@@ -220,7 +209,6 @@ class FirebaseAdapter {
                 firebaseTimestamp: serverTimestamp() // Add server-side timestamp
             };
             await set(newRequestRef, dataToSave);
-            console.log("Maintenance request saved with ID:", newRequestRef.key);
             return newRequestRef.key;
         } catch (error) {
             console.error(`Firebase saveMaintenanceRequest error at path ${path}:`, error);
@@ -244,7 +232,6 @@ class FirebaseAdapter {
                 firebaseTimestamp: serverTimestamp() // Add server-side timestamp
             };
             await set(newRequestRef, dataToSave);
-            console.log("Supply request saved with ID:", newRequestRef.key);
             return newRequestRef.key;
         } catch (error) {
             console.error(`Firebase saveSupplyRequest error at path ${path}:`, error);
@@ -268,7 +255,6 @@ class FirebaseAdapter {
                 firebaseTimestamp: serverTimestamp() // Add server-side timestamp
             };
             await set(newRequestRef, dataToSave);
-            console.log("Wishlist request saved with ID:", newRequestRef.key);
             return newRequestRef.key;
         } catch (error) {
             console.error(`Firebase saveWishlistRequest error at path ${path}:`, error);

@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="Visual Scan Trainer — two-device matching game for therapy.">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f5f7">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1a1e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Scan Match">
     <title>Scan Match</title>
 
     <!-- Hub theme (override layout below) -->
@@ -94,6 +99,9 @@
             justify-content: space-between;
             align-items: center;
             padding: calc(var(--space-xs) + env(safe-area-inset-top)) var(--space-m) var(--space-xs);
+            background: var(--bg);              /* opaque: iOS status-bar/toolbar
+                                                    material can't bleed through */
+            border-bottom: 1px solid var(--border);
             position: relative;
             z-index: 10;
         }
@@ -139,9 +147,20 @@
         /* ── Lobby ───────────────────────────────────────── */
         #lobbyScreen {
             align-items: center; justify-content: safe center;
-            padding: var(--space-l); gap: var(--space-m);
+            padding: var(--space-l); gap: var(--space-s);
             overflow-y: auto; /* fallback for very short viewports */
         }
+        /* Labeled sections: MODE / DIFFICULTY / PLAY */
+        .lobby-section {
+            display: flex; flex-direction: column; align-items: center;
+            gap: var(--space-xs); width: 100%;
+        }
+        /* MODE: pill + presets share one wrapped row */
+        .mode-row {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            align-items: center; gap: var(--space-xs);
+        }
+        .mode-row .option-group { margin: 0; }
         #lobbyScreen h1 {
             font-size: clamp(1.25rem, 1rem + 1.2vw, 1.6rem); font-weight: 600;
             color: var(--text-heading); margin-bottom: var(--space-xs);
@@ -175,10 +194,6 @@
         .pill-label {
             font-size: var(--font-xs); color: var(--text-subtle);
             letter-spacing: 0.04em; text-transform: uppercase;
-        }
-        .pill-group {
-            display: flex; flex-direction: column; align-items: center;
-            gap: var(--space-xs); width: 100%;
         }
 
         /* ── Option buttons (count/timer presets) ────────── */
@@ -223,10 +238,6 @@
             from { opacity: 0; transform: scale(0.5); }
             to   { opacity: 0.7; transform: scale(1); }
         }
-        .btn-icon {
-            font-size: 0.8em; opacity: 0.45; margin-right: 3px;
-            display: inline; vertical-align: middle;
-        }
         .option-group .custom-btn {
             font-style: italic; color: var(--text-subtle);
         }
@@ -255,10 +266,6 @@
             font-weight: 600; cursor: pointer; min-height: 48px;
         }
         #joinBtn:disabled { opacity: 0.5; }
-        .lobby-divider {
-            color: var(--text-subtle); font-size: var(--font-m);
-            margin: var(--space-xs) 0;
-        }
         .create-btn {
             width: 100%; max-width: 280px; padding: var(--space-m);
             border: none; border-radius: 10px;
@@ -269,7 +276,7 @@
         #lobbyStatus {
             text-align: center; font-size: var(--font-m);
             color: var(--text-subtle);
-            min-height: 1.2em; font-style: italic;
+            font-style: italic;
         }
 
         /* ── Host area (after create) ─────────────────────── */
@@ -526,22 +533,22 @@
         }
         #newBtn:active { transform: scale(0.96); box-shadow: none; }
 
-        /* ── Exit confirm modal ──────────────────────────── */
-        #exitConfirm {
+        /* ── Modals (exit confirm + start mode select) ────── */
+        #exitConfirm, #startModal {
             display: none; position: fixed; inset: 0; z-index: 50;
             align-items: center; justify-content: center;
             background: rgba(0,0,0,0.45);
             padding: 24px;
         }
-        #exitConfirm.show { display: flex; }
-        #exitConfirm .modal-card {
+        #exitConfirm.show, #startModal.show { display: flex; }
+        #exitConfirm .modal-card, #startModal .modal-card {
             background: var(--card-bg); border-radius: 16px;
             padding: 22px 24px; max-width: 320px; width: 100%;
             text-align: center;
             box-shadow: 0 8px 40px rgba(0,0,0,0.25);
             animation: fadeUp 0.2s ease both;
         }
-        #exitConfirm h3 {
+        #exitConfirm h3, #startModal h3 {
             margin: 0 0 4px; font-size: 1.05em; font-weight: 600;
             color: var(--text-heading);
         }
@@ -549,7 +556,7 @@
             margin: 0 0 18px; font-size: 0.85em; color: var(--text-subtle);
         }
         #exitConfirm .modal-actions { display: flex; gap: 10px; }
-        #exitConfirm .modal-btn {
+        #exitConfirm .modal-btn, #startModal .modal-btn {
             flex: 1; min-height: 44px; padding: 10px;
             border: 1.5px solid var(--border); border-radius: 10px;
             background: var(--surface); color: var(--text);
@@ -558,6 +565,29 @@
         #exitConfirm .modal-btn.primary {
             background: var(--accent); border-color: var(--accent);
             color: #fff; font-weight: 600;
+        }
+        /* Start-mode options: stacked, two-line, hairline-separated */
+        #startModal .start-options {
+            display: flex; flex-direction: column;
+            margin: 10px 0 14px;
+        }
+        #startModal .start-option {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            padding: 12px 14px; min-height: 44px; width: 100%;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            background: var(--surface); color: var(--text);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #startModal .start-option + .start-option { margin-top: 8px; }
+        #startModal .start-option:active {
+            background: var(--surface-hover); border-color: var(--accent);
+        }
+        #startModal .start-option-title {
+            font-size: var(--font-m); font-weight: 600; color: var(--text-heading);
+        }
+        #startModal .start-option-desc {
+            font-size: var(--font-xs); color: var(--text-subtle);
         }
 
         /* ── Landscape (short viewports): compact chrome ──── */
@@ -569,76 +599,15 @@
             .bottom-row { margin-top: 0; }
         }
 
-        /* ── Desktop card-size stepper (zoom-style − / +) ─── */
+        /* ── Topbar right cluster ─────────────────────────── */
         .topbar-right { display: flex; align-items: center; gap: var(--space-s); }
-        #sizeStep {
-            display: none;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            background: var(--surface);
+        /* Connection dot: green = Firebase reachable, red = offline */
+        #connDot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--border); transition: background 0.3s;
         }
-        #sizeStep button {
-            min-width: 44px; min-height: 44px;
-            border: none; background: transparent;
-            font-size: var(--font-l); color: var(--text-subtle); cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        #sizeStep button:hover { color: var(--accent); }
-        #sizeStep button:active { background: var(--surface-hover); }
-        /* Native slider between the buttons — styled to match: 4px track, accent dot */
-        #sizeRange {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 110px; height: 44px;
-            background: transparent;
-            cursor: pointer;
-            margin: 0;
-        }
-        #sizeRange::-webkit-slider-runnable-track {
-            height: 4px; border-radius: 2px;
-            background: var(--border);
-        }
-        #sizeRange::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 14px; height: 14px; border-radius: 50%;
-            background: var(--accent);
-            margin-top: -5px;               /* center the dot on the 4px track */
-            border: none;
-        }
-        #sizeRange::-moz-range-track {
-            height: 4px; border-radius: 2px;
-            background: var(--border);
-        }
-        #sizeRange::-moz-range-thumb {
-            width: 14px; height: 14px; border-radius: 50%;
-            background: var(--accent);
-            border: none;
-        }
-        #sizeRange:focus-visible {
-            outline: 1.5px solid var(--accent);
-            outline-offset: -3px;
-            border-radius: 8px;
-        }
-
-        /* ── 1-device mode needs room — desktop / large displays only ── */
-        @media (max-width: 699px) {
-            #playersGroup, #startLocalBtn { display: none !important; }
-        }
-
-        /* ── Desktop: app width follows the slider (--app-max; 100% = full).
-           The topbar stays full-width so the slider never moves — only the
-           app column below it resizes. Fully continuous: no mode classes. ── */
-        @media (min-width: 700px) {
-            #sizeStep { display: inline-flex; }
-            #topBar { border-bottom: 1px solid var(--border); }
-            body { align-items: center; }
-            #topBar, #appRoot { width: 100%; }
-            #appRoot { max-width: var(--app-max, 100%); }
-        }
+        #connDot.on { background: var(--success); }
+        #connDot.off { background: #e5484d; }
     </style>
 </head>
 <body>
@@ -646,12 +615,7 @@
     <div id="topBar">
         <a id="homeBtn" href="/will/" aria-label="Home">←</a>
         <div class="topbar-right">
-            <div id="sizeStep" role="group" aria-label="Card size">
-                <button id="sizeMinus" aria-label="Shrink card" title="Shrink card">−</button>
-                <input type="range" id="sizeRange" min="0" max="100" step="1"
-                       aria-label="Card size level" tabindex="-1">
-                <button id="sizePlus" aria-label="Grow card" title="Grow card">+</button>
-            </div>
+            <span id="connDot" title="Server connection"></span>
             <div id="themeToggle" class="color-toggle-container">
                 <label class="switch theme-switch">
                     <input type="checkbox" id="themeToggleInput">
@@ -668,30 +632,33 @@
     <div id="lobbyScreen" class="screen active">
         <h1>Scan Match</h1>
 
-        <div class="mode-group pill-group">
+        <section class="lobby-section" id="modeSection">
             <span class="pill-label">Mode</span>
-            <div class="pill">
-                <button class="mode-btn active" data-mode="count">Count</button>
-                <button class="mode-btn" data-mode="timed">Timed</button>
+            <div class="mode-row">
+                <div class="pill">
+                    <button class="mode-btn active" data-mode="count">Count</button>
+                    <button class="mode-btn" data-mode="timed">Timed</button>
+                </div>
+                <div id="countOptions" class="option-group" style="display:flex">
+                    <button class="count-btn" data-target="10">10</button>
+                    <button class="count-btn active" data-target="25">25</button>
+                    <button class="count-btn" data-target="50">50</button>
+                    <button class="count-btn custom-btn" data-target="custom">Custom</button>
+                    <input type="number" id="countCustomInput" class="custom-input"
+                           placeholder="Count" min="1" max="200" style="display:none">
+                </div>
+                <div id="timerOptions" class="option-group" style="display:none">
+                    <button class="timer-btn" data-minutes="1">1</button>
+                    <button class="timer-btn active" data-minutes="2">2</button>
+                    <button class="timer-btn" data-minutes="5">5</button>
+                    <button class="timer-btn custom-btn" data-minutes="custom">Custom</button>
+                    <input type="number" id="timerCustomInput" class="custom-input"
+                           placeholder="Min" min="1" max="30" style="display:none">
+                </div>
             </div>
-        </div>
-        <div id="countOptions" class="option-group" style="display:flex">
-            <button class="count-btn" data-target="10">10</button>
-            <button class="count-btn active" data-target="25">25</button>
-            <button class="count-btn" data-target="50">50</button>
-            <button class="count-btn custom-btn" data-target="custom">Custom</button>
-            <input type="number" id="countCustomInput" class="custom-input"
-                   placeholder="Count" min="1" max="200" style="display:none">
-        </div>
-        <div id="timerOptions" class="option-group" style="display:none">
-            <button class="timer-btn" data-minutes="1">1 min</button>
-            <button class="timer-btn active" data-minutes="2">2 min</button>
-            <button class="timer-btn" data-minutes="5">5 min</button>
-            <button class="timer-btn custom-btn" data-minutes="custom">Custom</button>
-            <input type="number" id="timerCustomInput" class="custom-input"
-                   placeholder="Min" min="1" max="30" style="display:none">
-        </div>
-        <div class="pill-group">
+        </section>
+
+        <section class="lobby-section" id="difficultySection">
             <span class="pill-label">Difficulty (symbols per card)</span>
             <div class="pill" id="diffPill">
                 <button data-n="3">3</button>
@@ -703,32 +670,23 @@
                 <button data-n="10">10</button>
             </div>
             <div id="diffPreview" class="diff-preview"></div>
-        </div>
-        <div class="pill-group" id="playersGroup">
-            <span class="pill-label">Players</span>
-            <div class="pill" id="playersPill">
-                <button class="players-btn active" data-players="2">2 Devices</button>
-                <button class="players-btn" data-players="1">1 Device</button>
+        </section>
+
+        <section class="lobby-section" id="playSection">
+            <span class="pill-label">Play</span>
+            <button id="startGameBtn" class="create-btn">Start Game</button>
+            <input type="text" id="pinInput" placeholder="Enter PIN" maxlength="4"
+                   inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+            <button id="joinBtn" class="join-btn">Join Room</button>
+
+            <div id="hostArea">
+                <span id="pinLabel">Share this code</span>
+                <div id="pinDisplay"></div>
+                <div id="qrContainer"></div>
+                <span id="waitingMsg">Waiting for partner<span class="waiting-dot">.</span><span class="waiting-dot">.</span><span class="waiting-dot">.</span></span>
+                <button id="cancelBtn" class="cancel-btn">Cancel</button>
             </div>
-        </div>
-
-        <button id="startLocalBtn" class="create-btn" style="display:none">Start Game</button>
-
-        <button id="createBtn" class="create-btn">Create Room</button>
-
-        <div class="lobby-divider">— or —</div>
-
-        <input type="text" id="pinInput" placeholder="Enter PIN" maxlength="4"
-               inputmode="numeric" pattern="[0-9]*" autocomplete="off">
-        <button id="joinBtn" class="join-btn">Join Room</button>
-
-        <div id="hostArea">
-            <span id="pinLabel">Share this code</span>
-            <div id="pinDisplay"></div>
-            <div id="qrContainer"></div>
-            <span id="waitingMsg">Waiting for partner<span class="waiting-dot">.</span><span class="waiting-dot">.</span><span class="waiting-dot">.</span></span>
-            <button id="cancelBtn" class="cancel-btn">Cancel</button>
-        </div>
+        </section>
 
         <div id="lobbyStatus"></div>
     </div>
@@ -793,6 +751,24 @@
                 <button id="exitNo" class="modal-btn">Cancel</button>
                 <button id="exitYes" class="modal-btn primary">Exit</button>
             </div>
+        </div>
+    </div>
+
+    <!-- START MODE SELECT -->
+    <div id="startModal" role="dialog" aria-modal="true" aria-labelledby="startModalTitle">
+        <div class="modal-card">
+            <h3 id="startModalTitle">Start a game</h3>
+            <div class="start-options">
+                <button id="createBtn" class="start-option">
+                    <span class="start-option-title">Create Room</span>
+                    <span class="start-option-desc">2 devices — share a PIN or QR code</span>
+                </button>
+                <button id="startLocalBtn" class="start-option">
+                    <span class="start-option-title">Play on 1 Device</span>
+                    <span class="start-option-desc">2 players — one screen, face to face</span>
+                </button>
+            </div>
+            <button id="startCancel" class="modal-btn">Cancel</button>
         </div>
     </div>
 
