@@ -32,22 +32,31 @@ function withTimeout(promise, ms, message) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-// ── 91 Emoji Symbols (supports N=6,8,10 projective planes) ────────────
+// ── Emoji Symbol Pool — 67 distinct animals + 51 everyday objects ──────
+// All glyphs are Unicode 6–11 (2010–2018): universal on iOS, Android, and
+// Windows (Twemoji). Curated for a matching game: no flags, keycaps, or ZWJ
+// sequences; no same-animal variants (one 🐶, no 🐕/🐩) or 2019+ emoji that
+// render as boxes on older Windows. Animals and objects are INTERLEAVED so
+// any prefix (e.g. the difficulty preview) shows a mix. _initDeck samples a
+// seeded random subset of the whole pool per game.
 const EMOJI = [
-  '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼',
-  '🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔',
-  '🐧','🐦','🐤','🐣','🐥','🦆','🦅','🦉',
-  '🦇','🐺','🐗','🐴','🦄','🐝','🦋','🐌',
-  '🐞','🐜','🦟','🦗','🦂','🐢','🐍','🦎',
-  '🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡',
-  '🐠','🐟','🐬','🐳','🐋','🐊','🐆','🐅',
-  '🦓',
-  // ── +34 for N=9/10 support ──────────────────────
-  '🦙','🦛','🦘','🦡','🦨','🦦','🦥','🦔',
-  '🐿','🦃','🦏','🦍','🦚','🦢','🐏','🐒',
-  '🐄','🐃','🐂','🐐','🦈','🐘','🐓','🦝',
-  '🐁','🦧','🐕','🦣','🐀','🐩','🦭','🐖',
-  '🐇','🐎'
+  // interleaved animals + objects
+  '🐶','⚡','🐱','☀️','🐭','🌙','🐹','⭐',
+  '🐰','🔥','🦊','💧','🐻','❄️','🐼','🌈',
+  '🐨','☂️','🐯','🎈','🦁','🎁','🐮','🔔',
+  '🐷','🔑','🐸','✂️','🐵','🚀','🐔','⚓',
+  '🐧','👑','🐦','💎','🐤','💡','🦆','🔌',
+  '🦅','💻','🦉','⌚','🦇','📷','🐺','🎯',
+  '🐗','🎲','🐴','🏆','🦄','🎸','🐝','🎧',
+  '🦋','🔍','🐌','🔦','🐞','💰','🐜','🚗',
+  '🦟','🚲','🦗','✈️','🦂','🚁','🐢','⛵',
+  '🐍','🏠','🦎','💍','🦖','🌹','🦕','🌻',
+  '🐙','🌵','🦑','🌴','🦐','🍄','🦞','🍕',
+  '🦀','🍩','🐡','🎂','🐟','🍭','🐬','🍿',
+  '🐳','🌮','🐊','🍇','🦓','🍓',
+  // remaining animals
+  '🦙','🦛','🦘','🦡','🦔','🐿','🦃','🦏',
+  '🦍','🦚','🦢','🐏','🐐','🦈','🐘','🦝'
 ];
 
 // ── Finite field GF(q) — needed for prime-power q (4, 8, 9) ────────────
@@ -379,9 +388,12 @@ export class ScanMatchGame {
     const baseDeck = generateBaseDeck(N);
     const cardCount = baseDeck.length; // N*(N-1)+1
 
-    // Shuffle symbol → emoji mapping (use only as many emoji as cards)
-    const indices = Array.from({ length: Math.min(EMOJI.length, cardCount) }, (_, i) => i);
-    rng.shuffle(indices);
+    // Symbol → emoji mapping: shuffle the FULL pool, then take what this
+    // deck needs — every game samples a seeded random mix of animals +
+    // objects. Deterministic per seed, so both devices render identically.
+    const all = Array.from({ length: EMOJI.length }, (_, i) => i);
+    rng.shuffle(all);
+    const indices = all.slice(0, Math.min(EMOJI.length, cardCount));
     this.emojiMap = indices.map(i => EMOJI[i]);
 
     // Shuffle card order

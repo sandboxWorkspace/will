@@ -1,11 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 
-# Cleanup function: remove temp files and return to main branch
+# Local-only docs (AGENTS.md, BUILD.md, workflow.md): never pushed to GitHub.
+# - Version history lives in ../will-local-docs.git (bare repo OUTSIDE this
+#   working tree, so no branch's `git add .` can ever sweep it up).
+# - They are backed up/restored around the gh-pages working-tree swap and
+#   auto-snapshotted to the history repo at the end of every deploy.
+KEEP_FILES="AGENTS.md BUILD.md workflow.md"
+DOCS_GIT_DIR=../will-local-docs.git
+
 cleanup() {
     rm -rf ../temp_gh_pages
-    rm -f ../AGENTS.keep
     git checkout main 2>/dev/null || true
+    # Restore docs AFTER returning to main — restoring while on gh-pages
+    # would commit them to the public site (that branch has no .gitignore).
+    local f
+    for f in $KEEP_FILES; do
+        [ -f "../$f.keep" ] && mv "../$f.keep" "$f"
+    done
+    # Auto-snapshot docs into the local history repo (commit is a no-op if
+    # nothing changed). Never pushed anywhere.
+    if [ -d "$DOCS_GIT_DIR" ]; then
+        git --git-dir="$DOCS_GIT_DIR" --work-tree=. add -f $KEEP_FILES 2>/dev/null || true
+        git --git-dir="$DOCS_GIT_DIR" --work-tree=. commit -q \
+            -m "Docs snapshot $(date '+%Y-%m-%d %H:%M')" 2>/dev/null || true
+    fi
 }
 trap cleanup EXIT
 
@@ -23,18 +42,19 @@ git push origin main
 mkdir -p ../temp_gh_pages
 cp -r dist/* ../temp_gh_pages/
 
-# Preserve gitignored local-only files (AGENTS.md) across the working-tree
-# swap below — rm -rf doesn't respect .gitignore
-[ -f AGENTS.md ] && cp AGENTS.md ../AGENTS.keep || true
+# Preserve local-only docs across the working-tree swap below
+for f in $KEEP_FILES; do
+    [ -f "$f" ] && cp "$f" "../$f.keep" || true
+done
 
 git checkout gh-pages
 
-# Clean up the current gh-pages directory (keep .git)
-rm -rf ./* 2>/dev/null || true
+# Wipe the working tree INCLUDING dot-directories — `rm -rf ./*` misses
+# dotfiles (e.g. .vite/), which then leak into the gh-pages commit
+find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
 # Copy the built files to the gh-pages branch
 cp -r ../temp_gh_pages/* .
-[ -f ../AGENTS.keep ] && mv ../AGENTS.keep AGENTS.md || true
 
 read -p "Do you want to push to gh-pages? (y/n): " confirm_push
 
