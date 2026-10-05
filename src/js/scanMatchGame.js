@@ -156,6 +156,7 @@ export class ScanMatchGame {
     this.timerInterval = null;
     this.maxRounds = 25;
     this.symbolsPerCard = 8;
+    this.playStyle = 'any';  // 'any' (Tap Anywhere) | 'focus' — toggle in-game
 
     // Connection state: emits 'connChanged' (true|false) via the pub-sub.
     // `.info/connected` is a standard RTDB presence node (no auth needed).
@@ -173,6 +174,7 @@ export class ScanMatchGame {
     this.timerDuration = timerDuration;
     this.maxRounds = maxRounds;
     this.symbolsPerCard = symbolsPerCard;
+    this.playStyle = 'any';   // every game starts in Tap Anywhere
 
     const rng = new SeededRNG(Date.now() + attempt * 7919);
     this.pin = String(PIN_MIN + Math.floor(rng.next() * (PIN_MAX - PIN_MIN + 1)));
@@ -192,6 +194,7 @@ export class ScanMatchGame {
       timerDuration,
       maxRounds: this.maxRounds,
       symbolsPerCard: this.symbolsPerCard,
+      playStyle: this.playStyle,
       createdAt: serverTimestamp()
     }), FB_TIMEOUT_MS,
       'Couldn\u2019t reach the game server \u2014 check your connection.');
@@ -228,6 +231,7 @@ export class ScanMatchGame {
     this.timerDuration = data.timerDuration !== undefined ? data.timerDuration : 60;
     this.maxRounds = data.maxRounds !== undefined ? data.maxRounds : 25;
     this.symbolsPerCard = data.symbolsPerCard || 8;
+    this.playStyle = data.playStyle === 'focus' ? 'focus' : 'any';
     this.state = 'playing';
     this.round = data.round || 0;
 
@@ -265,6 +269,7 @@ export class ScanMatchGame {
     this.timerDuration = timerDuration;
     this.maxRounds = maxRounds;
     this.symbolsPerCard = symbolsPerCard;
+    this.playStyle = 'any';   // every game starts in Tap Anywhere
     this.round = 0;
     this.roundTimes = [];
     this.sessionSeed = Date.now() | 0;
@@ -324,6 +329,19 @@ export class ScanMatchGame {
       round: prevRound,
       roundTimes: prevTimes
     });
+  }
+
+  /** Switch play style mid-game ('any' | 'focus'). Optimistic locally;
+   * remote syncs via room data (Firebase queues the write while offline). */
+  setPlayStyle(style) {
+    if (style !== 'any' && style !== 'focus') return;
+    if (style === this.playStyle) return;
+    this.playStyle = style;
+    this._notify('styleChanged', style);
+    if (!this.local && this.pin && this.state === 'playing') {
+      update(ref(this.db, `scanMatchSessions/${this.pin}`), { playStyle: style })
+        .catch(() => { /* queued while offline — syncs on reconnect */ });
+    }
   }
 
   // ── Timer ───────────────────────────────────────────────────────────
@@ -428,6 +446,12 @@ export class ScanMatchGame {
       this.roundTimes = Array.isArray(data.roundTimes)
         ? data.roundTimes
         : (data.roundTimes ? Object.values(data.roundTimes) : []);
+
+      // Play style changed by either player — apply on this device
+      if (data.playStyle !== undefined && data.playStyle !== this.playStyle) {
+        this.playStyle = data.playStyle;
+        this._notify('styleChanged', this.playStyle);
+      }
 
       if (data.status === 'playing' && this.state === 'waiting') {
         this.state = 'playing';
@@ -543,6 +567,7 @@ export class ScanMatchUI {
     this.cardB = document.getElementById('cardB');
     this.endBtn = document.getElementById('endBtn');
     this.undoBtn = document.getElementById('undoBtn');
+    this.focusToggle = document.getElementById('focusToggle');
     this.gameStatus = document.getElementById('gameStatus');
 
     // Results
@@ -558,6 +583,7 @@ export class ScanMatchUI {
     this._paintedRound = -1;
     this._readyAt = null;
     this._revealUntil = 0;      // timestamp: reveal animation active until
+    this._misses = 0;           // Focus-mode wrong taps (local, never synced)
 
     // Back / exit
     this.homeBtn = document.getElementById('homeBtn');
@@ -648,11 +674,15 @@ export class ScanMatchUI {
     });
 
     // Game — cards ARE the Found It button (either card in one-device mode)
-    this.myCard.addEventListener('click', () => this._onFoundIt());
-    this.cardB.addEventListener('click', () => this._onFoundIt());
+    this.myCard.addEventListener('click', (e) => this._onFoundIt(e, this.myCard));
+    this.cardB.addEventListener('click', (e) => this._onFoundIt(e, this.cardB));
 
     this.undoBtn.addEventListener('click', () => this._onUndo());
     this.endBtn.addEventListener('click', () => this._onEnd());
+
+    // Focus-mode switch (game screen only) — flips mid-game, syncs remotely
+    this.focusToggle.addEventListener('change', () =>
+      this.game.setPlayStyle(this.focusToggle.checked ? 'focus' : 'any'));
 
     // Re-layout on resize/rotation (same seed → same arrangement, rescaled)
     let resizeTimer = null;
@@ -733,6 +763,9 @@ export class ScanMatchUI {
       if (this.timerBarFill) this.timerBarFill.style.width = `${pct}%`;
     });
 
+    // Play style applied on both devices (mid-game switch or room join)
+    this.game.on('styleChanged', (style) => this._applyPlayStyle(style));
+
     // Connection indicator: dot reflects Firebase reachability; the lobby
     // status line explains what offline means (retries are automatic).
     this.game.on('connChanged', (connected) => {
@@ -804,15 +837,23 @@ export class ScanMatchUI {
     }
   }
 
-  async _onFoundIt() {
+  async _onFoundIt(e, cardEl) {
     if (this.game.state !== 'playing' || this._tapping) return;
+    if (this.game.playStyle === 'focus') {
+      this._focusTap(e, cardEl);
+      return;
+    }
+    await this._findIt();
+  }
+
+  /** Correct find (shared by both styles): instant local reveal + immediate
+   * round update — _onRoundChanged drives both devices' repaint timing. */
+  async _findIt() {
     this._tapping = true;
     // Render-excluded find time: clock ran from paint-ready to this tap
     const t = this._readyAt != null
       ? Math.max(0, Math.round(performance.now() - this._readyAt))
       : null;
-    // Instant local reveal — the round update drives BOTH devices' repaint
-    // timing via _onRoundChanged, so the partner sees the reveal too.
     this._highlightMatch();
     if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) { /* ignore */ } }
     this._revealUntil = performance.now() + REVEAL_MS;
@@ -821,6 +862,59 @@ export class ScanMatchUI {
     } catch (e) {
       this._tapping = false;       // write failed — allow retry
       this._revealUntil = 0;
+    }
+  }
+
+  /** Focus mode: tap a specific emoji. Wrong → shake + dim to 35%; the
+   * round auto-advances when only the match is left bright. */
+  _focusTap(e, cardEl) {
+    if (!e) return;
+    const cell = e.target.closest('.cell');
+    if (!cell) return;                       // empty space — no-op
+    const i = parseInt(cell.dataset.i, 10);
+    if (isNaN(i)) return;
+    const g = this.game;
+    const card = g.deck[(g.round * 2 + this._cardOffset(cardEl)) % g.deck.length];
+    const matchIdx = g.getMatchSymbolIndex(g.round);
+
+    if (card[i] === matchIdx) { this._findIt(); return; }
+
+    // Wrong tap: shake (repeat taps included) + soft buzz
+    cell.classList.remove('cell-miss');
+    void cell.offsetWidth;
+    cell.classList.add('cell-miss');
+    if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) { /* ignore */ } }
+    if (cell.classList.contains('cell-ghost')) return;   // already dimmed
+    this._misses++;
+    cell.classList.add('cell-ghost');
+
+    // Auto-advance: every non-match emoji on this card is now dimmed
+    const matchPos = card.indexOf(matchIdx);
+    const cells = cardEl.querySelectorAll('.cell');
+    let solved = true;
+    cells.forEach((c, idx) => {
+      if (idx !== matchPos && !c.classList.contains('cell-ghost')) solved = false;
+    });
+    if (solved) this._findIt();
+  }
+
+  /** Which deck offset (card A = 0, card B = 1) a tap landed on. */
+  _cardOffset(cardEl) {
+    const g = this.game;
+    if (g.local) return cardEl === this.cardB ? 1 : 0;
+    return g.role === 'guest' ? 1 : 0;
+  }
+
+  /** Apply play style: switch state, cell hit-targets, ghost restoration. */
+  _applyPlayStyle(style) {
+    const focus = style === 'focus';
+    if (this.focusToggle) this.focusToggle.checked = focus;
+    this.myCard.classList.toggle('targeted', focus);
+    this.cardB.classList.toggle('targeted', focus);
+    if (!focus) {
+      [this.myCard, this.cardB].forEach(card =>
+        card.querySelectorAll('.cell.cell-ghost')
+          .forEach(c => c.classList.remove('cell-ghost')));
     }
   }
 
@@ -990,9 +1084,15 @@ export class ScanMatchUI {
 
     if (this.undoBtn) this.undoBtn.disabled = g.round <= 0;
 
+    // Play style: hit-targets + switch state (covers joins + every repaint)
+    this._applyPlayStyle(g.playStyle);
+
     // Update game status (hint text is only shown before first find)
     if (g.round === 0) {
-      this._setGameStatus(g.local ? 'Tap either card to find it' : 'Tap the card to find it');
+      const hint = g.playStyle === 'focus'
+        ? 'Tap the matching symbol'
+        : (g.local ? 'Tap either card to find it' : 'Tap the card to find it');
+      this._setGameStatus(hint);
     } else {
       this._setGameStatus('');
     }
@@ -1162,6 +1262,7 @@ export class ScanMatchUI {
     this._paintedRound = -1;
     this._readyAt = null;
     this._revealUntil = 0;
+    this._misses = 0;
 
     // Clean up the swipe-back history guard
     if (this._historyPushed) {

@@ -160,6 +160,7 @@ export function paintCard(container, emojis, layout) {
   emojis.forEach((emoji, i) => {
     const cell = document.createElement('div');
     cell.className = 'cell';
+    cell.dataset.i = i;   // Guided-mode hit-testing: tap → symbol index
     cell.style.fontSize = layout.sizes[i].toFixed(1) + 'px';
     cell.style.left = layout.positions[i].x + '%';
     cell.style.top = layout.positions[i].y + '%';

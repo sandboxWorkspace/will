@@ -23,7 +23,7 @@ cleanup() {
     if [ -d "$DOCS_GIT_DIR" ]; then
         git --git-dir="$DOCS_GIT_DIR" --work-tree=. add -f $KEEP_FILES 2>/dev/null || true
         git --git-dir="$DOCS_GIT_DIR" --work-tree=. commit -q \
-            -m "Docs snapshot $(date '+%Y-%m-%d %H:%M')" 2>/dev/null || true
+            -m "Docs snapshot $(date '+%Y-%m-%d %H:%M')" >/dev/null 2>&1 || true
     fi
 }
 trap cleanup EXIT
