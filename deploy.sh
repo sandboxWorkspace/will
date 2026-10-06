@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-# Local-only docs (AGENTS.md, BUILD.md, workflow.md): never pushed to GitHub.
+# Local-only docs (AGENTS.md, workflow.md): never pushed to GitHub.
 # - Version history lives in ../will-local-docs.git (bare repo OUTSIDE this
 #   working tree, so no branch's `git add .` can ever sweep it up).
 # - They are backed up/restored around the gh-pages working-tree swap and
 #   auto-snapshotted to the history repo at the end of every deploy.
-KEEP_FILES="AGENTS.md BUILD.md workflow.md"
+KEEP_FILES="AGENTS.md workflow.md"
 DOCS_GIT_DIR=../will-local-docs.git
 
 cleanup() {

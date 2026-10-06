@@ -8,6 +8,17 @@ function detectLocation() {
 }
 
 async function initializeApp() {
+  // AAC Speak Board (standalone tool — no Firebase)
+  if (document.getElementById('aac-board')) {
+    if (document.querySelector('.collapse-button-container')) {
+      const { default: initCollapse } = await import('./js/ui/collapsibleSections.js');
+      initCollapse();
+    }
+    const { initBoard } = await import('./js/aac/aacBoard.js');
+    initBoard();
+    return;
+  }
+
   const hasDb = document.getElementById('schedule-table') ||
                 document.getElementById('maintenanceRequestForm') ||
                 document.getElementById('supplyRequestForm') ||

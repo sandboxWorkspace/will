@@ -35,7 +35,8 @@ export default defineConfig({
         toolQuickRestock: path.resolve(__dirname, 'toolQuickRestock.html'),
         equipment: path.resolve(__dirname, 'equipment.html'),
         fesBike: path.resolve(__dirname, 'fesBike.html'),
-        toolScanMatch: path.resolve(__dirname, 'toolScanMatch.html')
+        toolScanMatch: path.resolve(__dirname, 'toolScanMatch.html'),
+        toolSpeakBoard: path.resolve(__dirname, 'toolSpeakBoard.html')
       },
     },
   },
