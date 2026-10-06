@@ -1,0 +1,15 @@
+{
+  "boards": {
+    "home": {
+      "name": "Basic Needs",
+      "tiles": [
+        { "id": "yes",   "label": "Yes",       "icon": "👍", "speech": "Yes" },
+        { "id": "no",    "label": "No",        "icon": "👎", "speech": "No" },
+        { "id": "water", "label": "Water",     "icon": "💧", "speech": "I want water" },
+        { "id": "pain",  "label": "Pain",      "icon": "🤕", "speech": "I am in pain" },
+        { "id": "bath",  "label": "Bathroom",  "icon": "🚻", "speech": "I need the bathroom" },
+        { "id": "nurse", "label": "Nurse",     "icon": "🔔", "speech": "Nurse, I need help" }
+      ]
+    }
+  }
+}
