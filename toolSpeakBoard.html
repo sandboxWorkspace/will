@@ -19,50 +19,64 @@
 
     <style>
         /* Speak Board — page-specific styles (kept in-page per repo convention) */
+        [hidden] { display: none !important; }
+
+        body { min-height: 100vh; min-height: 100dvh; }
+
+        .aac-header { padding: 10px 0 0; }
+        .aac-header .logo { width: 56px; }
+        .aac-header h1 { font-size: 1.6em; margin: 0.15em 0 0; }
+
         .aac-main {
-            align-items: stretch;
+            display: flex;
+            flex-direction: column;
             width: 100%;
-            max-width: 920px;
+            max-width: 960px;
             margin: 0 auto;
-            flex-grow: 1;
+            flex: 1 1 auto;
+            min-height: 0;
+            gap: 8px;
         }
 
         .aac-controls {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            padding: 6px 0 2px;
+            gap: 8px;
+            padding-top: 4px;
         }
 
-        #gaze-toggle {
+        /* Compact variant of the shared .button */
+        .aac-ctl {
+            padding: 10px 16px !important;
+            font-size: 0.95em !important;
             min-height: 44px;
-            min-width: 140px;
-            font-size: 1rem;
         }
 
         #gaze-toggle.gaze-on {
-            background: var(--primary-color-dark);
-            color: var(--text-on-primary);
+            outline: 3px solid var(--primary-color);
+            outline-offset: -3px;
         }
 
         .aac-last-said {
             text-align: center;
-            font-size: 1.05rem;
-            min-height: 1.7em;
+            font-size: 1rem;
+            min-height: 1.6em;
             color: var(--text-secondary);
-            padding: 2px 0;
+            padding: 0 4px;
         }
 
-        .aac-last-said strong {
-            color: var(--text-emphasis);
-        }
+        .aac-last-said strong { color: var(--text-emphasis); }
 
         .aac-board {
+            flex: 1 1 auto;
+            min-height: 220px;
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-auto-rows: minmax(110px, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: minmax(96px, 1fr);
             gap: 12px;
             width: 100%;
-            padding-bottom: 4px;
+            overflow-y: auto;
         }
 
         .aac-tile {
@@ -71,8 +85,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            min-height: 110px;
+            gap: 6px;
+            min-height: 0;
+            min-width: 0;
             border: 3px solid var(--border-color-light);
             border-radius: var(--border-radius-large);
             background: var(--background-surface);
@@ -91,20 +106,19 @@
             outline-offset: 2px;
         }
 
-        .aac-tile:active {
-            transform: scale(0.97);
-        }
+        .aac-tile:active { transform: scale(0.97); }
 
         .aac-tile .aac-icon {
-            font-size: clamp(2rem, 9vw, 3.6rem);
-            line-height: 1;
+            font-size: clamp(1.9rem, 9vmin, 4rem);
+            line-height: 1.15;
             pointer-events: none;
         }
 
         .aac-tile .aac-label {
-            font-size: clamp(1.05rem, 4.5vw, 1.6rem);
+            font-size: clamp(1rem, 4vmin, 1.7rem);
             font-weight: 600;
             pointer-events: none;
+            text-align: center;
         }
 
         .aac-tile.just-spoken {
@@ -131,41 +145,189 @@
             text-align: center;
             font-size: 0.95rem;
             color: var(--primary-color);
-            padding: 4px 0 2px;
             min-height: 1.6em;
+            padding: 0 4px;
         }
 
-        .aac-status.warn {
-            color: var(--error-text);
-            font-weight: 600;
+        .aac-status.warn { color: var(--error-text); font-weight: 600; }
+
+        .edit-tools {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .aac-about p {
-            margin: 8px 0;
+        .aac-about p { margin: 8px 0; line-height: 1.5; }
+
+        /* ── Overlays (calibration, practice) ─────────────── */
+        .aac-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            z-index: 50;
+        }
+
+        .calib-stage, .practice-stage { position: absolute; inset: 0; }
+
+        .calib-target {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            margin: -28px 0 0 -28px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            box-shadow: 0 0 24px rgba(74, 144, 226, 0.8);
+            animation: calib-pulse 1.1s ease-in-out infinite;
+        }
+
+        @keyframes calib-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+        }
+
+        .calib-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--background-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-large);
+            padding: 24px;
+            width: min(92vw, 420px);
+            text-align: center;
+        }
+
+        .calib-card h2 { font-size: 1.3em; margin: 0 0 8px; }
+        .calib-card p { color: var(--text-secondary); margin: 6px 0; line-height: 1.4; }
+
+        .practice-hud {
+            position: absolute;
+            top: max(10px, env(safe-area-inset-top));
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: var(--border-radius);
+            padding: 6px 14px;
+            font-size: 1rem;
+            z-index: 2;
+        }
+
+        .practice-bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #57d8f5, #03c0eb);
+            box-shadow: 0 0 18px rgba(87, 216, 245, 0.7);
+            animation: calib-pulse 1.4s ease-in-out infinite;
+        }
+
+        .practice-bubble.pop { animation: none; background: var(--success-bg); box-shadow: none; }
+
+        #practice-exit {
+            position: absolute;
+            bottom: max(12px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        /* ── Modals (edit tile, settings) ─────────────────── */
+        .aac-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 60;
+            background: var(--background-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-large);
+            padding: 20px;
+            width: min(92vw, 460px);
+            max-height: 86vh;
+            max-height: 86dvh;
+            overflow-y: auto;
+        }
+
+        .aac-modal h2 { font-size: 1.3em; margin: 0 0 10px; }
+
+        .aac-modal label {
+            display: block;
+            margin: 12px 0 4px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .aac-modal input[type="text"], .aac-modal select {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            background: var(--background-alt);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+        }
+
+        .aac-modal label.check-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 14px 0;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .aac-modal label.check-label input { width: 18px; height: 18px; }
+
+        .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        /* ── Gaze feedback (dot + readout) ────────────────── */
+        #gaze-dot {
+            position: fixed;
+            width: 26px;
+            height: 26px;
+            margin: -13px 0 0 -13px;
+            border-radius: 50%;
+            background: rgba(74, 144, 226, 0.3);
+            border: 2px solid var(--primary-color);
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        #gaze-check {
+            position: fixed;
+            top: max(8px, env(safe-area-inset-top));
+            right: 8px;
+            background: rgba(0, 0, 0, 0.72);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 8px 10px;
+            font-size: 0.75rem;
             line-height: 1.5;
+            color: var(--text-primary);
+            white-space: pre;
+            z-index: 40;
+            pointer-events: none;
         }
 
-        @media (orientation: landscape) {
-            .aac-board {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
+        /* ── Responsive ───────────────────────────────────── */
         @media (prefers-reduced-motion: reduce) {
-            .aac-tile {
-                transition: none;
-            }
-            .aac-tile:active {
-                transform: none;
-            }
+            .calib-target, .practice-bubble { animation: none; }
+            .aac-tile:active { transform: none; }
         }
     </style>
-  <script type="module" crossorigin src="/will/assets/scripts-Bmodje1G.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-DArKjRZ1.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-DBH1DUSb.css">
   <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-B5V2Wh3s.css">
 </head>
 <body>
-    <header>
+    <header class="aac-header">
         <a href="/will/">
             <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
@@ -174,14 +336,26 @@
 
     <main class="aac-main">
         <div class="aac-controls">
-            <button id="gaze-toggle" class="blue-button" type="button" aria-pressed="false">Gaze: Off</button>
+            <button id="gaze-toggle" class="button blue-button aac-ctl" type="button" aria-pressed="false">Gaze: Off</button>
+            <button id="calibrate-btn" class="button blue-button aac-ctl" type="button">Calibrate</button>
+            <button id="practice-btn" class="button teal-button aac-ctl" type="button">Practice</button>
+            <button id="edit-toggle" class="button orange-button aac-ctl" type="button" aria-pressed="false">Edit</button>
+            <button id="settings-btn" class="button green-button aac-ctl" type="button">Settings</button>
         </div>
 
         <div id="last-said" class="aac-last-said" aria-live="polite">Tap a tile to speak it aloud.</div>
 
-        <div id="aac-board" class="aac-board" role="group" aria-label="Speaking board — basic needs"></div>
+        <div id="aac-board" class="aac-board" role="group" aria-label="Speaking board"></div>
 
         <div id="gaze-status" class="aac-status" hidden></div>
+
+        <div id="edit-tools" class="edit-tools" hidden>
+            <button id="edit-add" class="button green-button aac-ctl" type="button">Add tile</button>
+            <button id="edit-export" class="button blue-button aac-ctl" type="button">Export</button>
+            <button id="edit-import" class="button blue-button aac-ctl" type="button">Import</button>
+            <button id="edit-reset" class="button red-button aac-ctl" type="button">Reset board</button>
+            <input id="edit-import-file" type="file" accept="application/json,.json" hidden>
+        </div>
 
         <div class="collapse-button-container">
             <button class="collapse-button red-button" data-target="aboutLicenses" data-default-open="false">
@@ -198,9 +372,17 @@
                     never uploaded, stored, or transmitted.
                 </p>
                 <p>
-                    <strong>Gaze mode:</strong> turn it on, then look up / down / left / right to move the highlighted
-                    tile. Look ahead (center) and hold to select, or hold a deliberate blink. Works best with the
-                    camera at arm's length in good lighting.
+                    <strong>Gaze mode:</strong> <em>Cursor</em> — look at a tile and hold until the blue bar fills to
+                    select. Calibrate once per device for best accuracy. <em>Directional</em> — look up / down / left /
+                    right to move a highlight, look ahead or blink to select. <em>Head pointer</em> — steers with head
+                    movement; the most reliable option under glare or with glasses.
+                </p>
+                <p>
+                    <strong>Practice:</strong> a bubble-popping mini-game for training gaze and dwell selection.
+                </p>
+                <p>
+                    <strong>Voices:</strong> uses the voices built into your device (many include male and female
+                    options — choose in Settings).
                 </p>
                 <p>
                     <strong>Tip:</strong> on iPhone/iPad (iOS 18+) and Android, the built-in Eye Tracking or Camera
@@ -226,6 +408,64 @@
             </a>
         </div>
     </footer>
+
+    <!-- Gaze feedback -->
+    <div id="gaze-dot" hidden></div>
+    <div id="gaze-check" hidden></div>
+
+    <!-- Calibration overlay -->
+    <div id="calib-overlay" class="aac-overlay" hidden>
+        <div id="calib-stage" class="calib-stage"></div>
+        <div id="calib-card" class="calib-card" hidden></div>
+    </div>
+
+    <!-- Practice overlay -->
+    <div id="practice-overlay" class="aac-overlay" hidden>
+        <div id="practice-hud" class="practice-hud">Score: 0</div>
+        <div id="practice-stage" class="practice-stage"></div>
+        <button id="practice-exit" class="button red-button aac-ctl" type="button">Exit</button>
+    </div>
+
+    <!-- Edit tile modal -->
+    <div id="edit-modal" class="aac-modal" hidden role="dialog" aria-modal="true" aria-labelledby="edit-title">
+        <h2 id="edit-title">Edit Tile</h2>
+        <label for="edit-label">Button label</label>
+        <input id="edit-label" type="text" maxlength="24" autocomplete="off">
+        <label for="edit-icon">Icon (emoji, optional)</label>
+        <input id="edit-icon" type="text" maxlength="4" autocomplete="off">
+        <label for="edit-speech">Spoken phrase</label>
+        <input id="edit-speech" type="text" maxlength="80" autocomplete="off">
+        <div class="modal-actions">
+            <button id="edit-save" class="button green-button aac-ctl" type="button">Save</button>
+            <button id="edit-delete" class="button red-button aac-ctl" type="button">Delete</button>
+            <button id="edit-cancel" class="button pending-button aac-ctl" type="button">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" class="aac-modal" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <h2 id="settings-title">Settings</h2>
+        <label for="set-mode">Gaze mode</label>
+        <select id="set-mode">
+            <option value="cursor">Cursor (calibrated)</option>
+            <option value="directional">Directional (no calibration)</option>
+            <option value="head">Head pointer (best with glare)</option>
+        </select>
+        <label for="set-dwell">Select (dwell) time</label>
+        <select id="set-dwell">
+            <option value="600">0.6 seconds</option>
+            <option value="800">0.8 seconds</option>
+            <option value="1200">1.2 seconds</option>
+        </select>
+        <label for="set-voice">Voice (from this device)</label>
+        <select id="set-voice"></select>
+        <label class="check-label"><input type="checkbox" id="set-dot"> Show gaze dot</label>
+        <label class="check-label"><input type="checkbox" id="set-check"> Show tracking readout</label>
+        <div class="modal-actions">
+            <button id="set-test" class="button blue-button aac-ctl" type="button">Test voice</button>
+            <button id="set-close" class="button green-button aac-ctl" type="button">Done</button>
+        </div>
+    </div>
 
 </body>
 </html>

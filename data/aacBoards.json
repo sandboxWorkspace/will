@@ -1,14 +1,20 @@
 {
   "boards": {
     "home": {
-      "name": "Basic Needs",
+      "name": "Speaking Board",
       "tiles": [
-        { "id": "yes",   "label": "Yes",       "icon": "👍", "speech": "Yes" },
-        { "id": "no",    "label": "No",        "icon": "👎", "speech": "No" },
-        { "id": "water", "label": "Water",     "icon": "💧", "speech": "I want water" },
-        { "id": "pain",  "label": "Pain",      "icon": "🤕", "speech": "I am in pain" },
-        { "id": "bath",  "label": "Bathroom",  "icon": "🚻", "speech": "I need the bathroom" },
-        { "id": "nurse", "label": "Nurse",     "icon": "🔔", "speech": "Nurse, I need help" }
+        { "id": "yes",    "label": "Yes",       "icon": "👍", "speech": "Yes" },
+        { "id": "no",     "label": "No",        "icon": "👎", "speech": "No" },
+        { "id": "hi",     "label": "Hi",        "icon": "😊", "speech": "Hi" },
+        { "id": "bye",    "label": "Bye",       "icon": "👋", "speech": "Bye" },
+        { "id": "water",  "label": "Water",     "icon": "💧", "speech": "Water, please" },
+        { "id": "pain",   "label": "Pain",      "icon": "🤕", "speech": "I am in pain" },
+        { "id": "help",   "label": "Help",      "icon": "🆘", "speech": "Help, please" },
+        { "id": "thanks", "label": "Thank you", "icon": "🙏", "speech": "Thank you" },
+        { "id": "one",    "label": "One",       "icon": "1️⃣", "speech": "One" },
+        { "id": "two",    "label": "Two",       "icon": "2️⃣", "speech": "Two" },
+        { "id": "three",  "label": "Three",     "icon": "3️⃣", "speech": "Three" },
+        { "id": "more",   "label": "More",      "icon": "➕", "speech": "More, please" }
       ]
     }
   }
