@@ -1,18 +1,22 @@
 /**
- * Gaze engine for Speak Board — directional webcam gaze via MediaPipe
- * FaceLandmarker (© Google, Apache-2.0), loaded at runtime from a CDN only
- * when the user turns Gaze mode on. All processing happens on-device.
+ * Gaze engine for Speak Board — webcam gaze via MediaPipe FaceLandmarker
+ * (© Google, Apache-2.0), loaded at runtime from a CDN only when the user
+ * turns Gaze mode on. All processing happens on-device.
  *
  * Emits document-level CustomEvents:
- *   aac:gaze-dir    { detail: { dir: 'up'|'down'|'left'|'right' } }
- *   aac:gaze-center { detail: { active: true|false } }
- *   aac:gaze-blink  { detail: {} }
- *   aac:gaze-face   { detail: { ok: true|false } }
- *   aac:gaze-status { detail: { text, warn } }
+ *   aac:gaze-sample  { detail: { gx, gy, hx, hy, stable, faceOk } }
+ *       gx, gy — iris vector, per-eye-normalized (~[0,1], 0.5 = looking ahead)
+ *       hx, hy — head vector (nose position within the face box, same scale)
+ *       stable — false when a large head movement made this frame unreliable
+ *   aac:gaze-dir     { detail: { dir: 'up'|'down'|'left'|'right' } }
+ *   aac:gaze-center  { detail: { active: true|false } }
+ *   aac:gaze-blink   { detail: {} }
+ *   aac:gaze-face    { detail: { ok: true|false } }
+ *   aac:gaze-quality { detail: { fps, jitter } }  (roughly every 500 ms)
+ *   aac:gaze-status  { detail: { text, warn } }
  *
- * Control model: relative gaze direction only — no calibration required.
- * The user must return their gaze to center (deadzone) before the next
- * direction event fires, which keeps webcam jitter from running away.
+ * Cursor positioning (calibrated iris or head pointer) and dwell live in
+ * aacBoard.js / calibration.js — this engine only reports raw signals.
  */
 
 const CDN_ROOT = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';
@@ -29,8 +33,9 @@ const BLINK_EAR = 0.16; // eye aspect ratio below which an eye counts as closed
 const BLINK_MIN_MS = 400; // deliberate blink: hold at least this long...
 const BLINK_MAX_MS = 900; // ...but no longer than this
 const BLINK_SUPPRESS_MS = 900; // ignore blinks this soon after a direction event
-const HEAD_GATE = 0.03; // nose-tip jump (normalized) that suppresses a frame
+const HEAD_GATE = 0.03; // nose-tip jump (normalized) that marks a frame unstable
 const FACE_LOST_MS = 1000;
+const QUALITY_INTERVAL_MS = 500;
 
 // Canonical FaceMesh landmark indices (iris-refined 478-point model)
 const EYE = {
@@ -38,8 +43,12 @@ const EYE = {
     right: { iris: 473, inner: 362, outer: 263, top: 386, bottom: 374 }
 };
 const NOSE_TIP = 1;
+const FACE_LEFT = 234;
+const FACE_RIGHT = 454;
+const FACE_TOP = 10;
+const FACE_BOTTOM = 152;
 
-const TRACKING_HINT = 'Look up, down, left, or right to move. Look ahead (or blink) to select.';
+const TRACKING_HINT = 'Look at a tile and hold until the blue bar fills.';
 
 let running = false;
 let video = null;
@@ -60,6 +69,11 @@ let prevNose = null;
 let faceSeenAt = 0;
 let faceLost = false;
 
+// Quality tracking
+let frameCount = 0;
+let qualityAt = 0;
+let recentSamples = [];
+
 function emit(type, detail) {
     document.dispatchEvent(new CustomEvent(type, { detail }));
 }
@@ -70,6 +84,7 @@ function resetTransient() {
     hasAvg = false;
     blinking = false;
     prevNose = null;
+    recentSamples = [];
 }
 
 /**
@@ -206,21 +221,37 @@ function loop() {
     }
 
     // Head-motion gate: a large nose-tip jump means the head moved this
-    // frame; eye direction is unreliable during head motion, so skip it.
+    // frame; eye direction is unreliable during head motion.
     const nose = lm[NOSE_TIP];
-    if (
-        prevNose &&
-        Math.hypot(nose.x - prevNose.x, nose.y - prevNose.y) > HEAD_GATE
-    ) {
-        prevNose = { x: nose.x, y: nose.y };
-        return;
-    }
+    const headJump = prevNose
+        ? Math.hypot(nose.x - prevNose.x, nose.y - prevNose.y)
+        : 0;
+    const stable = headJump <= HEAD_GATE;
     prevNose = { x: nose.x, y: nose.y };
 
+    // Raw signals
     const [lx, ly] = eyeNorm(lm, EYE.left);
     const [rx, ry] = eyeNorm(lm, EYE.right);
     const gx = (lx + rx) / 2;
     const gy = (ly + ry) / 2;
+    const [hx, hy] = headNorm(lm);
+
+    frameCount += 1;
+    recentSamples.push({ gx, gy });
+    if (recentSamples.length > 30) recentSamples.shift();
+    emit('aac:gaze-sample', { gx, gy, hx, hy, stable, faceOk: true });
+
+    if (now - qualityAt > QUALITY_INTERVAL_MS) {
+        emit('aac:gaze-quality', {
+            fps: Math.round((frameCount * 1000) / (now - qualityAt)),
+            jitter: sampleJitter()
+        });
+        frameCount = 0;
+        qualityAt = now;
+    }
+
+    if (!stable) return; // skip zone/blink classification during head motion
+
     if (!hasAvg) {
         gxAvg = gx;
         gyAvg = gy;
@@ -245,6 +276,37 @@ function eyeNorm(lm, eye) {
     const ex = (iris.x - inner.x) / ((outer.x - inner.x) || 1e-6);
     const ey = (iris.y - top.y) / ((bottom.y - top.y) || 1e-6);
     return [ex, ey];
+}
+
+// Nose position within the face box, normalized by box size. Immune to head
+// translation (whole box moves together); responds to head rotation (nose
+// sweeps within the box). Robust where iris detail fails: glare, glasses.
+function headNorm(lm) {
+    const faceW = Math.abs(lm[FACE_RIGHT].x - lm[FACE_LEFT].x) || 1e-6;
+    const faceH = Math.abs(lm[FACE_BOTTOM].y - lm[FACE_TOP].y) || 1e-6;
+    const cx = (lm[FACE_RIGHT].x + lm[FACE_LEFT].x) / 2;
+    const cy = (lm[FACE_TOP].y + lm[FACE_BOTTOM].y) / 2;
+    const hx = (lm[NOSE_TIP].x - cx) / faceW + 0.5;
+    const hy = (lm[NOSE_TIP].y - cy) / faceH + 0.5;
+    return [hx, hy];
+}
+
+function sampleJitter() {
+    if (recentSamples.length < 6) return 0;
+    const n = recentSamples.length;
+    let mx = 0;
+    let my = 0;
+    recentSamples.forEach((s) => {
+        mx += s.gx;
+        my += s.gy;
+    });
+    mx /= n;
+    my /= n;
+    let acc = 0;
+    recentSamples.forEach((s) => {
+        acc += (s.gx - mx) * (s.gx - mx) + (s.gy - my) * (s.gy - my);
+    });
+    return Math.sqrt(acc / n);
 }
 
 function classifyZone() {
