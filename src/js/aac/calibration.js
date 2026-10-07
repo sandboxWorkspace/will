@@ -6,7 +6,18 @@
  * The collected samples are fit with a per-axis affine map:
  *     screenX = a * gx + b * gy + c
  *     screenY = d * gx + e * gy + f
- * solved as least squares over the 5 target points (mean sample per point).
+ * solved as least squares over the 5 target points (mean or median sample
+ * per point, depending on variant).
+ *
+ * Variants (engines and pages pass their variant; fits are format-identical):
+ *   'legacy' — production behavior: strict stability gate, mean samples,
+ *              no exit affordance during collection
+ *   'a'      — Lab A: same sampling as legacy, plus an always-visible Exit
+ *              button and a per-point progress bar
+ *   'b'      — Lab B: median samples (outlier-robust), relaxed sampling gate
+ *              (any frame with a face counts), Exit button, progress bar,
+ *              and a live *calibrated* cursor (green) that visibly converges
+ *              onto the targets as points are collected
  *
  * Fits are stored in localStorage per source ('iris' or 'head') because the
  * two signals have very different offsets and gains.
@@ -58,12 +69,13 @@ export function applyFit(fit, ux, uy) {
  * Run the full calibration flow. Assumes the gaze engine is already running.
  * Calls onDone(fit) when finished, onCancel() if the user backs out.
  */
-export function runCalibration(source, { onDone, onCancel }) {
+export function runCalibration(source, { onDone, onCancel, variant = 'legacy' }) {
     const root = overlay();
     const stageEl = stage();
     const cardEl = card();
     if (!root || !stageEl || !cardEl) return;
 
+    const enhanced = variant === 'a' || variant === 'b';
     let active = false;
     let sampleListener = null;
     let escListener = null;
@@ -95,7 +107,7 @@ export function runCalibration(source, { onDone, onCancel }) {
         cardEl.innerHTML = `
             <h2>Calibrate Gaze</h2>
             <p>Look at each blue dot as it appears. Keep your head as still as you can.</p>
-            <p>Takes about 15 seconds.</p>
+            <p>${variant === 'b' ? 'A green cursor shows your calibrated gaze converging as you go.' : ''} Takes about 15 seconds.</p>
             <div class="modal-actions">
                 <button class="button green-button aac-ctl" data-act="start">Start</button>
                 <button class="button pending-button aac-ctl" data-act="cancel">Cancel</button>
@@ -108,7 +120,7 @@ export function runCalibration(source, { onDone, onCancel }) {
         cardEl.hidden = true;
         active = true;
 
-        // Target + live raw-gaze dot + point counter
+        // Target + live raw-gaze dot + point counter (+ variant extras)
         const target = document.createElement('div');
         target.className = 'calib-target';
         const dot = document.createElement('div');
@@ -118,11 +130,48 @@ export function runCalibration(source, { onDone, onCancel }) {
         const counter = document.createElement('div');
         counter.style.cssText =
             'position:absolute;top:max(10px, env(safe-area-inset-top));left:50%;transform:translateX(-50%);' +
-            'color:#fff;font-size:1rem;z-index:51;pointer-events:none;';
+            'color:#fff;font-size:1rem;z-index:51;pointer-events:none;text-align:center;';
+
+        const extras = document.createElement('div');
+        if (enhanced) {
+            // Always-visible exit — Escape does not exist on touch devices
+            const exit = document.createElement('button');
+            exit.type = 'button';
+            exit.className = 'button red-button aac-ctl';
+            exit.textContent = 'Exit';
+            exit.style.cssText =
+                'position:absolute;top:max(10px, env(safe-area-inset-top));right:10px;z-index:52;';
+            exit.addEventListener('click', cancel);
+            const progress = document.createElement('div');
+            progress.style.cssText =
+                'position:absolute;top:calc(max(10px, env(safe-area-inset-top)) + 34px);left:50%;' +
+                'transform:translateX(-50%);width:220px;height:6px;border-radius:3px;' +
+                'background:rgba(255,255,255,0.18);z-index:51;pointer-events:none;';
+            const progressFill = document.createElement('div');
+            progressFill.style.cssText = 'height:100%;width:0;border-radius:3px;background:#4a90e2;';
+            progress.appendChild(progressFill);
+            extras.appendChild(exit);
+            extras.appendChild(progress);
+            if (variant === 'b') {
+                const predict = document.createElement('div');
+                predict.style.cssText =
+                    'position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;' +
+                    'background:rgba(76,175,80,0.35);border:3px solid #4caf50;opacity:0.95;' +
+                    'z-index:52;pointer-events:none;visibility:hidden;';
+                predict.hidden = false;
+                extras.appendChild(predict);
+                extras.predictDot = predict;
+            }
+            extras.progressFill = progressFill;
+        }
+
         stageEl.innerHTML = '';
         stageEl.appendChild(target);
         stageEl.appendChild(dot);
         stageEl.appendChild(counter);
+        if (enhanced) {
+            Array.from(extras.children).forEach((child) => stageEl.appendChild(child));
+        }
 
         const perPoint = [];
         for (let i = 0; i < POINTS.length && active; i++) {
@@ -134,27 +183,58 @@ export function runCalibration(source, { onDone, onCancel }) {
             const samples = [];
             const started = performance.now();
             await new Promise((resolve) => {
+                let progressRAF = null;
+                const tick = () => {
+                    if (extras.progressFill) {
+                        const elapsed = performance.now() - started;
+                        extras.progressFill.style.width = `${Math.min(100, (elapsed / SAMPLE_MS) * 100)}%`;
+                        progressRAF = requestAnimationFrame(tick);
+                    }
+                };
+                if (enhanced) progressRAF = requestAnimationFrame(tick);
+
                 sampleListener = (event) => {
                     const s = event.detail;
                     if (!s || !s.faceOk) return;
                     const ux = source === 'head' ? s.hx : s.gx;
                     const uy = source === 'head' ? s.hy : s.gy;
-                    if (s.stable) samples.push([ux, uy]);
+                    // legacy/a keep the strict stability gate; b accepts any
+                    // tracked frame — the fit tolerates noise
+                    if (variant !== 'b' && !s.stable) return;
+                    samples.push([ux, uy]);
                     dot.style.left = `${ux * window.innerWidth}px`;
                     dot.style.top = `${uy * window.innerHeight}px`;
+
+                    // Live calibrated cursor: refit from points collected so
+                    // far and predict the current sample
+                    if (variant === 'b' && perPoint.length >= 3 && extras.predictDot) {
+                        const liveFit = solveFit(perPoint);
+                        if (liveFit) {
+                            const p = {
+                                x: liveFit.a * ux + liveFit.b * uy + liveFit.c,
+                                y: liveFit.d * ux + liveFit.e * uy + liveFit.f
+                            };
+                            extras.predictDot.style.visibility = 'visible';
+                            extras.predictDot.style.left = `${p.x}px`;
+                            extras.predictDot.style.top = `${p.y}px`;
+                        }
+                    }
+
                     if (performance.now() - started > SAMPLE_MS && samples.length >= MIN_SAMPLES) {
                         document.removeEventListener('aac:gaze-sample', sampleListener);
                         sampleListener = null;
+                        if (progressRAF) cancelAnimationFrame(progressRAF);
                         resolve();
                     }
                 };
                 document.addEventListener('aac:gaze-sample', sampleListener);
-                // Hard timeout: if we can't gather enough steady samples, bail
+                // Hard timeout: if we can't gather enough samples, move on
                 setTimeout(() => {
                     if (sampleListener) {
                         document.removeEventListener('aac:gaze-sample', sampleListener);
                         sampleListener = null;
-                        resolve(samples.length >= MIN_SAMPLES ? true : false);
+                        if (progressRAF) cancelAnimationFrame(progressRAF);
+                        resolve();
                     }
                 }, SAMPLE_MS * 3);
             });
@@ -164,9 +244,19 @@ export function runCalibration(source, { onDone, onCancel }) {
                 failCard('Not enough steady samples. Try in better light, closer to the camera.');
                 return;
             }
-            const mx = samples.reduce((sum, s) => sum + s[0], 0) / samples.length;
-            const my = samples.reduce((sum, s) => sum + s[1], 0) / samples.length;
-            perPoint.push({ ux: mx, uy: my, tx: px * window.innerWidth, ty: py * window.innerHeight });
+            const aggregate =
+                variant === 'b'
+                    ? medianSample(samples)
+                    : samples.reduce(
+                          (acc, s) => [acc[0] + s[0], acc[1] + s[1]],
+                          [0, 0]
+                      ).map((v) => v / samples.length);
+            perPoint.push({
+                ux: aggregate[0],
+                uy: aggregate[1],
+                tx: px * window.innerWidth,
+                ty: py * window.innerHeight
+            });
         }
 
         if (!active) return;
@@ -201,7 +291,7 @@ export function runCalibration(source, { onDone, onCancel }) {
         cardEl.querySelector('[data-act="redo"]').addEventListener('click', () => {
             cleanup();
             active = false;
-            runCalibration(source, { onDone, onCancel });
+            runCalibration(source, { onDone, onCancel, variant });
         });
     };
 
@@ -216,13 +306,22 @@ export function runCalibration(source, { onDone, onCancel }) {
             </div>`;
         cardEl.querySelector('[data-act="redo"]').addEventListener('click', () => {
             cleanup();
-            runCalibration(source, { onDone, onCancel });
+            runCalibration(source, { onDone, onCancel, variant });
         });
         cardEl.querySelector('[data-act="cancel"]').addEventListener('click', cancel);
     };
 
     document.addEventListener('keydown', escListener);
     intro();
+}
+
+function medianSample(samples) {
+    const xs = samples.map((s) => s[0]).sort((a, b) => a - b);
+    const ys = samples.map((s) => s[1]).sort((a, b) => a - b);
+    const mid = Math.floor(samples.length / 2);
+    const pick = (arr) =>
+        arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+    return [pick(xs), pick(ys)];
 }
 
 /** Least-squares affine fit per axis. Returns { a..f, errPx } or null. */

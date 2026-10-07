@@ -10,14 +10,22 @@ import * as speech from './speech.js';
 import { escapeHtml } from '../utils/utils.js';
 import { getFit, applyFit, runCalibration } from './calibration.js';
 import { startPractice } from './gazePractice.js';
+import { OneEuro2D } from './oneEuro.js';
 
 const CUSTOM_KEY = 'aac-custom-board';
 const SETTINGS_KEY = 'aac-settings';
 const POINT_SMOOTH = 0.35;
 const FLASH_MS = 350;
 const JITTER_WARN = 0.015;
+// Lab B: dwell only accrues when the cursor is slower than this (px/ms)
+const VEL_GATE = 0.6;
+// Lab B Auto mode: iris weight vs jitter (blend shifts toward head pointer
+// as iris jitter rises between these bounds)
+const JITTER_LO = 0.006;
+const JITTER_HI = 0.02;
 
 const MODE_HINTS = {
+    auto: 'Look at a tile and hold until the blue bar fills.',
     cursor: 'Look at a tile and hold until the blue bar fills.',
     directional: 'Look up, down, left, or right to move. Look ahead or blink to select.',
     head: 'Tilt your head to move the cursor. Hold steady on a tile to select.'
@@ -28,7 +36,7 @@ const state = {
     hovered: -1,
     highlight: -1, // directional-mode cursor
     gazeOn: false,
-    mode: 'directional', // 'cursor' | 'directional' | 'head'
+    mode: 'directional', // 'auto' | 'cursor' | 'directional' | 'head'
     lock: null, // 'calibration' | 'practice' — disables tile activation
     editMode: false,
     dwellRAF: null,
@@ -36,6 +44,13 @@ const state = {
     engine: null,
     fits: { iris: null, head: null },
     point: null, // smoothed cursor position
+    variant: 'legacy', // 'legacy' | 'a' | 'b' — set by the page
+    enginePath: './gazeEngine.js',
+    oneEuro: null,
+    lastJitter: 0,
+    speed: 0, // cursor speed in px/ms (variant b)
+    lastPoint: null,
+    lastPointAt: 0,
     settings: { mode: 'cursor', dwellMs: 800, showDot: true, showCheck: false }
 };
 
@@ -83,7 +98,13 @@ export async function initBoard() {
         setClose: document.getElementById('set-close')
     });
 
+    // Page-selected engine + behavior variant (see toolGazeLabA/B.html)
+    state.variant = root.dataset.gazeVariant || 'legacy';
     loadSettings();
+    if (root.dataset.gazeDefaultMode && !localStorage.getItem(SETTINGS_KEY)) {
+        state.settings.mode = root.dataset.gazeDefaultMode;
+    }
+    state.oneEuro = new OneEuro2D(1.0, 0.04, 1.0);
     state.fits.iris = getFit('iris');
     state.fits.head = getFit('head');
 
@@ -263,15 +284,34 @@ function wireGaze() {
             setHover(-1);
             return;
         }
-        if (!state.point) state.point = { x: raw.x, y: raw.y };
-        state.point.x += (raw.x - state.point.x) * POINT_SMOOTH;
-        state.point.y += (raw.y - state.point.y) * POINT_SMOOTH;
+        const now = performance.now();
+        if (state.variant === 'b') {
+            // One Euro: adaptive smoothing — steady when still, agile on saccades
+            state.point = state.oneEuro.filter(raw.x, raw.y, now);
+        } else {
+            if (!state.point) state.point = { x: raw.x, y: raw.y };
+            state.point.x += (raw.x - state.point.x) * POINT_SMOOTH;
+            state.point.y += (raw.y - state.point.y) * POINT_SMOOTH;
+        }
+        // Cursor speed (px/ms) — Lab B gates dwell while the eye is moving
+        if (state.lastPoint && now > state.lastPointAt) {
+            const moved = Math.hypot(state.point.x - state.lastPoint.x, state.point.y - state.lastPoint.y);
+            state.speed = moved / (now - state.lastPointAt);
+        }
+        state.lastPoint = { x: state.point.x, y: state.point.y };
+        state.lastPointAt = now;
         if (state.settings.showDot) {
             gazeDotEl.hidden = false;
             gazeDotEl.style.left = `${state.point.x}px`;
             gazeDotEl.style.top = `${state.point.y}px`;
         }
         setHover(hitTest(state.point.x, state.point.y));
+    });
+
+    document.addEventListener('aac:gaze-quality', (event) => {
+        els.lastQuality = event.detail;
+        if (typeof event.detail.jitter === 'number') state.lastJitter = event.detail.jitter;
+        updateCheck();
     });
 
     document.addEventListener('aac:gaze-status', (event) => {
@@ -287,9 +327,19 @@ function wireGaze() {
     document.addEventListener('aac:gaze-face', updateCheck);
 }
 
+// Engines are code-split chunks; import.meta.glob keeps the paths statically
+// analyzable so Vite bundles every engine the pages can select. Pages pick
+// one via data-gaze-engine ("" production, "A", "B").
+const ENGINE_LOADERS = import.meta.glob('./gazeEngine*.js');
+
 async function ensureEngine() {
     try {
-        if (!state.engine) state.engine = await import('./gazeEngine.js');
+        if (!state.engine) {
+            const key = root.dataset.gazeEngine || '';
+            const loader = ENGINE_LOADERS[`./gazeEngine${key}.js`] || ENGINE_LOADERS['./gazeEngine.js'];
+            if (!loader) throw new Error(`no engine loader for "${key}"`);
+            state.engine = await loader();
+        }
     } catch (err) {
         console.error('aacBoard: failed to load gaze engine', err);
         return false;
@@ -299,6 +349,32 @@ async function ensureEngine() {
 
 async function enterPreferredMode() {
     const preferred = state.settings.mode;
+    if (preferred === 'auto' && state.variant === 'b') {
+        const needIris = !state.fits.iris;
+        const needHead = !state.fits.head;
+        if (needIris || needHead) {
+            const first = needIris ? 'iris' : 'head';
+            const second = needIris ? 'head' : 'iris';
+            launchCalibration(
+                first,
+                () => {
+                    if ((first === 'iris' && !state.fits.head) || (first === 'head' && !state.fits.iris)) {
+                        launchCalibration(
+                            second,
+                            () => activateMode('auto'),
+                            () => activateMode('auto')
+                        );
+                    } else {
+                        activateMode('auto');
+                    }
+                },
+                () => activateMode('directional')
+            );
+            return;
+        }
+        activateMode('auto');
+        return;
+    }
     if ((preferred === 'cursor' && !state.fits.iris) || (preferred === 'head' && !state.fits.head)) {
         const source = preferred === 'head' ? 'head' : 'iris';
         launchCalibration(source, () => activateMode(preferred), () => activateMode('directional'));
@@ -311,9 +387,11 @@ function launchCalibration(source, onDone, onCancel) {
     state.lock = 'calibration';
     gazeDotEl.hidden = true;
     runCalibration(source, {
+        variant: state.variant,
         onDone: (fit) => {
             state.fits[source] = fit;
             state.point = null;
+            state.oneEuro.reset();
             state.lock = null;
             updateFeedback('Gaze calibrated.');
             if (onDone) onDone();
@@ -326,16 +404,32 @@ function launchCalibration(source, onDone, onCancel) {
 }
 
 function activateMode(mode) {
-    if ((mode === 'cursor' && !state.fits.iris) || (mode === 'head' && !state.fits.head)) {
-        mode = 'directional';
+    if (mode === 'auto' && state.variant === 'b') {
+        // Auto needs both fits; degrade gracefully to what exists
+        if (state.fits.iris && state.fits.head) state.mode = 'auto';
+        else if (state.fits.iris) state.mode = 'cursor';
+        else if (state.fits.head) state.mode = 'head';
+        else state.mode = 'directional';
+    } else if ((mode === 'cursor' && !state.fits.iris) || (mode === 'head' && !state.fits.head)) {
+        state.mode = 'directional';
+    } else {
+        state.mode = mode;
     }
-    state.mode = mode;
     state.gazeOn = true;
     state.point = null;
+    state.oneEuro.reset();
     state.dwellArmed = true;
     setHover(-1, true);
     setHighlight(state.mode === 'directional' ? 0 : -1);
-    els.gazeToggle.textContent = `Gaze: ${state.mode === 'cursor' ? 'Cursor' : state.mode === 'head' ? 'Head' : 'Directional'}`;
+    const label =
+        state.mode === 'auto'
+            ? 'Auto'
+            : state.mode === 'cursor'
+              ? 'Cursor'
+              : state.mode === 'head'
+                ? 'Head'
+                : 'Directional';
+    els.gazeToggle.textContent = `Gaze: ${label}`;
     els.gazeToggle.classList.add('gaze-on');
     els.gazeToggle.setAttribute('aria-pressed', 'true');
     statusBarEl.hidden = false;
@@ -351,6 +445,8 @@ function stopGaze() {
     cancelDwell();
     setHover(-1, true);
     setHighlight(-1);
+    state.point = null;
+    state.oneEuro.reset();
     gazeDotEl.hidden = true;
     els.gazeToggle.textContent = 'Gaze: Off';
     els.gazeToggle.classList.remove('gaze-on');
@@ -360,6 +456,28 @@ function stopGaze() {
 
 function computePoint(sample) {
     if (!sample || !sample.faceOk) return null;
+    if (state.mode === 'auto' && state.variant === 'b') {
+        const irisPoint = state.fits.iris
+            ? scalePoint(state.fits.iris, applyFit(state.fits.iris, sample.gx, sample.gy))
+            : null;
+        const headPoint = state.fits.head
+            ? scalePoint(state.fits.head, applyFit(state.fits.head, sample.hx, sample.hy))
+            : null;
+        if (irisPoint && headPoint) {
+            // Weight the eye signal by its own stability; when the iris gets
+            // noisy (glare, glasses, dim light) lean on the head pointer
+            const t = Math.min(
+                1,
+                Math.max(0, (state.lastJitter - JITTER_LO) / (JITTER_HI - JITTER_LO))
+            );
+            const wIris = 1 - 0.75 * t; // never below 0.25
+            return {
+                x: irisPoint.x * wIris + headPoint.x * (1 - wIris),
+                y: irisPoint.y * wIris + headPoint.y * (1 - wIris)
+            };
+        }
+        return irisPoint || headPoint;
+    }
     const fit = state.mode === 'head' ? state.fits.head : state.fits.iris;
     if (!fit) return null;
     const p = applyFit(
@@ -443,7 +561,8 @@ function setHover(index, force) {
     state.hovered = index;
     tileEls().forEach((el, i) => el.classList.toggle('highlight', i === index));
     cancelDwell();
-    if (index >= 0 && state.dwellArmed && !state.editMode) startDwell();
+    const slowEnough = state.variant !== 'b' || state.speed <= VEL_GATE;
+    if (index >= 0 && state.dwellArmed && !state.editMode && slowEnough) startDwell();
     if (index < 0) state.dwellArmed = true;
 }
 
@@ -623,6 +742,12 @@ function wireSettings() {
     speech.onVoicesChanged(() => fillVoices());
 
     els.settings.addEventListener('click', () => {
+        const modeOptions = Array.from(els.setMode.options).map((option) => option.value);
+        if (!modeOptions.includes(state.settings.mode)) {
+            // Page doesn't offer this mode (e.g. Auto on non-Lab-B pages)
+            state.settings.mode = modeOptions.includes('cursor') ? 'cursor' : modeOptions[0];
+            saveSettings();
+        }
         els.setMode.value = state.settings.mode;
         els.setDwell.value = String(state.settings.dwellMs);
         els.setDot.checked = state.settings.showDot;
@@ -710,10 +835,19 @@ function updateCheck() {
         return;
     }
     const modeLabel =
-        state.mode === 'cursor' ? 'Cursor' : state.mode === 'head' ? 'Head pointer' : 'Directional';
+        state.mode === 'auto'
+            ? 'Auto'
+            : state.mode === 'cursor'
+              ? 'Cursor'
+              : state.mode === 'head'
+                ? 'Head pointer'
+                : 'Directional';
     const lines = [`Mode: ${state.gazeOn ? modeLabel : 'off'}`, `Face: ${state.gazeOn ? 'ok' : 'camera off'}`];
     if (els.lastQuality && state.gazeOn) {
         lines.push(`FPS: ${els.lastQuality.fps}`);
+        if (els.lastQuality.backend) {
+            lines.push(`Engine: ${els.lastQuality.backend}${els.lastQuality.inference ? ` (${els.lastQuality.inference})` : ''}`);
+        }
         lines.push(
             `Jitter: ${els.lastQuality.jitter.toFixed(3)}${els.lastQuality.jitter > JITTER_WARN ? ' — check lighting' : ''}`
         );
