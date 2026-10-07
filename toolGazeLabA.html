@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="description" content="Speak Board — a free touch and gaze speaking board for basic needs communication.">
+    <meta name="description" content="Gaze Lab A — reliability-hardened gaze engine experiment (watchdog, timeouts, diagnostics).">
     <meta name="application-name" content="Will Clinic Hub">
     <meta name="author" content="Will">
-    <meta property="og:title" content="Speak Board | Will Clinic Hub">
-    <meta property="og:description" content="A free touch and gaze speaking board for basic needs communication.">
+    <meta property="og:title" content="Gaze Lab A | Will Clinic Hub">
+    <meta property="og:description" content="Reliability-hardened gaze engine experiment for the Speak Board.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
-    <title>Speak Board | Will Clinic Hub</title>
+    <title>Gaze Lab A | Will Clinic Hub</title>
 
 
     <link rel="icon" href="/will/assets/logo.png" type="image/png">
@@ -18,7 +18,7 @@
     <link rel="apple-touch-icon" href="/will/assets/logo.png">
 
     <style>
-        /* Speak Board — page-specific styles (kept in-page per repo convention) */
+        /* Gaze Lab A — shares the Speak Board page styles (kept in-page per repo convention) */
         [hidden] { display: none !important; }
 
         body { min-height: 100vh; min-height: 100dvh; }
@@ -26,6 +26,14 @@
         .aac-header { padding: 10px 0 0; }
         .aac-header .logo { width: 56px; }
         .aac-header h1 { font-size: 1.6em; margin: 0.15em 0 0; }
+
+        .aac-lab-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0 0 4px;
+            padding: 0 12px;
+        }
 
         .aac-main {
             display: flex;
@@ -46,7 +54,6 @@
             padding-top: 4px;
         }
 
-        /* Compact variant of the shared .button */
         .aac-ctl {
             padding: 10px 16px !important;
             font-size: 0.95em !important;
@@ -101,11 +108,7 @@
             padding: 8px;
         }
 
-        .aac-tile:focus-visible {
-            outline: 3px solid var(--primary-color);
-            outline-offset: 2px;
-        }
-
+        .aac-tile:focus-visible { outline: 3px solid var(--primary-color); outline-offset: 2px; }
         .aac-tile:active { transform: scale(0.97); }
 
         .aac-tile .aac-icon {
@@ -121,15 +124,8 @@
             text-align: center;
         }
 
-        .aac-tile.just-spoken {
-            border-color: var(--success-border);
-            background: var(--success-bg);
-        }
-
-        .aac-tile.highlight {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.35);
-        }
+        .aac-tile.just-spoken { border-color: var(--success-border); background: var(--success-bg); }
+        .aac-tile.highlight { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.35); }
 
         .dwell-bar {
             position: absolute;
@@ -160,14 +156,7 @@
 
         .aac-about p { margin: 8px 0; line-height: 1.5; }
 
-        /* ── Overlays (calibration, practice) ─────────────── */
-        .aac-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.88);
-            z-index: 50;
-        }
-
+        .aac-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.88); z-index: 50; }
         .calib-stage, .practice-stage { position: absolute; inset: 0; }
 
         .calib-target {
@@ -232,7 +221,6 @@
             z-index: 2;
         }
 
-        /* ── Modals (edit tile, settings) ─────────────────── */
         .aac-modal {
             position: fixed;
             top: 50%;
@@ -287,7 +275,6 @@
             margin-top: 18px;
         }
 
-        /* ── Gaze feedback (dot + readout) ────────────────── */
         #gaze-dot {
             position: fixed;
             width: 26px;
@@ -316,7 +303,6 @@
             pointer-events: none;
         }
 
-        /* ── Responsive ───────────────────────────────────── */
         @media (prefers-reduced-motion: reduce) {
             .calib-target, .practice-bubble { animation: none; }
             .aac-tile:active { transform: none; }
@@ -331,7 +317,8 @@
         <a href="/will/">
             <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
         </a>
-        <h1>Speak Board</h1>
+        <h1>Gaze Lab A</h1>
+        <p class="aac-lab-note">Experiment A — reliability hardening: load watchdog, timeouts, frame dedup, stall alerts, engine diagnostics. Tracking math identical to production.</p>
     </header>
 
     <main class="aac-main">
@@ -345,7 +332,9 @@
 
         <div id="last-said" class="aac-last-said" aria-live="polite">Tap a tile to speak it aloud.</div>
 
-        <div id="aac-board" class="aac-board" role="group" aria-label="Speaking board"></div>
+        <div id="aac-board" class="aac-board" role="group" aria-label="Speaking board"
+             data-gaze-variant="a"
+             data-gaze-engine="A"></div>
 
         <div id="gaze-status" class="aac-status" hidden></div>
 
@@ -363,35 +352,23 @@
             </button>
             <div id="aboutLicenses" class="collapse-content aac-about">
                 <p>
-                    <strong>Speak Board</strong> is a free communication aid for clinic use. It is not a certified
-                    medical device, is not FDA-cleared, is not billable, and does not replace assessment by a
-                    speech-language pathologist.
+                    <strong>Gaze Lab A</strong> is an experimental engine comparison page — not for patient use.
+                    It pairs the Speak Board UI with the reliability-hardened engine: startup watchdog, camera
+                    permission timeout, frame dedup, stall detection, and an always-visible Exit during
+                    calibration. Smoothing, blink detection, and calibration sampling match the production page
+                    so results are comparable with <a href="toolGazeLabB.html">Gaze Lab B</a>.
                 </p>
                 <p>
-                    <strong>Privacy:</strong> in Gaze mode, camera video is processed entirely in your browser and is
-                    never uploaded, stored, or transmitted.
+                    <strong>Privacy:</strong> camera video is processed entirely in your browser and is never
+                    uploaded, stored, or transmitted.
                 </p>
                 <p>
-                    <strong>Gaze mode:</strong> <em>Cursor</em> — look at a tile and hold until the blue bar fills to
-                    select. Calibrate once per device for best accuracy. <em>Directional</em> — look up / down / left /
-                    right to move a highlight, look ahead or blink to select. <em>Head pointer</em> — steers with head
-                    movement; the most reliable option under glare or with glasses.
+                    <strong>Diagnostics:</strong> enable "Show tracking readout" in Settings to see FPS,
+                    engine backend, and jitter (lighting warnings).
                 </p>
                 <p>
-                    <strong>Practice:</strong> a bubble-popping mini-game for training gaze and dwell selection.
-                </p>
-                <p>
-                    <strong>Voices:</strong> uses the voices built into your device (many include male and female
-                    options — choose in Settings).
-                </p>
-                <p>
-                    <strong>Tip:</strong> on iPhone/iPad (iOS 18+) and Android, the built-in Eye Tracking or Camera
-                    Switches accessibility features can also operate this board hands-free without Gaze mode.
-                </p>
-                <p>
-                    <strong>Built from:</strong> Web Speech API (voices provided by your device's operating system) ·
-                    MediaPipe Face Landmarker (© Google, Apache License 2.0), used in Gaze mode only · board phrases
-                    are original · tile artwork: device emoji fonts.
+                    <strong>Built from:</strong> Web Speech API · MediaPipe Face Landmarker (© Google,
+                    Apache License 2.0) · board phrases are original · tile artwork: device emoji fonts.
                 </p>
             </div>
         </div>
