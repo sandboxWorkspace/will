@@ -183,17 +183,26 @@ export function runCalibration(source, { onDone, onCancel, variant = 'legacy' })
             const samples = [];
             const started = performance.now();
             await new Promise((resolve) => {
+                // Everything here is scoped to THIS point: the listener, the
+                // progress animation, and the watchdog timer. finish() is the
+                // single exit path and is idempotent, so no timer from an
+                // earlier point can ever strand a later one (the bug that
+                // hung calibration at the 3rd dot).
+                let finished = false;
                 let progressRAF = null;
-                const tick = () => {
-                    if (extras.progressFill) {
-                        const elapsed = performance.now() - started;
-                        extras.progressFill.style.width = `${Math.min(100, (elapsed / SAMPLE_MS) * 100)}%`;
-                        progressRAF = requestAnimationFrame(tick);
-                    }
-                };
-                if (enhanced) progressRAF = requestAnimationFrame(tick);
+                let hardTimer = null;
 
-                sampleListener = (event) => {
+                const finish = () => {
+                    if (finished) return;
+                    finished = true;
+                    if (progressRAF) cancelAnimationFrame(progressRAF);
+                    if (hardTimer) clearTimeout(hardTimer);
+                    document.removeEventListener('aac:gaze-sample', listener);
+                    if (sampleListener === listener) sampleListener = null;
+                    resolve();
+                };
+
+                const listener = (event) => {
                     const s = event.detail;
                     if (!s || !s.faceOk) return;
                     const ux = source === 'head' ? s.hx : s.gx;
@@ -221,22 +230,26 @@ export function runCalibration(source, { onDone, onCancel, variant = 'legacy' })
                     }
 
                     if (performance.now() - started > SAMPLE_MS && samples.length >= MIN_SAMPLES) {
-                        document.removeEventListener('aac:gaze-sample', sampleListener);
-                        sampleListener = null;
-                        if (progressRAF) cancelAnimationFrame(progressRAF);
-                        resolve();
+                        finish();
                     }
                 };
-                document.addEventListener('aac:gaze-sample', sampleListener);
-                // Hard timeout: if we can't gather enough samples, move on
-                setTimeout(() => {
-                    if (sampleListener) {
-                        document.removeEventListener('aac:gaze-sample', sampleListener);
-                        sampleListener = null;
-                        if (progressRAF) cancelAnimationFrame(progressRAF);
-                        resolve();
-                    }
-                }, SAMPLE_MS * 3);
+
+                sampleListener = listener;
+                document.addEventListener('aac:gaze-sample', listener);
+                if (enhanced) {
+                    const tick = () => {
+                        if (finished) return;
+                        const elapsed = performance.now() - started;
+                        if (extras.progressFill) {
+                            extras.progressFill.style.width = `${Math.min(100, (elapsed / SAMPLE_MS) * 100)}%`;
+                        }
+                        progressRAF = requestAnimationFrame(tick);
+                    };
+                    progressRAF = requestAnimationFrame(tick);
+                }
+                // Hard watchdog: if this point can't gather enough samples,
+                // give up on it (the caller decides what to show)
+                hardTimer = setTimeout(finish, SAMPLE_MS * 3);
             });
 
             if (!active) break;
