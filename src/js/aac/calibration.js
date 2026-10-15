@@ -39,7 +39,10 @@
  *
  * UI shape: everything lives ON the dot — a progress ring that fills while
  * the gaze dwells inside and drains when it leaves, plus a counter chip.
- * Dots auto-advance on a held gaze — no per-target clicks required.
+ * Dots auto-advance on a held gaze — no per-target clicks required. The
+ * ring only advances while the raw eye/head signal LEANS toward the dot
+ * (coarse calibration-free aim gate): progress is honest on sub-optimal
+ * cameras, precision is judged later by the verification step.
  *
  * Flow: intro (seating guidance + position coach) → 13 dots → 3-dot
  * verification (honest corrected px per dot) → result card (average +
@@ -47,7 +50,7 @@
  * dots (17 total). While the flow runs, board selection/speech stays locked.
  *
  * Exports:
- *   runCalibration({ kind, onDone, onCancel }) — kind 'gaze' | 'head'
+ *   runCalibration({ kind, onDone, onCancel, onHiResRetry, onHeadRetry }) — kind 'gaze' | 'head'
  *   applyCalib(fit, sample) → { x, y } px   (kind read off the fit)
  *   refineFitFromTap(fit, sample, txPx, tyPx) → fit | null
  */
@@ -68,16 +71,30 @@ const EDGE_POINTS = [
 const VERIFY_POINTS = [[0.5, 0.5], [0.15, 0.15], [0.85, 0.85]];
 
 // Dot-dwell accrual model: progress fills DWELL_TOTAL_MS of "good" gaze;
-// a tick adds 50ms while good, drains slower (30% of gain) while bad —
-// dwell-anywhere long bothers the eyes before it bothers the fit.
+// a tick adds 50ms while good and drains slowly while bad. Drain is mild so
+// slow-but-real gazes on sub-optimal cameras still advance (>~14% good
+// frames is net-positive) instead of stalling out to the watchdog.
 const DWELL_TOTAL_MS = 900;
 const VERIFY_DWELL_MS = 1000;
 const TICK_MS = 50;
-const TICK_BAD_DRAIN = 15;
+const TICK_BAD_DRAIN = 8;
 const VERDICT_EXCELLENT = 120; // px — tiles click easily
 const VERDICT_GOOD = 220;
 const VERDICT_FAIR = 350; // at/above this, the fit is rejected (see showResult)
-const SPREAD_GATE = 0.05; // normalized signal scatter that fails a dot
+// Capture acceptance. Noisy-but-real captures pass: the solver weights each
+// anchor by 1/spread, LOO-MAD prunes corrupt ones, and verification still
+// blocks weak fits — the gate only exists to discard truly unusable windows.
+const SPREAD_GATE = 0.09;
+// Coarse, calibration-free AIM gate: the raw eye (or head) signal must lean
+// toward the dot's part of the screen by AIM_LEAN_MIN (~10% of a full raw
+// swing), or stay near straight-ahead for the center dot. Initial values —
+// tune per device from field reports; they gate honesty, not precision.
+const AIM_LEAN_MIN = 0.015;
+const AIM_CENTER_MAX = 0.05;
+// Graded stability: ≥ STABILITY_MIN_FRAC of the recent window inside the
+// scatter radius (a noisy camera spikes; a moving head drifts).
+const STABILITY_RADIUS = 0.07;
+const STABILITY_MIN_FRAC = 0.8;
 const MIN_RING_SAMPLES = 5; // minimum window content to make a sample
 const PREVIEW_MIN_POINTS = 4; // anchors in before the live corrected cursor shows
 const RIDGE = 0.02; // diagonal-scaled ridge shrink
@@ -404,7 +421,13 @@ const OVERLAY_TICK = TICK_MS;
  * blinks are fine, eyes-open is not a gate).
  * Calls onDone(fit) when finished, onCancel() if the user backs out.
  */
-export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
+export function runCalibration({
+    kind = 'gaze',
+    onDone,
+    onCancel,
+    onHiResRetry, // optional: retry the whole flow with the 720p camera flag set
+    onHeadRetry // optional (gaze kind): switch to a head-pointer calibration
+}) {
     const root = overlay();
     const stageEl = stage();
     const cardEl = card();
@@ -423,6 +446,14 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         predictEl: null,
         dot: null, // current runDot state
         hintEl: null, // intro coach element
+        failTally: {}, // reason → count across the flow, for the failure card
+        captured: 0, // accepted anchors so far
+        totalDots: 0
+    };
+
+    const tallyFail = (reason) => {
+        const key = reason || 'unknown';
+        live.failTally[key] = (live.failTally[key] || 0) + 1;
     };
 
     const cleanup = () => {
@@ -516,8 +547,29 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         } else if (s.hx == null) {
             return 'face visible — camera can\'t see your nose';
         }
+        if (!aimedAtDot(dot, s)) return 'look at the dot';
         if (!stableRecent(dot)) return 'steady your head';
         return null;
+    }
+
+    /**
+     * Coarse aim gate — calibration-free. The raw eye signal (gx/gy, or the
+     * nose-in-face hx/hy for the head kind) must LEAN toward the dot's part
+     * of the screen; for the center dot it must stay near straight-ahead.
+     * This is what keeps the ring honest (it fills because the user is
+     * actually looking at the dot, not merely being tracked) while asking
+     * nothing about precision — the fit is still verified afterwards.
+     */
+    function aimedAtDot(dot, s) {
+        const ex = (kind === 'gaze' ? s.gx : s.hx) - 0.5;
+        const ey = (kind === 'gaze' ? s.gy : s.hy) - 0.5;
+        if (!Number.isFinite(ex) || !Number.isFinite(ey)) return false;
+        const dx = dot.fx - 0.5;
+        const dy = dot.fy - 0.5;
+        const len = Math.hypot(dx, dy);
+        if (len < 0.05) return Math.hypot(ex, ey) <= AIM_CENTER_MAX;
+        const lean = (ex * dx + ey * dy) / len;
+        return lean >= AIM_LEAN_MIN;
     }
 
     function stableRecent(dot) {
@@ -531,12 +583,15 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         });
         mx /= w.length;
         my /= w.length;
-        for (const q of w) {
+        // Graded: a fraction of spike-y samples is tolerated; sustained
+        // drift (a moving head) fails. Sub-optimal cameras spike.
+        let outside = 0;
+        w.forEach((q) => {
             const qx = q[keyA] ?? 0;
             const qy = q[keyB] ?? 0;
-            if (Math.hypot(qx - mx, qy - my) > 0.05) return false;
-        }
-        return true;
+            if (Math.hypot(qx - mx, qy - my) > STABILITY_RADIUS) outside += 1;
+        });
+        return outside <= Math.floor(w.length * (1 - STABILITY_MIN_FRAC) + 0.999);
     }
 
     /**
@@ -567,6 +622,8 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
                 chipEl: chip,
                 xPx,
                 yPx,
+                fx,
+                fy,
                 index,
                 mode,
                 kind: mode,
@@ -620,6 +677,7 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
                     state.hinted = false;
                 }
                 if (t - state.startedAt > STALL_MS && state.progressMs <= 0) {
+                    tallyFail(state.badReason || 'tracking lost');
                     close(null);
                     return;
                 }
@@ -643,6 +701,7 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
                 }
                 const good = windowSamples.filter((q) => hasSignal(q));
                 if (good.length < MIN_RING_SAMPLES) {
+                    tallyFail('not enough steady samples');
                     resolve(null);
                     return;
                 }
@@ -740,6 +799,9 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         buildStageChrome();
         const samples = [...(priorSamples || [])];
         let fails = 0;
+        live.failTally = {};
+        live.captured = 0;
+        live.totalDots = POINTS13.length;
 
         for (let i = 0; i < POINTS13.length && active; i++) {
             const [fx, fy] = POINTS13[i];
@@ -762,7 +824,9 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
                 }
             } else {
                 fails += 1;
+                if (got) tallyFail('unsteady capture');
             }
+            live.captured = samples.length;
             await sleep(200);
         }
         if (!active) return;
@@ -771,7 +835,8 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
             failCard(
                 samples.length < MIN_POINTS[kind]
                     ? 'Not enough good gazes — keep your face visible and eyes on the dots.'
-                    : 'Dots timed out — more light on your face and a steadier seat help.'
+                    : 'Dots timed out — more light on your face and a steadier seat help.',
+                { recovery: true }
             );
             return;
         }
@@ -781,13 +846,14 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         if (!health.ok) {
             failCard(
                 'The gaze signal barely changed across the dots — the eyes may not be following them yet. ' +
-                    'Watch that the gaze dot tracks the user\'s eyes, then try again.'
+                    'Watch that the gaze dot tracks the user\'s eyes, then try again.',
+                { recovery: true }
             );
             return;
         }
         const fit = solveFit(samples, { kind });
         if (!fit) {
-            failCard('Calibration could not be solved. Please try again.');
+            failCard('Calibration could not be solved. Please try again.', { recovery: true });
             return;
         }
         fit.vw = window.innerWidth;
@@ -853,7 +919,7 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         }
         cardEl.querySelector('[data-act="redo"]').addEventListener('click', () => {
             cleanup();
-            runCalibration({ kind, onDone, onCancel });
+            runCalibration({ kind, onDone, onCancel, onHiResRetry, onHeadRetry });
         });
         const cancelBtn = cardEl.querySelector('[data-act="cancel"]');
         if (cancelBtn) cancelBtn.addEventListener('click', cancel);
@@ -909,24 +975,50 @@ export function runCalibration({ kind = 'gaze', onDone, onCancel }) {
         return 'Rough — try again with more light and the screen at arm length.';
     };
 
-    const failCard = (message) => {
+    const failCard = (message, { recovery = false } = {}) => {
         active = false;
         stageEl.innerHTML = '';
         live.predictEl = null;
         live.dot = null;
         cardEl.hidden = false;
+        const tally = live.failTally || {};
+        const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+        const captured = live.captured ?? 0;
+        const total = live.totalDots || POINTS13.length;
+        let hiresOn = false;
+        try {
+            hiresOn = localStorage.getItem('aac-hires') === '1';
+        } catch (err) { /* storage unavailable */ }
+        const redoOpts = { kind, onDone, onCancel, onHiResRetry, onHeadRetry };
         cardEl.innerHTML = `
             <h2>Calibration Problem</h2>
             <p>${message}</p>
+            ${top ? `<p class="calib-hint">Captured ${captured} of ${total} dots — most common issue: ${top[0]}.</p>` : ''}
             <div class="modal-actions">
-                <button class="button blue-button aac-ctl" data-act="redo">Try again</button>
+                <button class="button green-button aac-ctl" data-act="redo">Try again</button>
+                ${recovery && onHiResRetry && !hiresOn ? '<button class="button blue-button aac-ctl" data-act="hires">Retry in high detail (720p)</button>' : ''}
+                ${recovery && kind === 'gaze' && onHeadRetry ? '<button class="button teal-button aac-ctl" data-act="head">Try head pointer instead</button>' : ''}
                 <button class="button pending-button aac-ctl" data-act="cancel">Cancel</button>
             </div>`;
         cardEl.querySelector('[data-act="redo"]').addEventListener('click', () => {
             cleanup();
             live.fit = null;
-            runCalibration({ kind, onDone, onCancel });
+            runCalibration(redoOpts);
         });
+        const hiresBtn = cardEl.querySelector('[data-act="hires"]');
+        if (hiresBtn) {
+            hiresBtn.addEventListener('click', () => {
+                cleanup();
+                onHiResRetry();
+            });
+        }
+        const headBtn = cardEl.querySelector('[data-act="head"]');
+        if (headBtn) {
+            headBtn.addEventListener('click', () => {
+                cleanup();
+                onHeadRetry();
+            });
+        }
         cardEl.querySelector('[data-act="cancel"]').addEventListener('click', cancel);
     };
 

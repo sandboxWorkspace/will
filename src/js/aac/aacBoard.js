@@ -26,12 +26,24 @@ import { runCalibration, applyCalib, refineFitFromTap } from './calibration.js';
 import { pickTile, recordOf } from './hitTest.js';
 import { createDwellController } from './dwellController.js';
 
-const CUSTOM_KEY = 'aac-custom-board';
 const SETTINGS_KEY = 'aac-settings';
+// Board library + user content. The shipped library lives in
+// public/data/aacBoards.json (id → { name, icon?, tiles }). User content is
+// localStorage — same project storage approach as settings; no
+// accounts/backend. Shape: { overrides: { boardId: {name, tiles} },
+// customs: { customId: {name, tiles} } } — overrides replace library
+// boards (edits + the legacy single-board customization), customs are
+// user-made boards listed under "My boards".
+const CUSTOM_BOARDS_KEY = 'aac-custom-boards';
+const LEGACY_CUSTOM_KEY = 'aac-custom-board';
 // Per-device, named-user calibration persistence (localStorage — same
 // project storage approach as settings/custom board; no accounts/backend).
 // Shape: { name, savedAt, vw, vh, fits: { gaze?, head? } }
 const CALIB_KEY = 'aac-calib-profile';
+// Grid density: auto = viewport tier (small phones ≤3 cols so a 3×3 grid
+// never shrinks, large phones 4, tablets 6, desktop up to 8), all clamped
+// by a minimum tile width so manual picks can't make tiles unreadable.
+const MIN_TILE_FLOOR_PX = 95;
 // Pass-through: the worker's One Euro is the ONLY smoothing stage (the old
 // comment here described a light EMA that 1.0 does not perform).
 const POINT_SMOOTH = 1.0;
@@ -74,7 +86,11 @@ const MODE_HINTS = {
 const LEGACY_FIT_KEYS = ['aac-calib-joint', 'aac-calib-iris', 'aac-calib-head', 'aac-b-hires'];
 
 const state = {
-    tiles: [],
+    tiles: [], // RENDERED tiles of the current board (incl. synthetic nav tiles)
+    allBoards: {}, // merged view: library + overrides + customs
+    libraryIds: new Set(), // board ids that come from the shipped library
+    customStore: { overrides: {}, customs: {} },
+    boardStack: ['home'], // navigation stack; top = current board id
     hovered: -1, // cursor-mode highlight (driven by the dwell controller)
     highlight: -1, // directional-mode cursor
     gazeOn: false,
@@ -88,8 +104,20 @@ const state = {
     lastSample: null, // latest gaze sample (freshness/settling gate for anchors)
     lastSampleAt: 0,
     predRing: [], // recent signal bundles — median behind the dwell anchor
-    settings: { mode: 'auto', dwellMs: 800, showDot: true, showPad: false, userName: '' }
+    settings: {
+        mode: 'auto',
+        dwellMs: 800,
+        showDot: true,
+        showPad: false,
+        userName: '',
+        showEmoji: true,
+        colsPerRow: 'auto'
+    }
 };
+
+// Synthetic tiles injected at render time (never persisted)
+const BACK_TILE = { id: '__back', label: 'Back', icon: '⬅', go: '__back' };
+const MY_BOARDS_TILE = { id: '__myboards', label: 'My boards', icon: '📋', go: '__myboards' };
 
 const els = {};
 let lastSaidEl, statusBarEl, gazeDotEl, root;
@@ -144,6 +172,14 @@ export async function initBoard() {
         setUser: document.getElementById('set-user'),
         setClearCal: document.getElementById('set-clearcal'),
         calibStatus: document.getElementById('calib-status'),
+        setEmoji: document.getElementById('set-emoji'),
+        setCols: document.getElementById('set-cols'),
+        boardNewOpen: document.getElementById('boardnew-open'),
+        boardNewModal: document.getElementById('boardnew-modal'),
+        boardNewName: document.getElementById('boardnew-name'),
+        boardNewList: document.getElementById('boardnew-list'),
+        boardNewCreate: document.getElementById('boardnew-create'),
+        boardNewCancel: document.getElementById('boardnew-cancel'),
         setTest: document.getElementById('set-test'),
         setClose: document.getElementById('set-close'),
         aboutOpen: document.getElementById('about-open'),
@@ -255,6 +291,7 @@ function activeFit() {
 // nags when a fit actually exists.
 let rotateHintTimer = null;
 window.addEventListener('resize', () => {
+    applyGridCols(); // tiles-per-row follows the window shape
     const fit = activeFit();
     if (!fit) return;
     const fitAspect = fit.vw / fit.vh;
@@ -268,56 +305,225 @@ window.addEventListener('resize', () => {
 
 // ── Board data ─────────────────────────────────────────────
 
+/** One-time migration: the old single-custom-board key becomes a home override. */
+function migrateLegacyCustom() {
+    try {
+        const raw = localStorage.getItem(LEGACY_CUSTOM_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        const tiles = parsed && Array.isArray(parsed.tiles) ? parsed.tiles : null;
+        if (tiles && tiles.length) {
+            const store = readCustomBoards();
+            if (!store.overrides.home) {
+                store.overrides.home = { name: 'Speaking Board', tiles };
+                persistCustomBoards(store);
+            }
+        }
+        localStorage.removeItem(LEGACY_CUSTOM_KEY);
+    } catch (err) { /* storage unavailable */ }
+}
+
+function readCustomBoards() {
+    try {
+        const raw = localStorage.getItem(CUSTOM_BOARDS_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (parsed && typeof parsed === 'object') {
+            return {
+                overrides:
+                    parsed.overrides && typeof parsed.overrides === 'object' ? parsed.overrides : {},
+                customs:
+                    parsed.customs && typeof parsed.customs === 'object' ? parsed.customs : {}
+            };
+        }
+    } catch (err) { /* storage unavailable */ }
+    return { overrides: {}, customs: {} };
+}
+
+function persistCustomBoards(store) {
+    try {
+        localStorage.setItem(CUSTOM_BOARDS_KEY, JSON.stringify(store));
+    } catch (err) { /* storage unavailable */ }
+}
+
 async function loadTiles() {
-    const custom = readCustom();
-    if (custom && Array.isArray(custom.tiles) && custom.tiles.length) {
-        state.tiles = custom.tiles;
-        return true;
-    }
+    let library = null;
     try {
         const res = await fetch('data/aacBoards.json');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const board = data.boards && data.boards.home;
-        if (!board || !Array.isArray(board.tiles) || !board.tiles.length) throw new Error('empty');
-        state.tiles = board.tiles;
-        return true;
+        if (data && data.boards && data.boards.home) library = data.boards;
     } catch (err) {
-        updateFeedback('Board data failed to load. Please reload the page.');
         console.error('aacBoard: failed to load board data', err);
-        return false;
+    }
+    migrateLegacyCustom();
+    const store = readCustomBoards();
+    if (!library) {
+        // Offline/partial loads: user content alone can carry the app
+        const home = store.overrides.home || store.customs.home;
+        if (!home) {
+            updateFeedback('Board data failed to load. Please reload the page.');
+            return false;
+        }
+        library = { home };
+    }
+    state.libraryIds = new Set(Object.keys(library));
+    state.customStore = store;
+    state.allBoards = { ...library, ...store.overrides, ...store.customs };
+    state.boardStack = ['home'];
+    return true;
+}
+
+const currentBoardId = () => state.boardStack[state.boardStack.length - 1];
+
+const hasCustomBoards = () => Object.keys(state.customStore.customs).length > 0;
+
+/** Rendered tiles for a board: real tiles + injected navigation synthetics. */
+function boardTilesFor(boardId) {
+    const board = state.allBoards[boardId];
+    if (!board) return [];
+    const tiles = Array.isArray(board.tiles) ? [...board.tiles] : [];
+    if (boardId === '__myboards') {
+        return tiles; // already synthesized by myBoardsBoard()
+    }
+    if (boardId !== 'home') tiles.unshift(BACK_TILE);
+    if (boardId === 'more' && hasCustomBoards()) tiles.push(MY_BOARDS_TILE);
+    return tiles;
+}
+
+/** The generated "My boards" list: one nav tile per user-made board. */
+function myBoardsBoard() {
+    const tiles = Object.keys(state.customStore.customs)
+        .sort()
+        .map((id) => ({
+            id: `go-${id}`,
+            label: state.customStore.customs[id].name || 'Board',
+            icon: '📋',
+            go: id
+        }));
+    return { name: 'My boards', tiles };
+}
+
+function navigate(target) {
+    if (target === '__back') {
+        if (state.boardStack.length > 1) state.boardStack.pop();
+        else return;
+    } else if (target === '__myboards') {
+        state.allBoards.__myboards = myBoardsBoard();
+        state.boardStack.push('__myboards');
+    } else if (state.allBoards[target]) {
+        state.boardStack.push(target);
+        if (state.boardStack.length > 16) state.boardStack.splice(1, 1); // sanity cap
+    } else {
+        return;
+    }
+    renderBoard();
+    const board = state.allBoards[currentBoardId()];
+    if (board && board.name) {
+        updateFeedback(`Opened: <strong>${escapeHtml(board.name)}</strong>`);
     }
 }
 
-function readCustom() {
-    try {
-        const raw = localStorage.getItem(CUSTOM_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch (err) {
-        return null;
-    }
-}
-
-function writeCustom() {
-    try {
-        localStorage.setItem(CUSTOM_KEY, JSON.stringify({ tiles: state.tiles }));
-    } catch (err) { /* storage unavailable */ }
+/** Persist the current board's rendered tiles (synthetics stripped). */
+function writeBoard() {
+    const id = currentBoardId();
+    if (id === '__myboards') return; // generated view — nothing to persist
+    const board = state.allBoards[id];
+    if (!board) return;
+    const tiles = state.tiles
+        .filter((t) => t.id !== '__back' && t.id !== '__myboards')
+        .map((t) => ({
+            id: t.id,
+            label: String(t.label || '').slice(0, 24),
+            icon: typeof t.icon === 'string' ? t.icon.slice(0, 4) : '',
+            speech: String(t.speech || t.label || '').slice(0, 80),
+            go: typeof t.go === 'string' ? t.go : ''
+        }));
+    const store = readCustomBoards();
+    if (state.libraryIds.has(id)) store.overrides[id] = { name: board.name, tiles };
+    else store.customs[id] = { name: board.name, tiles };
+    persistCustomBoards(store);
+    state.customStore = store;
+    state.allBoards[id] = { ...board, tiles };
 }
 
 function renderBoard() {
-    root.innerHTML = state.tiles
+    state.tiles = boardTilesFor(currentBoardId());
+    const cols = computeGridCols();
+    const rows = Math.ceil(state.tiles.length / cols);
+    const blanks = Math.max(0, cols * rows - state.tiles.length);
+    // Edit mode shows the grid's blank cells as "Add" placeholders (and one
+    // trailing cell when the grid is full, so a board can always grow).
+    // They are DOM-only: never in state.tiles, never gaze/hit-test targets
+    // (gaze is off in edit mode), and always appended AFTER real tiles so
+    // element indexes still line up with state.tiles.
+    const addCells = state.editMode ? Math.max(1, blanks) : 0;
+    const tilesHtml = state.tiles
         .map(
             (tile, index) => `
-        <button class="aac-tile" data-index="${index}" type="button" aria-label="${escapeHtml(tile.label || '')}">
-            ${tile.icon ? `<span class="aac-icon" aria-hidden="true">${tile.icon}</span>` : ''}
+        <button class="aac-tile${tile.go ? ' aac-tile-category' : ''}" data-index="${index}" type="button" aria-label="${escapeHtml(tile.go ? `Open ${tile.label || ''}` : tile.label || '')}">
+            ${tile.icon ? `<span class="aac-icon" aria-hidden="true">${escapeHtml(tile.icon)}</span>` : ''}
             <span class="aac-label">${escapeHtml(tile.label || '')}</span>
             <span class="dwell-bar" aria-hidden="true"></span>
         </button>`
         )
         .join('');
+    const addHtml = Array.from({ length: addCells }, () => `
+        <button class="aac-tile aac-tile-add" type="button" data-add="1" aria-label="Add a tile here">
+            <span class="aac-icon" aria-hidden="true">➕</span>
+            <span class="aac-label">Add</span>
+        </button>`).join('');
+    root.innerHTML = tilesHtml + addHtml;
+    root.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    applyEmojiSetting();
     dwellCtl.reset();
     setHoverVisual(-1, true);
     setHighlight(-1);
+}
+
+// ── Grid density + emoji display (Settings-driven) ───────────
+
+/**
+ * Auto column choice: minimize BLANK CELLS first (a grid that fills its
+ * rows completely), with tile squareness as the tiebreaker — so a 9-tile
+ * home board is a full 3×3, a 15-tile word board earns 5 columns, and a
+ * 5-tile animals board avoids a lonely single row. Caps keep phones ≤3
+ * columns and every tile ≥ the width floor; manual picks clamp the same way.
+ */
+function computeGridCols() {
+    const vw = window.innerWidth;
+    const tierCap = vw <= 420 ? 3 : vw <= 768 ? 4 : vw <= 1200 ? 6 : 8;
+    const width = root ? root.clientWidth || vw : vw;
+    const widthCap = Math.max(2, Math.floor(width / MIN_TILE_FLOOR_PX));
+    const n = Math.max(1, state.tiles.length);
+    const pref = state.settings.colsPerRow;
+    if (pref && pref !== 'auto' && Number.isFinite(Number(pref))) {
+        return Math.max(2, Math.min(Number(pref), tierCap, widthCap));
+    }
+    const height = root && root.clientHeight ? root.clientHeight : width * 0.6;
+    const maxCols = Math.min(tierCap, widthCap, Math.max(2, n));
+    let cols = 2;
+    let best = Infinity;
+    for (let c = 2; c <= maxCols; c++) {
+        const rows = Math.ceil(n / c);
+        const blanks = c * rows - n;
+        const aspect = Math.abs(Math.log(width / c / (height / rows)));
+        const score = blanks * 0.6 + aspect;
+        if (score < best) {
+            best = score;
+            cols = c;
+        }
+    }
+    return Math.max(2, Math.min(cols, tierCap, widthCap));
+}
+
+function applyGridCols() {
+    if (!root) return;
+    root.style.gridTemplateColumns = `repeat(${computeGridCols()}, 1fr)`;
+}
+
+function applyEmojiSetting() {
+    if (!root) return;
+    root.classList.toggle('no-emoji', !state.settings.showEmoji);
 }
 
 const tileEls = () => Array.from(root.querySelectorAll('.aac-tile'));
@@ -328,6 +534,11 @@ function wireTouchAndKeys() {
     root.addEventListener('click', (event) => {
         const tileEl = event.target.closest('.aac-tile');
         if (!tileEl) return;
+        // Blank-cell "Add" placeholders (edit mode only, DOM-only elements)
+        if (tileEl.dataset.add) {
+            if (state.editMode) addTile();
+            return;
+        }
         const index = Number(tileEl.dataset.index);
         if (state.editMode) openEditor(index);
         else {
@@ -348,6 +559,7 @@ function wireTouchAndKeys() {
         if (event.key === 'Escape') {
             els.editModal.hidden = true;
             els.settingsModal.hidden = true;
+            if (els.boardNewModal) els.boardNewModal.hidden = true;
             if (els.aboutModal) els.aboutModal.hidden = true;
             return;
         }
@@ -369,6 +581,12 @@ function wireTouchAndKeys() {
 function activate(index) {
     const tile = state.tiles[index];
     if (!tile) return;
+    // Category tiles navigate (silently) instead of speaking — one activation,
+    // one outcome, in every input mode (touch, gaze dwell, directional, pad).
+    if (tile.go) {
+        navigate(tile.go);
+        return;
+    }
     speech.speak(tile.speech || tile.label);
     updateFeedback(`Said: <strong>${escapeHtml(tile.speech || tile.label)}</strong>`);
     const el = tileEls()[index];
@@ -556,8 +774,47 @@ function launchCalibration(kind, onDone, onCancel) {
             state.lock = null;
             updatePadVisibility();
             if (onCancel) onCancel();
-        }
+        },
+        // Poor-camera recovery: restart the whole flow with the 720p flag,
+        // or switch this user to a head-pointer calibration instead
+        onHiResRetry: () => {
+            state.lock = null;
+            updatePadVisibility();
+            retryCalibrationHiRes(kind, onDone, onCancel);
+        },
+        onHeadRetry:
+            kind === 'gaze'
+                ? () => {
+                      state.lock = null;
+                      updatePadVisibility();
+                      launchCalibration(
+                          'head',
+                          (fit) => {
+                              if (fit) {
+                                  state.settings.mode = 'head';
+                                  saveSettings();
+                                  updateFeedback(
+                                      'Head-pointer calibrated — set as the gaze mode.'
+                                  );
+                              } else fallbackToDirectional();
+                          },
+                          () => fallbackToDirectional()
+                      );
+                  }
+                : null
     });
+}
+
+/** Restart gaze with the 720p camera flag set, then re-run the calibration. */
+async function retryCalibrationHiRes(kind, onDone, onCancel) {
+    try {
+        localStorage.setItem('aac-hires', '1');
+    } catch (err) { /* storage unavailable */ }
+    if (els.setHiRes) els.setHiRes.checked = true;
+    stopGaze();
+    updateFeedback('High-detail camera enabled — restarting Gaze…');
+    if (!(await ensureEngine())) return; // engine status explains the failure
+    launchCalibration(kind, onDone, onCancel);
 }
 
 function activateMode(mode) {
@@ -761,24 +1018,20 @@ function wireEdit() {
         els.editToggle.textContent = state.editMode ? 'Done editing' : 'Edit';
         els.editToggle.setAttribute('aria-pressed', String(state.editMode));
         els.editTools.hidden = !state.editMode;
-        els.editReset.textContent = 'Reset board';
+        updateEditResetLabel();
         cancelDwell();
         dwellCtl.reset();
         setHoverVisual(-1, true);
         updatePadVisibility();
+        renderBoard(); // placeholders appear/disappear with edit mode
         updateFeedback(
             state.editMode
-                ? 'Editing: tap a tile to change it. Your board saves on this device.'
+                ? 'Editing: tap a tile to change it. Boards save on this device.'
                 : 'Tap a tile to speak it aloud.'
         );
     });
 
-    els.editAdd.addEventListener('click', () => {
-        state.tiles.push({ id: `t${Date.now()}`, label: 'New button', icon: '', speech: '' });
-        writeCustom();
-        renderBoard();
-        openEditor(state.tiles.length - 1);
-    });
+    els.editAdd.addEventListener('click', addTile);
 
     els.editSave.addEventListener('click', () => {
         if (editIndex < 0) return;
@@ -790,15 +1043,18 @@ function wireEdit() {
         state.tiles[editIndex].label = label;
         state.tiles[editIndex].icon = els.editIcon.value.trim();
         state.tiles[editIndex].speech = els.editSpeech.value.trim() || label;
-        writeCustom();
+        writeBoard();
         els.editModal.hidden = true;
         renderBoard();
     });
 
     els.editDelete.addEventListener('click', () => {
-        if (editIndex < 0 || state.tiles.length <= 1) return;
+        if (editIndex < 0) return;
+        const tile = state.tiles[editIndex];
+        if (tile && (tile.id === '__back' || tile.id === '__myboards')) return;
+        if (state.tiles.length <= 1) return;
         state.tiles.splice(editIndex, 1);
-        writeCustom();
+        writeBoard();
         els.editModal.hidden = true;
         renderBoard();
     });
@@ -807,10 +1063,15 @@ function wireEdit() {
         els.editModal.hidden = true;
     });
 
+    // Export/import carry ALL user content: overrides of library boards and
+    // custom boards. Legacy single-board exports still import (as the home
+    // board override), so old files keep working.
     els.editExport.addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify({ tiles: state.tiles }, null, 2)], {
-            type: 'application/json'
-        });
+        const store = readCustomBoards();
+        const blob = new Blob(
+            [JSON.stringify({ version: 2, overrides: store.overrides, customs: store.customs }, null, 2)],
+            { type: 'application/json' }
+        );
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'speakBoard.json';
@@ -826,19 +1087,16 @@ function wireEdit() {
         reader.onload = () => {
             try {
                 const parsed = JSON.parse(reader.result);
-                const tiles = parsed.tiles || parsed.boards?.home?.tiles;
-                if (!Array.isArray(tiles) || !tiles.length || !tiles.every((t) => t && t.label)) {
-                    throw new Error('invalid');
-                }
-                state.tiles = tiles.map((t, i) => ({
-                    id: t.id || `t${i}`,
-                    label: String(t.label).slice(0, 24),
-                    icon: typeof t.icon === 'string' ? t.icon.slice(0, 4) : '',
-                    speech: String(t.speech || t.label).slice(0, 80)
-                }));
-                writeCustom();
-                renderBoard();
-                updateFeedback('Board imported.');
+                const imported = sanitizeImport(parsed);
+                if (!imported) throw new Error('invalid');
+                const store = { overrides: imported.overrides, customs: imported.customs };
+                persistCustomBoards(store);
+                loadTiles().then((ok) => {
+                    if (ok) {
+                        renderBoard();
+                        updateFeedback('Boards imported.');
+                    }
+                });
             } catch (err) {
                 updateFeedback('Import failed — file must be a Speak Board export.');
             }
@@ -847,30 +1105,171 @@ function wireEdit() {
         reader.readAsText(file);
     });
 
+    // Reset/delete semantics depend on the current board: library boards
+    // reset to their shipped defaults (removes the override); user-made
+    // boards are deleted entirely.
     els.editReset.addEventListener('click', () => {
+        const id = currentBoardId();
+        if (id === '__myboards') return;
+        const isCustom = !state.libraryIds.has(id) && id !== 'home';
         if (els.editReset.dataset.armed) {
-            try {
-                localStorage.removeItem(CUSTOM_KEY);
-            } catch (err) { /* storage unavailable */ }
-            loadTiles().then(() => renderBoard());
-            els.editReset.textContent = 'Reset board';
+            const store = readCustomBoards();
+            if (isCustom) {
+                delete store.customs[id];
+                persistCustomBoards(store);
+                state.customStore = store;
+                delete state.allBoards[id];
+                state.boardStack.pop();
+            } else {
+                delete store.overrides[id];
+                persistCustomBoards(store);
+                state.customStore = store;
+                state.allBoards[id] = undefined;
+            }
             delete els.editReset.dataset.armed;
-            updateFeedback('Board reset to defaults.');
+            loadTiles().then(() => {
+                // Stay on the board after a reset (it still exists); a deleted
+                // custom board falls back to home.
+                if (!isCustom && state.allBoards[id]) state.boardStack = [id];
+                renderBoard();
+                updateEditResetLabel();
+            });
+            updateFeedback(isCustom ? 'Board deleted.' : 'Board reset to defaults.');
         } else {
             els.editReset.dataset.armed = '1';
-            els.editReset.textContent = 'Confirm reset?';
+            els.editReset.textContent = isCustom ? 'Delete board?' : 'Confirm reset?';
             setTimeout(() => {
                 delete els.editReset.dataset.armed;
-                els.editReset.textContent = 'Reset board';
+                updateEditResetLabel();
             }, 3000);
         }
     });
+
+    wireBoardNew();
+}
+
+/** Reset-button label for the board being edited. */
+function updateEditResetLabel() {
+    if (!els.editReset) return;
+    const id = currentBoardId();
+    if (id === '__myboards') {
+        els.editReset.hidden = true;
+        return;
+    }
+    els.editReset.hidden = false;
+    const isCustom = !state.libraryIds.has(id) && id !== 'home';
+    els.editReset.textContent = isCustom ? 'Delete board' : 'Reset board';
+}
+
+/** Append a tile to the current board (Add tile button + grid placeholders). */
+function addTile() {
+    if (currentBoardId() === '__myboards') {
+        updateFeedback('This list is generated from your boards — create one with New board.');
+        return;
+    }
+    state.tiles.push({ id: `t${Date.now()}`, label: 'New button', icon: '', speech: '' });
+    writeBoard();
+    renderBoard();
+    openEditor(state.tiles.length - 1);
+}
+
+/**
+ * New board from a pasted list — one word per line, optional icon after a
+ * pipe ("shark | 🦈"). Creates a custom board listed under My boards.
+ */
+function wireBoardNew() {
+    if (!els.boardNewOpen) return;
+    els.boardNewOpen.addEventListener('click', () => {
+        if (!els.boardNewModal) return;
+        els.boardNewName.value = '';
+        els.boardNewList.value = '';
+        els.boardNewModal.hidden = false;
+        els.boardNewName.focus();
+    });
+    if (els.boardNewCancel) {
+        els.boardNewCancel.addEventListener('click', () => {
+            els.boardNewModal.hidden = true;
+        });
+    }
+    if (els.boardNewCreate) {
+        els.boardNewCreate.addEventListener('click', () => {
+            const name = (els.boardNewName.value || '').trim().slice(0, 24);
+            const lines = els.boardNewList.value
+                .split('\n')
+                .map((line) => line.trim())
+                .filter(Boolean);
+            const tiles = [];
+            lines.forEach((line) => {
+                const [word, icon] = line.split('|').map((part) => part.trim());
+                if (!word) return;
+                tiles.push({
+                    id: `t${tiles.length}`,
+                    label: word.slice(0, 24),
+                    icon: icon ? icon.slice(0, 4) : '',
+                    speech: word.slice(0, 80)
+                });
+            });
+            if (!name || !tiles.length) {
+                updateFeedback('New board needs a name and at least one word.');
+                return;
+            }
+            const id = `custom-${Date.now()}`;
+            const store = readCustomBoards();
+            store.customs[id] = { name, tiles };
+            persistCustomBoards(store);
+            state.customStore = store;
+            state.allBoards[id] = { name, tiles };
+            els.boardNewModal.hidden = true;
+            navigate(id);
+            updateFeedback(`Board "${escapeHtml(name)}" created — add more tiles with Add tile.`);
+        });
+    }
+}
+
+/** Accepts v2 full exports or legacy single-board files; returns a clean store shape. */
+function sanitizeImport(parsed) {
+    if (!parsed || typeof parsed !== 'object') return null;
+    const cleanTiles = (tiles) => {
+        if (!Array.isArray(tiles) || !tiles.length) return null;
+        if (!tiles.every((t) => t && t.label)) return null;
+        return tiles.map((t, i) => ({
+            id: t.id || `t${i}`,
+            label: String(t.label).slice(0, 24),
+            icon: typeof t.icon === 'string' ? t.icon.slice(0, 4) : '',
+            speech: String(t.speech || t.label).slice(0, 80),
+            go: typeof t.go === 'string' ? t.go.slice(0, 32) : ''
+        }));
+    };
+    const cleanMap = (obj) => {
+        const out = {};
+        if (obj && typeof obj === 'object') {
+            Object.keys(obj).forEach((id) => {
+                const board = obj[id];
+                if (!board || !board.name) return;
+                const tiles = cleanTiles(board.tiles);
+                if (tiles) out[id] = { name: String(board.name).slice(0, 24), tiles };
+            });
+        }
+        return out;
+    };
+    if (parsed.version === 2) {
+        return { overrides: cleanMap(parsed.overrides), customs: cleanMap(parsed.customs) };
+    }
+    const legacy = parsed.tiles || parsed.boards?.home?.tiles;
+    const tiles = cleanTiles(legacy);
+    if (!tiles) return null;
+    return { overrides: { home: { name: 'Speaking Board', tiles } }, customs: {} };
 }
 
 function openEditor(index) {
     editIndex = index;
     const tile = state.tiles[index];
     if (!tile) return;
+    // Synthetic navigation tiles are not editable content
+    if (tile.id === '__back' || tile.id === '__myboards') {
+        editIndex = -1;
+        return;
+    }
     els.editTitle.textContent = index >= state.tiles.length ? 'Add Tile' : 'Edit Tile';
     els.editLabel.value = tile.label || '';
     els.editIcon.value = tile.icon || '';
@@ -897,6 +1296,8 @@ function loadSettings() {
     // Retired settings keys from older builds
     delete state.settings.showCheck; // debug tracking readout (removed)
     if (typeof state.settings.userName !== 'string') state.settings.userName = '';
+    if (typeof state.settings.showEmoji !== 'boolean') state.settings.showEmoji = true;
+    if (typeof state.settings.colsPerRow !== 'string') state.settings.colsPerRow = 'auto';
 }
 
 function saveSettings() {
@@ -918,6 +1319,8 @@ function wireSettings() {
         els.setDwell.value = String(state.settings.dwellMs);
         els.setDot.checked = state.settings.showDot;
         if (els.setPad) els.setPad.checked = state.settings.showPad;
+        if (els.setEmoji) els.setEmoji.checked = state.settings.showEmoji;
+        if (els.setCols) els.setCols.value = state.settings.colsPerRow || 'auto';
         if (els.setUser) els.setUser.value = profileName();
         renderCalibStatus();
         fillVoices();
@@ -960,6 +1363,25 @@ function wireSettings() {
             if (state.settings.showPad) {
                 updateFeedback('Direction pad on: arrows move the highlight, ● selects.');
             }
+        });
+    }
+
+    // Emoji display: words always remain; icons are optional decoration
+    if (els.setEmoji) {
+        els.setEmoji.addEventListener('change', () => {
+            state.settings.showEmoji = els.setEmoji.checked;
+            applyEmojiSetting();
+            saveSettings();
+        });
+    }
+
+    // Grid density: Auto follows the viewport tier; manual picks are
+    // clamped so tiles can never shrink below the floor on small screens
+    if (els.setCols) {
+        els.setCols.addEventListener('change', () => {
+            state.settings.colsPerRow = els.setCols.value;
+            applyGridCols();
+            saveSettings();
         });
     }
 

@@ -3,18 +3,164 @@
     "home": {
       "name": "Speaking Board",
       "tiles": [
-        { "id": "yes",    "label": "Yes",       "icon": "👍", "speech": "Yes" },
-        { "id": "no",     "label": "No",        "icon": "👎", "speech": "No" },
-        { "id": "hi",     "label": "Hi",        "icon": "😊", "speech": "Hi" },
-        { "id": "bye",    "label": "Bye",       "icon": "👋", "speech": "Bye" },
-        { "id": "water",  "label": "Water",     "icon": "💧", "speech": "Water, please" },
-        { "id": "pain",   "label": "Pain",      "icon": "🤕", "speech": "I am in pain" },
-        { "id": "help",   "label": "Help",      "icon": "🆘", "speech": "Help, please" },
+        { "id": "yes",      "label": "Yes",       "icon": "👍", "speech": "Yes" },
+        { "id": "no",       "label": "No",        "icon": "👎", "speech": "No" },
+        { "id": "water",    "label": "Water",      "icon": "💧", "speech": "Water, please" },
+        { "id": "pain",     "label": "Pain",       "icon": "🤕", "speech": "I am in pain" },
+        { "id": "help",     "label": "Help",       "icon": "🆘", "speech": "Help, please" },
+        { "id": "thanks",   "label": "Thank you",  "icon": "🙏", "speech": "Thank you" },
+        { "id": "go-words",   "label": "Words",   "icon": "🗣", "go": "words" },
+        { "id": "go-animals", "label": "Animals", "icon": "🐾", "go": "animals" },
+        { "id": "go-more",    "label": "More",    "icon": "➕", "go": "more" }
+      ]
+    },
+    "words": {
+      "name": "Words",
+      "icon": "🗣",
+      "tiles": [
+        { "id": "i",      "label": "I",         "speech": "I" },
+        { "id": "you",    "label": "You",       "speech": "You" },
+        { "id": "want",   "label": "Want",      "speech": "Want" },
+        { "id": "need",   "label": "Need",      "speech": "Need" },
+        { "id": "like",   "label": "Like",      "speech": "Like" },
+        { "id": "love",   "label": "Love",      "icon": "❤️", "speech": "Love" },
+        { "id": "more",   "label": "More",      "icon": "➕", "speech": "More, please" },
+        { "id": "please", "label": "Please",    "icon": "🙏", "speech": "Please" },
         { "id": "thanks", "label": "Thank you", "icon": "🙏", "speech": "Thank you" },
+        { "id": "hi",     "label": "Hi",        "icon": "👋", "speech": "Hi" },
+        { "id": "bye",    "label": "Bye",       "icon": "👋", "speech": "Bye" },
         { "id": "one",    "label": "One",       "icon": "1️⃣", "speech": "One" },
         { "id": "two",    "label": "Two",       "icon": "2️⃣", "speech": "Two" },
-        { "id": "three",  "label": "Three",     "icon": "3️⃣", "speech": "Three" },
-        { "id": "more",   "label": "More",      "icon": "➕", "speech": "More, please" }
+        { "id": "three",  "label": "Three",     "icon": "3️⃣", "speech": "Three" }
+      ]
+    },
+    "animals": {
+      "name": "Animals",
+      "icon": "🐾",
+      "tiles": [
+        { "id": "go-aquatic", "label": "Aquatic", "icon": "🐟", "go": "animals-aquatic" },
+        { "id": "go-farm",    "label": "Farm",    "icon": "🐮", "go": "animals-farm" },
+        { "id": "go-pets",    "label": "Pets",    "icon": "🐶", "go": "animals-pets" },
+        { "id": "go-wild",    "label": "Wild",    "icon": "🦁", "go": "animals-wild" }
+      ]
+    },
+    "animals-aquatic": {
+      "name": "Aquatic",
+      "icon": "🐟",
+      "tiles": [
+        { "id": "shark",   "label": "Shark",   "icon": "🦈", "speech": "Shark" },
+        { "id": "fish",    "label": "Fish",    "icon": "🐟", "speech": "Fish" },
+        { "id": "dolphin", "label": "Dolphin", "icon": "🐬", "speech": "Dolphin" },
+        { "id": "turtle",  "label": "Turtle",  "icon": "🐢", "speech": "Turtle" },
+        { "id": "whale",   "label": "Whale",   "icon": "🐳", "speech": "Whale" },
+        { "id": "octopus", "label": "Octopus", "icon": "🐙", "speech": "Octopus" },
+        { "id": "crab",    "label": "Crab",    "icon": "🦀", "speech": "Crab" },
+        { "id": "eel",     "label": "Eel",     "speech": "Eel" }
+      ]
+    },
+    "animals-farm": {
+      "name": "Farm",
+      "icon": "🐮",
+      "tiles": [
+        { "id": "cow",     "label": "Cow",     "icon": "🐮", "speech": "Cow" },
+        { "id": "pig",     "label": "Pig",     "icon": "🐷", "speech": "Pig" },
+        { "id": "horse",   "label": "Horse",   "icon": "🐴", "speech": "Horse" },
+        { "id": "chicken", "label": "Chicken", "icon": "🐔", "speech": "Chicken" },
+        { "id": "sheep",   "label": "Sheep",   "icon": "🐑", "speech": "Sheep" },
+        { "id": "goat",    "label": "Goat",    "icon": "🐐", "speech": "Goat" },
+        { "id": "duck",    "label": "Duck",    "icon": "🦆", "speech": "Duck" }
+      ]
+    },
+    "animals-pets": {
+      "name": "Pets",
+      "icon": "🐶",
+      "tiles": [
+        { "id": "dog",    "label": "Dog",    "icon": "🐶", "speech": "Dog" },
+        { "id": "cat",    "label": "Cat",    "icon": "🐱", "speech": "Cat" },
+        { "id": "bird",   "label": "Bird",   "icon": "🐦", "speech": "Bird" },
+        { "id": "fish",   "label": "Fish",   "icon": "🐟", "speech": "Fish" },
+        { "id": "rabbit", "label": "Rabbit", "icon": "🐰", "speech": "Rabbit" },
+        { "id": "turtle", "label": "Turtle", "icon": "🐢", "speech": "Turtle" }
+      ]
+    },
+    "animals-wild": {
+      "name": "Wild",
+      "icon": "🦁",
+      "tiles": [
+        { "id": "lion",     "label": "Lion",     "icon": "🦁", "speech": "Lion" },
+        { "id": "tiger",    "label": "Tiger",    "icon": "🐯", "speech": "Tiger" },
+        { "id": "elephant", "label": "Elephant", "icon": "🐘", "speech": "Elephant" },
+        { "id": "monkey",   "label": "Monkey",   "icon": "🐵", "speech": "Monkey" },
+        { "id": "bear",     "label": "Bear",     "icon": "🐻", "speech": "Bear" },
+        { "id": "snake",    "label": "Snake",    "icon": "🐍", "speech": "Snake" }
+      ]
+    },
+    "more": {
+      "name": "More boards",
+      "icon": "➕",
+      "tiles": [
+        { "id": "go-feelings",   "label": "Feelings",    "icon": "😊", "go": "feelings" },
+        { "id": "go-food",       "label": "Food & Drink", "icon": "🍎", "go": "food" },
+        { "id": "go-body",       "label": "Body",        "icon": "👤", "go": "body" },
+        { "id": "go-activities", "label": "Activities",  "icon": "🎮", "go": "activities" }
+      ]
+    },
+    "feelings": {
+      "name": "Feelings",
+      "icon": "😊",
+      "tiles": [
+        { "id": "happy",  "label": "Happy",  "icon": "😊", "speech": "Happy" },
+        { "id": "sad",    "label": "Sad",    "icon": "😢", "speech": "Sad" },
+        { "id": "mad",    "label": "Mad",    "icon": "😠", "speech": "Mad" },
+        { "id": "scared", "label": "Scared", "icon": "😨", "speech": "Scared" },
+        { "id": "tired",  "label": "Tired",  "icon": "😴", "speech": "Tired" },
+        { "id": "hurt",   "label": "Hurt",    "icon": "🤕", "speech": "Hurt" },
+        { "id": "love",   "label": "Love",    "icon": "❤️", "speech": "Love" }
+      ]
+    },
+    "food": {
+      "name": "Food & Drink",
+      "icon": "🍎",
+      "tiles": [
+        { "id": "hungry",  "label": "Hungry",  "speech": "Hungry" },
+        { "id": "thirsty", "label": "Thirsty", "icon": "💧", "speech": "Thirsty" },
+        { "id": "water",   "label": "Water",   "icon": "💧", "speech": "Water, please" },
+        { "id": "juice",   "label": "Juice",   "icon": "🥤", "speech": "Juice, please" },
+        { "id": "coffee",  "label": "Coffee",  "icon": "☕", "speech": "Coffee, please" },
+        { "id": "apple",   "label": "Apple",   "icon": "🍎", "speech": "Apple" },
+        { "id": "banana",  "label": "Banana",  "icon": "🍌", "speech": "Banana" },
+        { "id": "bread",   "label": "Bread",   "icon": "🍞", "speech": "Bread" },
+        { "id": "cookie",  "label": "Cookie",  "icon": "🍪", "speech": "Cookie" }
+      ]
+    },
+    "body": {
+      "name": "Body",
+      "icon": "👤",
+      "tiles": [
+        { "id": "head",     "label": "Head",     "speech": "Head" },
+        { "id": "shoulder", "label": "Shoulder", "speech": "Shoulder" },
+        { "id": "arm",      "label": "Arm",      "speech": "Arm" },
+        { "id": "hand",     "label": "Hand",     "speech": "Hand" },
+        { "id": "back",     "label": "Back",     "speech": "Back" },
+        { "id": "stomach",  "label": "Stomach",  "speech": "Stomach" },
+        { "id": "chest",    "label": "Chest",    "speech": "Chest" },
+        { "id": "hip",      "label": "Hip",      "speech": "Hip" },
+        { "id": "leg",      "label": "Leg",      "speech": "Leg" },
+        { "id": "foot",     "label": "Foot",     "speech": "Foot" }
+      ]
+    },
+    "activities": {
+      "name": "Activities",
+      "icon": "🎮",
+      "tiles": [
+        { "id": "tv",       "label": "TV",       "icon": "📺", "speech": "TV" },
+        { "id": "music",    "label": "Music",    "icon": "🎵", "speech": "Music" },
+        { "id": "walk",     "label": "Walk",     "icon": "🚶", "speech": "Walk" },
+        { "id": "rest",     "label": "Rest",     "icon": "😴", "speech": "Rest" },
+        { "id": "game",     "label": "Game",     "icon": "🎮", "speech": "Game" },
+        { "id": "outside",  "label": "Outside",  "icon": "🌳", "speech": "Outside" },
+        { "id": "read",     "label": "Read",     "icon": "📖", "speech": "Read" },
+        { "id": "exercise", "label": "Exercise", "icon": "💪", "speech": "Exercise" }
       ]
     }
   }

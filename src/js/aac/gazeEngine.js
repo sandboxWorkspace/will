@@ -638,6 +638,21 @@ function handleSignal(msg) {
             res: video ? `${video.videoWidth}x${video.videoHeight}` : ''
         });
         qualityAt = now;
+        // Dev-server-only metric trace (Vite strips DEV in production
+        // builds): lets a tester read fps/latency/health from the console
+        // while judging a camera — not a product feature.
+        if (import.meta.env && import.meta.env.DEV) {
+            console.debug(
+                '[gaze] fps=%d lat=%s/%sms drops=%d err=%d stall=%d stale=%d',
+                stats.fps,
+                stats.avgMs ?? '–',
+                stats.p95Ms ?? '–',
+                stats.drops,
+                cum.errors,
+                cum.stalls,
+                cum.staleDrops
+            );
+        }
     }
 
     if (!stable) return;
