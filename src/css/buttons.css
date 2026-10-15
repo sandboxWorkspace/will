@@ -15,7 +15,7 @@
     text-decoration: none;
     transition: background-color 0.3s, transform 0.3s, background 0.5s;
     background: var(--background-alt);
-    color: var(--text-emphasis);
+    color: var(--text-on-primary);
     font-size: 1.1em;
     border: none;
     cursor: pointer;
@@ -112,7 +112,7 @@
     position: relative;
     transition: background-color 0.3s, background 0.3s;
     background: var(--background-alt);
-    color: var(--text-emphasis);
+    color: var(--text-on-primary);
     font-size: 1.1em;
     cursor: pointer;
     text-align: left;

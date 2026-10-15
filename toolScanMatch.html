@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="color-scheme" content="dark light">
+    <script>(function(){try{var t=localStorage.getItem('hubTheme');var l=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=(t==='dark'||t==='light')?t:l}catch(e){document.documentElement.dataset.theme='dark'}})();</script>
     <meta name="description" content="Visual Scan Trainer — two-device matching game for therapy.">
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f5f7">
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1a1e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Scan Match">
@@ -35,20 +35,20 @@
         header, footer { display: none; }
 
         /* ── Theme variables ─────────────────────────────── */
+        /* Colors alias the hub tokens (src/css/base.css); the active set is    */
+        /* driven by <html data-theme>. Layout tokens stay local to this page.  */
         :root {
-            --bg: #f5f5f7;
-            --card-bg: #fff;
-            --text: #333;
-            --text-subtle: #888;
-            --text-heading: #333;
-            --border: #d0d0d0;
-            --accent: #2563eb;
-            --accent-bg: #eff6ff;
-            --accent-text: #2563eb;
-            --success: #22c55e;
-            --success-dark: #16a34a;
-            --surface: #fff;
-            --surface-hover: #f0f0f0;
+            --bg: var(--background-color);
+            --text: var(--text-primary);
+            --text-subtle: var(--text-subtle);
+            --text-heading: var(--text-emphasis);
+            --border: var(--border-color-light);
+            --accent: var(--accent);
+            --accent-bg: var(--accent-bg);
+            --accent-text: var(--accent-text);
+            --success: var(--success-border);
+            --success-dark: var(--success-border);
+            --surface: var(--card-bg);
 
             /* ── Fluid scale tokens (320px phones → desktop) ── */
             --space-xs: clamp(4px, 1vw, 8px);
@@ -61,21 +61,6 @@
             --font-m: clamp(0.88rem, 0.72rem + 0.8vw, 1.05rem);
             --font-l: clamp(1rem, 0.85rem + 0.9vw, 1.2rem);
             --touch-min: 44px;
-        }
-        body.dark {
-            --bg: #1a1a1e;
-            --card-bg: #2c2c32;
-            --text: #e8e8ea;
-            --text-subtle: #999;
-            --text-heading: #fff;
-            --border: #3a3a42;
-            --accent: #60a5fa;
-            --accent-bg: #1e293b;
-            --accent-text: #60a5fa;
-            --success: #4ade80;
-            --success-dark: #22c55e;
-            --surface: #2c2c32;
-            --surface-hover: #3a3a42;
         }
 
         /* ── Screens ─────────────────────────────────────── */
@@ -128,19 +113,6 @@
         #themeToggle .switch { width: 52px; height: 30px; }
         #themeToggle .slider:before { height: 24px; width: 24px; }
         #themeToggle input:checked + .slider:before { transform: translateX(22px); }
-        /* Fix: use page theme vars instead of toggleSwitch.css hardcoded colors */
-        .switch.theme-switch .slider {
-            background-color: var(--border);
-            background-image: url('/assets/moon.svg');
-            background-repeat: no-repeat;
-            background-position: right 6px center;
-            background-size: 16px;
-        }
-        .switch.theme-switch input:checked + .slider {
-            background-color: var(--accent);
-            background-image: url('/assets/sun.svg');
-            background-position: left 6px center;
-        }
 
 
 
@@ -210,7 +182,7 @@
             display: inline-flex; align-items: center; justify-content: center;
         }
         .option-group button.active {
-            border-color: var(--text-muted);
+            border-color: var(--text-subtle);
             background: var(--surface-hover);
             color: var(--text);
             font-weight: 600;
@@ -269,7 +241,8 @@
         .create-btn {
             width: 100%; max-width: 280px; padding: var(--space-m);
             border: none; border-radius: 10px;
-            background: var(--accent); color: #fff; font-size: var(--font-l);
+            /* accent-strong reads identically in both themes with white text */
+            background: var(--accent-strong); color: var(--text-on-primary); font-size: var(--font-l);
             font-weight: 600; cursor: pointer; min-height: 48px;
         }
         .create-btn:disabled { opacity: 0.5; }

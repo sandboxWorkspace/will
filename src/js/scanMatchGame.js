@@ -8,7 +8,6 @@
 
 import { getDatabase, ref, set, get, onValue, update, serverTimestamp, onDisconnect } from "firebase/database";
 import QRCode from 'qrcode';
-import { setupToggleSwitch } from './utils/utils.js';
 import { SeededRNG, computeCardLayout, paintCard } from './scanMatchLayout.js';
 
 // Match reveal: how long the correct emoji stays highlighted before advancing
@@ -708,11 +707,8 @@ export class ScanMatchUI {
       }
     });
 
-    // Theme toggle
-    setupToggleSwitch(this.themeToggle, (isDark) => {
-      document.body.classList.toggle('dark', isDark);
-      localStorage.setItem('scanMatchTheme', isDark ? 'dark' : 'light');
-    });
+    // Theme toggle is wired by src/js/ui/theme.js (initTheme) on all pages —
+    // no per-page handler or storage key needed here anymore.
   }
 
   _listenGame() {
@@ -791,10 +787,10 @@ export class ScanMatchUI {
   // ── Theme ──────────────────────────────────────────────────
 
   _restoreTheme() {
-    const saved = localStorage.getItem('scanMatchTheme');
-    if (saved === 'dark') {
-      document.body.classList.add('dark');
-      if (this.themeToggle) this.themeToggle.checked = true;
+    // html[data-theme] was applied pre-paint by the head snippet; just sync
+    // the switch position to the active theme
+    if (this.themeToggle) {
+      this.themeToggle.checked = document.documentElement.dataset.theme === 'dark';
     }
   }
 

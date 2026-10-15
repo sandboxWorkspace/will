@@ -2,18 +2,18 @@
  * App entry — detects page type and loads only what's needed.
  * Landing pages (no data elements) skip JS entirely.
  */
+import { initTheme } from './js/ui/theme.js';
+
 function detectLocation() {
   const path = window.location.pathname;
   return path.includes('moursund') ? 'moursund' : 'southeast';
 }
 
 async function initializeApp() {
-  // AAC Speak Board (standalone tool — no Firebase)
+  initTheme();
+
+  // AAC Speak Board (standalone tool — no Firebase, no collapsible sections)
   if (document.getElementById('aac-board')) {
-    if (document.querySelector('.collapse-button-container')) {
-      const { default: initCollapse } = await import('./js/ui/collapsibleSections.js');
-      initCollapse();
-    }
     const { initBoard } = await import('./js/aac/aacBoard.js');
     initBoard();
     return;

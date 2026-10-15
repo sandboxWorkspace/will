@@ -3,16 +3,23 @@
     --text-secondary: #aaa;
     --text-emphasis: #ffffff;
     --text-on-primary: #ffffff;
+    --text-subtle: #999;
 
     --background-color: #121212;
     --background-alt: #2c2c2c;
     --background-surface: #1e1e1e;
+    --card-bg: #2c2c2c;
+    --surface-hover: #3a3a42;
 
     --border-color: #333;
     --border-color-light: #444;
 
     --primary-color: #4a90e2;
     --primary-color-dark: #357abd;
+    --accent: #4a90e2;
+    --accent-bg: #1e293b;
+    --accent-text: #4a90e2;
+    --accent-strong: #2563eb; /* saturated fill for white-text buttons — readable in BOTH themes */
 
     --border-radius: 8px;
     --border-radius-large: 16px;
@@ -25,6 +32,72 @@
     --error-bg: #5d2f2f;
     --error-border: #d32f2f;
     --error-text: #ffebee;
+}
+
+/* Light theme — authored under the data-theme attribute AND follows the OS
+   when no explicit choice is stored. Keep both blocks identical. */
+:root[data-theme="light"] {
+    --text-primary: #333;
+    --text-secondary: #555;
+    --text-emphasis: #1a1a1a;
+    --text-on-primary: #ffffff;
+    --text-subtle: #888;
+
+    --background-color: #f5f5f7;
+    --background-alt: #ebebef;
+    --background-surface: #ffffff;
+    --card-bg: #ffffff;
+    --surface-hover: #f0f0f0;
+
+    --border-color: #d5d5da;
+    --border-color-light: #d0d0d0;
+
+    --primary-color: #2563eb;
+    --primary-color-dark: #1d4ed8;
+    --accent: #2563eb;
+    --accent-bg: #eff6ff;
+    --accent-text: #2563eb;
+    --accent-strong: #2563eb;
+
+    --success-bg: #dcf5e3;
+    --success-border: #22c55e;
+    --success-text: #14532d;
+    --error-bg: #fef2f2;
+    --error-border: #ef4444;
+    --error-text: #b91c1c;
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        --text-primary: #333;
+        --text-secondary: #555;
+        --text-emphasis: #1a1a1a;
+        --text-on-primary: #ffffff;
+        --text-subtle: #888;
+
+        --background-color: #f5f5f7;
+        --background-alt: #ebebef;
+        --background-surface: #ffffff;
+        --card-bg: #ffffff;
+        --surface-hover: #f0f0f0;
+
+        --border-color: #d5d5da;
+        --border-color-light: #d0d0d0;
+
+        --primary-color: #2563eb;
+        --primary-color-dark: #1d4ed8;
+        --accent: #2563eb;
+        --accent-bg: #eff6ff;
+        --accent-text: #2563eb;
+        --accent-strong: #2563eb;
+
+        --success-bg: #dcf5e3;
+        --success-border: #22c55e;
+        --success-text: #14532d;
+        --error-bg: #fef2f2;
+        --error-border: #ef4444;
+        --error-text: #b91c1c;
+    }
 }
 
 *,
