@@ -19,6 +19,13 @@ async function initializeApp() {
     return;
   }
 
+  // Color Switcher (standalone tool — no Firebase)
+  if (document.getElementById('colorSwitcher')) {
+    const { initColorSwitcher } = await import('./js/colorSwitcher.js');
+    initColorSwitcher();
+    return;
+  }
+
   const hasDb = document.getElementById('schedule-table') ||
                 document.getElementById('maintenanceRequestForm') ||
                 document.getElementById('supplyRequestForm') ||

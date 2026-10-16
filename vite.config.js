@@ -36,7 +36,8 @@ export default defineConfig({
         equipment: path.resolve(__dirname, 'equipment.html'),
         fesBike: path.resolve(__dirname, 'fesBike.html'),
         toolScanMatch: path.resolve(__dirname, 'toolScanMatch.html'),
-        toolSpeakBoard: path.resolve(__dirname, 'toolSpeakBoard.html')
+        toolSpeakBoard: path.resolve(__dirname, 'toolSpeakBoard.html'),
+        toolColorSwitcher: path.resolve(__dirname, 'toolColorSwitcher.html')
       },
     },
   },
