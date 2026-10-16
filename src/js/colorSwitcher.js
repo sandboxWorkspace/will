@@ -3,7 +3,7 @@
  *
  * Behaviour: the screen floods with one color = "go to that dot"; any input
  * (tap, any key / Bluetooth clicker, gamepad button)
- * advances to the next color. Manual or Pace timing × Random or Sequence order.
+ * advances to the next color. Manual or auto-advance timing × Random or Sequence order.
  *
  * No dependencies. No network. No Firebase — storage is the last-used settings only.
  * Loaded lazily from src/scripts.js when #colorSwitcher is present.
@@ -28,7 +28,6 @@ const DEBOUNCE_MS = 200;   // ignore inputs this soon after an advance
 const EARLY_MS = 300;      // advance sooner than this = flagged "early"
 const LONGPRESS_MS = 600;  // hold this long on the run screen = pause menu
 const LS_KEY = 'colorSwitcher.config.v1';
-const PACE_MS = [2000, 5000]; // pace mode: random interval range
 const GAP_MS = [150, 400];    // blank beat between colors
 const RING_CIRC = 2 * Math.PI * 40; // timer ring circumference (r = 40 in the SVG)
 
@@ -36,6 +35,7 @@ const DEFAULT_CONFIG = {
   presets: Object.fromEntries(PRESETS.map(p => [p.hex, p.on])),
   custom: [],              // { hex, label, on }
   timing: 'manual',        // 'manual' | 'pace'
+  paceMs: 3000,            // auto-advance interval between colors (ms)
   order: 'random',         // 'random' | 'sequence'
   sequence: [],            // hex strings (must be in play)
   speakNames: false,
@@ -137,6 +137,9 @@ class ColorSwitcherApp {
     this.ringProgress = $('#ringProgress');
     this.timeSlider = $('#timeSlider');
     this.timeVal = $('#timeVal');
+    this.paceRow = $('#paceRow');
+    this.paceSlider = $('#paceSlider');
+    this.paceVal = $('#paceVal');
     this.repsSlider = $('#repsSlider');
     this.repsMinus = $('#repsMinus');
     this.repsPlus = $('#repsPlus');
@@ -173,6 +176,7 @@ class ColorSwitcherApp {
       if (Array.isArray(saved.sequence)) merged.sequence = saved.sequence.filter(h => typeof h === 'string');
       if (['open', 'time', 'reps', 'either'].includes(saved.endMode)) merged.endMode = saved.endMode;
       if (typeof saved.endMs === 'number' && saved.endMs >= 15000 && saved.endMs <= 1800000) merged.endMs = saved.endMs;
+      if (typeof saved.paceMs === 'number' && saved.paceMs >= 1000 && saved.paceMs <= 10000) merged.paceMs = saved.paceMs;
       if (typeof saved.endReps === 'number' && saved.endReps >= 1 && saved.endReps <= 200) merged.endReps = saved.endReps;
       if ([0, 1, 2, 3].includes(saved.passes)) merged.passes = saved.passes;
       for (const k of ['speakNames']) {
@@ -264,6 +268,9 @@ class ColorSwitcherApp {
     this.timeSlider.value = String(this.cfg.endMs);
     this.timeSlider.setAttribute('aria-valuetext', formatDuration(this.cfg.endMs));
     this.timeVal.textContent = formatDuration(this.cfg.endMs);
+    this.paceSlider.value = String(this.cfg.paceMs);
+    this.paceSlider.setAttribute('aria-valuetext', `${this.paceLabel()} interval`);
+    this.paceVal.textContent = this.paceLabel();
     this.repsSlider.value = String(this.cfg.endReps);
     this.repsSlider.setAttribute('aria-valuetext', `${this.cfg.endReps} reps`);
     this.repsVal.textContent = String(this.cfg.endReps);
@@ -289,9 +296,25 @@ class ColorSwitcherApp {
 
   syncLengthRows() {
     const m = this.cfg.endMode;
+    this.paceRow.style.display = this.cfg.timing === 'pace' ? '' : 'none';
     this.timeRow.style.display = (m === 'time' || m === 'either') ? '' : 'none';
     this.repsRow.style.display = (m === 'reps' || m === 'either') ? '' : 'none';
     this.passesRow.style.display = this.cfg.order === 'sequence' ? '' : 'none';
+  }
+
+  paceLabel() {
+    const s = this.cfg.paceMs / 1000;
+    return `${Number.isInteger(s) ? s : s.toFixed(1)}s`;
+  }
+
+  setPaceMs(ms, persist = true) {
+    const clamped = Math.min(10000, Math.max(1000, Math.round(ms)));
+    this.cfg.paceMs = Math.round(clamped / 500) * 500;
+    this.paceSlider.value = String(this.cfg.paceMs);
+    this.paceSlider.setAttribute('aria-valuetext', `${this.paceLabel()} interval`);
+    this.paceVal.textContent = this.paceLabel();
+    this.updateSummaryLine();
+    if (persist) this.saveConfig();
   }
 
   syncStepperBounds() {
@@ -463,7 +486,7 @@ class ColorSwitcherApp {
 
   updateSummaryLine() {
     const n = this.activeColors().length;
-    const timing = this.cfg.timing === 'manual' ? 'Manual' : 'Pace';
+    const timing = this.cfg.timing === 'manual' ? 'Manual' : `Auto ${this.paceLabel()}`;
     const order = this.cfg.order === 'random' ? 'Random' : 'Sequence';
     let len = 'Open';
     if (this.cfg.endMode === 'time') len = formatDuration(this.cfg.endMs);
@@ -518,6 +541,8 @@ class ColorSwitcherApp {
     this.repsPlus.addEventListener('click', () => this.setReps(this.cfg.endReps + 1));
     this.timeSlider.addEventListener('input', () => this.setTimeMs(Number(this.timeSlider.value), false));
     this.timeSlider.addEventListener('change', () => this.saveConfig());
+    this.paceSlider.addEventListener('input', () => this.setPaceMs(Number(this.paceSlider.value), false));
+    this.paceSlider.addEventListener('change', () => this.saveConfig());
     this.repsSlider.addEventListener('input', () => this.setReps(Number(this.repsSlider.value), false));
     this.repsSlider.addEventListener('change', () => this.saveConfig());
     $('#addCustomBtn').addEventListener('click', () => {
@@ -754,7 +779,7 @@ class ColorSwitcherApp {
   }
 
   schedulePace() {
-    const dur = rand(PACE_MS[0], PACE_MS[1]);
+    const dur = this.cfg.paceMs;
     const gap = rand(GAP_MS[0], GAP_MS[1]);
     this.timerA = setTimeout(() => {
       if (this.state !== 'running') return;
@@ -1041,7 +1066,7 @@ class ColorSwitcherApp {
     }
 
     // Copy summary
-    const mode = this.cfg.timing === 'manual' ? 'Manual' : 'Pace';
+    const mode = this.cfg.timing === 'manual' ? 'Manual' : `Auto ${this.paceLabel()}`;
     const order = this.cfg.order === 'random' ? 'Random' : 'Sequence';
     const lines = [
       `Color Switcher · ${mode} · ${order} · ${active.length} colors · ${formatDuration(activeMs)}`,
