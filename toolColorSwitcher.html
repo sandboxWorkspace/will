@@ -128,13 +128,16 @@
         .wiz-body {
             flex: 1; min-height: 0; overflow-y: auto;
             width: 100%; max-width: 640px; margin: 0 auto;
-            padding: var(--space-m) var(--space-m) var(--space-l);
+            padding: var(--space-m) var(--space-m) calc(132px + env(safe-area-inset-bottom));
             display: flex; flex-direction: column;
         }
         .wiz-foot {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
             width: 100%; max-width: 640px; margin: 0 auto;
             display: flex; flex-direction: column; gap: var(--space-s);
             padding: var(--space-s) var(--space-m) calc(var(--space-s) + env(safe-area-inset-bottom));
+            background: var(--background-color);
+            border-top: 1px solid var(--border-color);
         }
         .wiz-foot .btn { width: 100%; min-height: 52px; font-size: var(--font-m); }
         .step { display: none; width: 100%; }
