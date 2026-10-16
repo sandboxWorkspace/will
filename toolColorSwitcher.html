@@ -123,23 +123,8 @@
             flex: 1 1 auto; min-height: 0;
         }
 
-        /* ══ SETUP SCREEN (wizard) ══ */
+        /* ══ SETUP SCREEN ══ */
         #setupScreen { overflow: hidden; }
-        .wiz-head {
-            width: 100%; max-width: 640px; margin: 0 auto;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: var(--space-m) var(--space-m) 0;
-        }
-        .wiz-count {
-            font-size: var(--font-xs); color: var(--text-subtle);
-            font-variant-numeric: tabular-nums;
-        }
-        .wiz-dots { display: flex; gap: 6px; }
-        .wiz-dots .dot {
-            width: 6px; height: 6px; border-radius: 50%; background: var(--border-color-light);
-            transition: background 0.2s, transform 0.2s;
-        }
-        .wiz-dots .dot.active { background: var(--primary-color); transform: scale(1.25); }
         .wiz-body {
             flex: 1; min-height: 0; overflow-y: auto;
             width: 100%; max-width: 640px; margin: 0 auto;
@@ -151,9 +136,7 @@
             display: flex; flex-direction: column; gap: var(--space-s);
             padding: var(--space-s) var(--space-m) calc(var(--space-s) + env(safe-area-inset-bottom));
         }
-        .wiz-nav { display: flex; gap: var(--space-s); }
-        .wiz-nav .btn { flex: 1; }
-        .wiz-nav .btn-primary { width: auto; min-height: 52px; font-size: var(--font-m); }
+        .wiz-foot .btn { width: 100%; min-height: 52px; font-size: var(--font-m); }
         .step { display: none; width: 100%; }
         .step.active { display: block; margin: auto 0; animation: step-in 0.18s ease; }
         @keyframes step-in {
@@ -162,9 +145,7 @@
         }
 
         .group { width: 100%; max-width: 520px; margin-left: auto; margin-right: auto; }
-        .group + .group { margin-top: var(--space-l); }
-        .step[data-step="1"] { padding-top: var(--space-s); }
-        .step[data-step="1"] .group + .group { margin-top: calc(var(--space-l) + var(--space-s)); }
+        .group + .group { margin-top: calc(var(--space-l) + var(--space-s)); }
         .group .label { margin-bottom: var(--space-xs); text-align: center; }
         .summary-line {
             text-align: center; font-size: var(--font-s); color: var(--text-subtle);
@@ -296,14 +277,20 @@
             box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
         }
 
-        /* ── Toggles (switch styles come from toggleSwitch.css) ── */
-        .toggle-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: var(--space-m); padding: 10px 0;
+        /* ── Speak toggle ── */
+        .icon-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 52px; height: 52px; margin: var(--space-l) auto 0;
+            border-radius: 50%; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text-subtle);
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+            transition: color 120ms, border-color 120ms;
         }
-        .toggle-row + .toggle-row { border-top: 1px solid var(--border); }
-        .toggle-text { display: flex; flex-direction: column; gap: 2px; }
-        .toggle-name { font-size: var(--font-s); color: var(--text); }
+        .icon-btn svg { width: 24px; height: 24px; }
+        .icon-btn .ico-on { display: none; }
+        .icon-btn.on { color: var(--accent); border-color: var(--accent); }
+        .icon-btn.on .ico-on { display: block; }
+        .icon-btn.on .ico-off { display: none; }
 
 
         /* ── Buttons ── */
@@ -480,7 +467,7 @@
             line-height: 1.5;
         }
     </style>
-  <script type="module" crossorigin src="/will/assets/scripts-DmEP8Ls2.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-B3HfWDZR.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-CPWlz4fN.css">
   <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-Cu3oya-3.css">
 </head>
@@ -498,47 +485,16 @@
             </label>
         </div>
 
-        <!-- ══ SETUP (wizard) ══ -->
+        <!-- ══ SETUP ══ -->
         <div id="setupScreen" class="screen active">
-            <div class="wiz-head">
-                <span id="wizCount" class="wiz-count">1/2</span>
-                <div class="wiz-dots" id="wizDots" aria-hidden="true">
-                    <span class="dot active"></span><span class="dot"></span>
-                </div>
-            </div>
             <div class="wiz-body">
-
-                <!-- Step 1: Colors -->
-                <section class="step active" data-step="0">
+                <section class="step active">
                     <div id="paletteChips" class="chips"></div>
                     <div id="customRow" class="custom-row">
                         <input type="color" id="customColorInput" value="#8B5CF6" aria-label="Custom color">
                         <input type="text" id="customLabelInput" placeholder="Label (optional, ≤12)" maxlength="12" autocomplete="off" aria-label="Custom color label">
                         <button id="addCustomBtn" class="btn btn-ghost" type="button">Add</button>
                     </div>
-                    <div class="card group" style="margin-top: var(--space-l);">
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="speakLabel">Speak color name</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="speakToggle" aria-labelledby="speakLabel"><span class="slider round"></span></label>
-                        </div>
-                    </div>
-                    <div class="group">
-                        <span class="label">Test inputs</span>
-                        <div class="indicators">
-                            <span class="ind" id="indTap">Tap / Click</span>
-                            <span class="ind" id="indKey">Key / Clicker</span>
-                            <span class="ind" id="indPad">Gamepad</span>
-                        </div>
-                    </div>
-                    <div class="summary-line" id="summaryLine"></div>
-                    <button id="resetBtn" class="link-btn" type="button" style="display:block; margin:0 auto;">↺ Reset</button>
-                    <p class="mvp-note">Hold to pause · ✕ ends · Experimental</p>
-                </section>
-
-                <!-- Step 2: Drill -->
-                <section class="step" data-step="1">
                     <div class="group">
                         <span class="label">Timing</span>
                         <div class="pill-group" id="timingPills" role="group" aria-label="Timing">
@@ -600,15 +556,73 @@
                             </div>
                         </div>
                     </div>
+                    <button id="speakBtn" class="icon-btn" type="button" aria-pressed="false" aria-label="Unmute color names">
+                        <svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                        <svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/></svg>
+                    </button>
+                    <div class="group">
+                        <span class="label">Test inputs</span>
+                        <div class="indicators">
+                            <span class="ind" id="indTap">Tap / Click</span>
+                            <span class="ind" id="indKey">Key / Clicker</span>
+                            <span class="ind" id="indPad">Gamepad</span>
+                        </div>
+                    </div>
+                    <div class="summary-line" id="summaryLine"></div>
+                    <button id="resetBtn" class="link-btn" type="button" style="display:block; margin:0 auto;">↺ Reset</button>
+                    <p class="mvp-note">Hold to pause · ✕ ends · Experimental</p>
                 </section>
 
+                <!--
+                    ════════════════════════════════════════════════════════════
+                    WIREFRAME ONLY — future config ideas, not built, not rendered
+                    (styled to match existing .group / .pill-group / .chips blocks)
+                    ════════════════════════════════════════════════════════════
+
+                    <div class="group">
+                        <span class="label">Pace presets</span>
+                        <div class="pill-group">
+                            <button>Slow (4 s)</button><button>Medium (3 s)</button><button>Fast (2 s)</button>
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <span class="label">Pace tuning</span>
+                        <div class="range-row">pace interval slider · 2–5 s</div>
+                        <div class="range-row">blank gap slider · 150–400 ms</div>
+                        <div class="toggle-row">countdown beep before each change</div>
+                        <div class="toggle-row">skip 3-2-1 countdown</div>
+                    </div>
+
+                    <div class="group">
+                        <span class="label">Saved color sets</span>
+                        <div class="chips">save palette + sequence as a named set · load / delete sets</div>
+                    </div>
+
+                    <div class="group">
+                        <span class="label">Feedback</span>
+                        <div class="toggle-row">vibrate on color change (Android)</div>
+                        <div class="toggle-row">pause chip on run screen (one-tap pause)</div>
+                        <div class="toggle-row">dual-color trials (two colors per stimulus)</div>
+                    </div>
+
+                    <div class="group">
+                        <span class="label">History &amp; export</span>
+                        <div class="toggle-row">recent sessions list (last 10)</div>
+                        <div class="toggle-row">CSV export / share sheet</div>
+                        <div class="toggle-row">reaction-time baseline chart across sessions</div>
+                    </div>
+
+                    <div class="group">
+                        <span class="label">Offline</span>
+                        <div class="toggle-row">service worker — run without network</div>
+                    </div>
+                    ══════════════ end wireframe ══════════════
+                -->
             </div>
             <div class="wiz-foot">
                 <p id="setupMsg"></p>
-                <div class="wiz-nav">
-                    <button id="wizBackBtn" class="btn btn-ghost" type="button">Back</button>
-                    <button id="wizNextBtn" class="btn btn-primary" type="button">Next</button>
-                </div>
+                <button id="startBtn" class="btn btn-primary" type="button">Start</button>
             </div>
         </div>
 
