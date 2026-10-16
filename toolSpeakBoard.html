@@ -158,15 +158,68 @@
             outline-offset: -3px;
         }
 
-        .aac-last-said {
-            text-align: center;
+        /* Primary controls (unified row: Gaze + Settings) — larger, bolder */
+        .aac-primary-btn {
+            min-height: 52px !important;
+            font-size: 1em !important;
+            font-weight: 700;
+            padding: 10px 18px !important;
+        }
+
+        /* Captions strip: expiring history of speech + notices */
+        .aac-captions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-height: 1.4em;
             font-size: 0.95rem;
-            min-height: 1.5em;
             color: var(--text-secondary);
+            text-align: center;
             padding: 0 4px;
         }
 
-        .aac-last-said strong { color: var(--text-emphasis); }
+        .aac-caption {
+            transition: opacity 600ms ease;
+            line-height: 1.4;
+        }
+
+        .aac-caption-new { color: var(--text-emphasis); font-weight: 600; }
+        .aac-caption:not(.aac-caption-new) { opacity: 0.65; }
+        .aac-caption.dying { opacity: 0; }
+
+        .aac-caption-speech {
+            background: none;
+            border: none;
+            padding: 2px 10px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .aac-caption-speech:hover { background: var(--background-alt); }
+
+        /* Settings section headers */
+        .aac-settings-section {
+            margin: 20px 0 6px;
+            padding-bottom: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-subtle);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .aac-settings-section:first-of-type { margin-top: 8px; }
+
+        /* Prominent "Edit this board" launcher (edit entry point lives here now) */
+        .aac-edit-promo {
+            min-height: 52px !important;
+            font-size: 1em !important;
+            font-weight: 700;
+        }
 
         /* Board takes every remaining pixel; tiles stretch evenly */
         .aac-board {
@@ -606,7 +659,7 @@
             .aac-tile:active { transform: none; }
         }
     </style>
-  <script type="module" crossorigin src="/will/assets/scripts-B3HfWDZR.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-D5DMOHAa.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-CPWlz4fN.css">
   <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-Cu3oya-3.css">
 </head>
@@ -624,24 +677,20 @@
     <main class="aac-main">
         <div class="aac-controls">
             <span id="aac-mode-pill" class="aac-mode-pill" aria-live="off">Touch</span>
-            <button id="gaze-toggle" class="button blue-button aac-ctl" type="button" aria-pressed="false">Gaze: Off</button>
-            <button id="calibrate-btn" class="button blue-button aac-ctl" type="button">Calibrate</button>
-            <button id="edit-toggle" class="button orange-button aac-ctl" type="button" aria-pressed="false">Edit</button>
-            <button id="settings-btn" class="button green-button aac-ctl" type="button">Settings</button>
-            <button id="about-open" class="button pending-button aac-ctl aac-about-btn" type="button">About & Licenses</button>
+            <button id="gaze-toggle" class="button blue-button aac-ctl aac-primary-btn" type="button" aria-pressed="false">Gaze: Off</button>
+            <button id="settings-btn" class="button orange-button aac-ctl aac-primary-btn" type="button">⚙️ Settings</button>
         </div>
 
-        <div id="last-said" class="aac-last-said" aria-live="polite">Tap a tile to speak it aloud.</div>
+        <!-- Captions: recent speech + notices, expiring, tap a speech caption to repeat it -->
+        <div id="captions" class="aac-captions" role="status" aria-live="polite"></div>
 
         <div id="aac-board" class="aac-board" role="group" aria-label="Speaking board"></div>
 
         <div id="gaze-status" class="aac-status" hidden></div>
 
         <div id="edit-tools" class="edit-tools" hidden>
-            <button id="edit-add" class="button green-button aac-ctl" type="button">Add tile</button>
-            <button id="boardnew-open" class="button blue-button aac-ctl" type="button">New board</button>
-            <button id="edit-export" class="button blue-button aac-ctl" type="button">Export</button>
-            <button id="edit-import" class="button blue-button aac-ctl" type="button">Import</button>
+            <button id="edit-toggle" class="button green-button aac-ctl" type="button" aria-pressed="true">Done editing</button>
+            <button id="edit-add" class="button blue-button aac-ctl" type="button">Add tile</button>
             <button id="edit-reset" class="button red-button aac-ctl" type="button">Reset board</button>
             <input id="edit-import-file" type="file" accept="application/json,.json" hidden>
         </div>
@@ -696,9 +745,21 @@
         </div>
     </div>
 
-    <!-- Settings modal -->
+    <!-- Settings modal (unified: board editing, gaze, calibration, display, voice) -->
     <div id="settings-modal" class="aac-modal" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <h2 id="settings-title">Settings</h2>
+
+        <h3 class="aac-settings-section">Board</h3>
+        <div class="modal-actions">
+            <button id="set-edit" class="button green-button aac-ctl aac-edit-promo" type="button">✏️ Edit this board</button>
+            <button id="boardnew-open" class="button blue-button aac-ctl" type="button">New board from a list</button>
+        </div>
+        <div class="modal-actions">
+            <button id="edit-export" class="button blue-button aac-ctl" type="button">Export</button>
+            <button id="edit-import" class="button blue-button aac-ctl" type="button">Import</button>
+        </div>
+
+        <h3 class="aac-settings-section">Gaze</h3>
         <label for="set-mode">Gaze mode</label>
         <select id="set-mode">
             <option value="auto">Auto — eye cursor (calibrated, most accurate)</option>
@@ -711,9 +772,20 @@
             <option value="800">0.8 seconds</option>
             <option value="1200">1.2 seconds</option>
         </select>
-        <label for="set-voice">Voice (from this device)</label>
-        <select id="set-voice"></select>
         <label class="check-label"><input type="checkbox" id="set-dot"> Show gaze dot</label>
+        <label class="check-label"><input type="checkbox" id="set-hires"> High-detail camera (720p, more CPU)</label>
+        <label class="check-label"><input type="checkbox" id="set-pad"> Show direction pad (touch arrows)</label>
+
+        <h3 class="aac-settings-section">Calibration</h3>
+        <label for="set-user">Calibration user name (keeps one user's fit from loading for another)</label>
+        <input id="set-user" type="text" maxlength="24" autocomplete="off" placeholder="Leave blank for this device's only user">
+        <p id="calib-status" class="aac-calib-status">No saved calibration on this device.</p>
+        <div class="modal-actions">
+            <button id="set-recalib" class="button blue-button aac-ctl" type="button">Recalibrate</button>
+            <button id="set-clearcal" class="button pending-button aac-ctl" type="button">Clear saved calibration</button>
+        </div>
+
+        <h3 class="aac-settings-section">Display</h3>
         <label class="check-label"><input type="checkbox" id="set-emoji"> Show emoji icons</label>
         <label for="set-cols">Tiles per row</label>
         <select id="set-cols">
@@ -726,16 +798,14 @@
             <option value="7">7</option>
             <option value="8">8</option>
         </select>
-        <label class="check-label"><input type="checkbox" id="set-hires"> High-detail camera (720p, more CPU)</label>
-        <label class="check-label"><input type="checkbox" id="set-pad"> Show direction pad (touch arrows)</label>
-        <label for="set-user">Calibration user name (keeps one user's fit from loading for another)</label>
-        <input id="set-user" type="text" maxlength="24" autocomplete="off" placeholder="Leave blank for this device's only user">
-        <p id="calib-status" class="aac-calib-status">No saved calibration on this device.</p>
-        <div class="modal-actions">
-            <button id="set-clearcal" class="button pending-button aac-ctl" type="button">Clear saved calibration</button>
-        </div>
+
+        <h3 class="aac-settings-section">Voice</h3>
+        <label for="set-voice">Voice (from this device)</label>
+        <select id="set-voice"></select>
+
         <div class="modal-actions">
             <button id="set-test" class="button blue-button aac-ctl" type="button">Test voice</button>
+            <button id="about-open" class="button pending-button aac-ctl" type="button">About & Licenses</button>
             <button id="set-close" class="button green-button aac-ctl" type="button">Done</button>
         </div>
     </div>
@@ -760,7 +830,7 @@
                     blue bar fills. <em>Head pointer</em> — tilt your head to steer
                     the dot; works even with unpredictable eye control. Both cursor modes are tuned to
                     <em>one user</em> with a short dot calibration — the app asks for it the first time,
-                    saves it on this device under the name in Settings, and the Calibrate button redoes it
+                    saves it on this device under the name in Settings, and Settings → Calibration → Recalibrate redoes it
                     (or switches to a different user). <em>Directional</em> — no calibration:
                     look up / down / left / right to move a highlight, look ahead or blink to select.
                     No camera or no calibration? Directional still works, and the <em>direction pad</em>
