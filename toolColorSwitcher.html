@@ -441,7 +441,14 @@
 
         /* ══ RESULTS ══ */
         #resultsScreen { align-items: center; overflow-y: auto; }
-        #resultsScreen .wrap { padding-top: var(--space-l); }
+        #resultsScreen .wrap { padding-top: var(--space-l); padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+        #resultsScreen .btn-row.actions {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+            width: 100%; max-width: 640px; margin: 0 auto;
+            padding: var(--space-s) var(--space-m) calc(var(--space-s) + env(safe-area-inset-bottom));
+            background: var(--background-color);
+            border-top: 1px solid var(--border-color);
+        }
         #resultsScreen h1 { margin: 0; font-size: var(--font-l); padding-top: var(--space-s); }
         .stat-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -690,7 +697,7 @@
                         <span id="copyStatus" role="status" class="visually-hidden"></span>
                     </div>
                 </div>
-                <div class="btn-row">
+                <div class="btn-row actions">
                     <button id="playAgainBtn" class="btn btn-primary" type="button">▶ Go again</button>
                     <button id="backSetupBtn" class="btn btn-ghost" type="button">⚙ Reconfigure</button>
                 </div>

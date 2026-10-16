@@ -4,6 +4,8 @@
  * Behaviour: the screen floods with one color = "go to that dot"; any input
  * (tap, any key / Bluetooth clicker, gamepad button)
  * advances to the next color. Manual or auto-advance timing × Random or Sequence order.
+ * Auto mode: colors advance every paceMs; each full color presentation counts as one
+ * rep (enforces rep targets); taps are acknowledgements and never stall the pace chain.
  *
  * No dependencies. No network. No Firebase — storage is the last-used settings only.
  * Loaded lazily from src/scripts.js when #colorSwitcher is present.
@@ -783,11 +785,25 @@ class ColorSwitcherApp {
     const gap = rand(GAP_MS[0], GAP_MS[1]);
     this.timerA = setTimeout(() => {
       if (this.state !== 'running') return;
+      if (this.recordPresentation()) {
+        this.updateHud();
+        this.endSession('reps');
+        return;
+      }
       this.showBlank();
       this.timerB = setTimeout(() => {
         if (this.state === 'running') this.showNext();
       }, gap);
     }, Math.max(dur - gap, 500));
+  }
+
+  // Auto mode: one rep = one full color presentation (interval elapsed).
+  // Returns true when the rep target has been reached.
+  recordPresentation() {
+    if (!this.current) return false;
+    const dt = performance.now() - this.currentTOn;
+    this.attempts.push({ dt, hex: this.current.hex, name: this.displayName(this.current), kind: 'rep', source: 'pace' });
+    return this.repTargetReached();
   }
 
   clearTimers() {
@@ -855,11 +871,11 @@ class ColorSwitcherApp {
 
     const dt = now - this.currentTOn;
     const kind = dt < EARLY_MS ? 'early' : 'rep';
-    this.attempts.push({ dt, hex: this.current.hex, name: this.displayName(this.current), kind, source });
     this.awaiting = false;
-    this.clearTimers();
 
     if (this.cfg.timing === 'manual') {
+      this.attempts.push({ dt, hex: this.current.hex, name: this.displayName(this.current), kind, source });
+      this.clearTimers();
       if (kind === 'rep' && this.repTargetReached()) {
         this.updateHud();
         this.endSession('reps');
@@ -872,15 +888,9 @@ class ColorSwitcherApp {
         if (this.state === 'running') this.showNext();
       }, gap);
     } else {
-      if (kind === 'rep') {
-        this.acks.push(dt);
-        if (this.repTargetReached()) {
-          this.updateHud();
-          this.endSession('reps');
-          return;
-        }
-      }
-      this.updateHud();
+      // Auto advance: a tap acknowledges the current color — it must NOT
+      // stall the pace chain; reps are counted per color presentation.
+      if (kind === 'rep') this.acks.push(dt);
       this.flashAck();
     }
   }
