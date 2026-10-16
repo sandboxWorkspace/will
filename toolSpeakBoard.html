@@ -226,6 +226,14 @@
             font-weight: 700;
         }
 
+        /* Chooser options: big full-width buttons */
+        .aac-new-opt {
+            width: 100%;
+            min-height: 52px !important;
+            font-size: 1em !important;
+            font-weight: 600;
+        }
+
         /* Board takes every remaining pixel; tiles stretch evenly */
         .aac-board {
             flex: 1 1 auto;
@@ -680,6 +688,7 @@
         <div class="aac-controls">
             <span id="aac-mode-pill" class="aac-mode-pill" aria-live="off">Touch</span>
             <button id="gaze-toggle" class="button blue-button aac-ctl aac-primary-btn" type="button" aria-pressed="false">Gaze: Off</button>
+            <button id="new-btn" class="button green-button aac-ctl aac-primary-btn" type="button">➕ New</button>
             <button id="settings-btn" class="button orange-button aac-ctl aac-primary-btn" type="button">⚙️ Settings</button>
         </div>
 
@@ -734,6 +743,20 @@
         </div>
     </div>
 
+    <!-- New chooser: add a tile to this board / create a new board -->
+    <div id="new-chooser" class="aac-modal" hidden role="dialog" aria-modal="true" aria-labelledby="new-chooser-title">
+        <h2 id="new-chooser-title">Add new</h2>
+        <div class="modal-actions">
+            <button id="new-tile-opt" class="button green-button aac-ctl aac-new-opt" type="button">➕ Add a tile to this board</button>
+        </div>
+        <div class="modal-actions">
+            <button id="new-board-opt" class="button blue-button aac-ctl aac-new-opt" type="button">📋 Create a new board</button>
+        </div>
+        <div class="modal-actions">
+            <button id="new-chooser-cancel" class="button pending-button aac-ctl" type="button">Cancel</button>
+        </div>
+    </div>
+
     <!-- New board from pasted list modal -->
     <div id="boardnew-modal" class="aac-modal" hidden role="dialog" aria-modal="true" aria-labelledby="boardnew-title">
         <h2 id="boardnew-title">New board from a list</h2>
@@ -754,7 +777,6 @@
         <h3 class="aac-settings-section">Board</h3>
         <div class="modal-actions">
             <button id="set-edit" class="button green-button aac-ctl aac-edit-promo" type="button">✏️ Edit this board</button>
-            <button id="boardnew-open" class="button blue-button aac-ctl" type="button">New board from a list</button>
         </div>
         <div class="modal-actions">
             <button id="edit-export" class="button blue-button aac-ctl" type="button">Export</button>
@@ -841,9 +863,10 @@
                 <p>
                     <strong>Boards:</strong> tiles with a dashed border and &#9654; open
                     category boards — Words, Animals (Aquatic, Farm, Pets, Wild), Feelings,
-                    Food & Drink, Body, Activities. In Edit mode you can change any
-                    board, build a new one from a pasted word list, or export/import
-                    everything; your boards appear under <em>My boards</em>. Emoji icons can
+                    Food & Drink, Body, Activities, Numbers, Common, People, Places. The
+                    <em>&#10133; New</em> button adds a tile to the current board or builds a
+                    new one from a pasted word list (your boards appear under <em>My boards</em>);
+                    Edit mode changes any board, and export/import lives in Settings. Emoji icons can
                     be turned off in Settings — the words always stay.
                 </p>
                 <p>

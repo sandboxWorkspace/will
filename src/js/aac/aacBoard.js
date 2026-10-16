@@ -186,7 +186,11 @@ export async function initBoard() {
         setCols: document.getElementById('set-cols'),
         setEdit: document.getElementById('set-edit'),
         setRecalib: document.getElementById('set-recalib'),
-        boardNewOpen: document.getElementById('boardnew-open'),
+        newBtn: document.getElementById('new-btn'),
+        newChooser: document.getElementById('new-chooser'),
+        newTileOpt: document.getElementById('new-tile-opt'),
+        newBoardOpt: document.getElementById('new-board-opt'),
+        newChooserCancel: document.getElementById('new-chooser-cancel'),
         boardNewModal: document.getElementById('boardnew-modal'),
         boardNewName: document.getElementById('boardnew-name'),
         boardNewList: document.getElementById('boardnew-list'),
@@ -218,6 +222,7 @@ export async function initBoard() {
     wireTouchAndKeys();
     wireGaze();
     wireEdit();
+    wireNew();
     wireSettings();
     wireAbout();
     wirePad();
@@ -586,6 +591,7 @@ function wireTouchAndKeys() {
             els.editModal.hidden = true;
             els.settingsModal.hidden = true;
             if (els.boardNewModal) els.boardNewModal.hidden = true;
+            if (els.newChooser) els.newChooser.hidden = true;
             if (els.aboutModal) els.aboutModal.hidden = true;
             return;
         }
@@ -679,6 +685,20 @@ function updateFeedback(html, opts) {
 
 // ── Gaze: engine lifecycle + mode management ───────────────
 
+/**
+ * True while any overlay modal is open. The gaze cursor must clear hover and
+ * Directional events must not act behind a modal — a dwell that fires a tile
+ * the user cannot see is an unintended selection.
+ */
+function anyModalOpen() {
+    return (
+        !els.settingsModal.hidden ||
+        !els.editModal.hidden ||
+        Boolean(els.boardNewModal && !els.boardNewModal.hidden) ||
+        Boolean(els.newChooser && !els.newChooser.hidden)
+    );
+}
+
 function wireGaze() {
     els.gazeToggle.addEventListener('click', async () => {
         speech.prime();
@@ -695,15 +715,18 @@ function wireGaze() {
 
     document.addEventListener('aac:gaze-dir', (event) => {
         if (!state.gazeOn || state.mode !== 'directional' || state.lock) return;
+        if (anyModalOpen()) return; // never move selection behind a modal
         moveHighlight(event.detail.dir);
     });
     document.addEventListener('aac:gaze-center', (event) => {
         if (!state.gazeOn || state.mode !== 'directional' || state.lock) return;
+        if (anyModalOpen()) return; // never dwell behind a modal
         if (event.detail.active) startDwell();
         else cancelDwell();
     });
     document.addEventListener('aac:gaze-blink', () => {
         if (!state.gazeOn || state.mode !== 'directional' || state.lock) return;
+        if (anyModalOpen()) return; // never select behind a modal
         if (state.highlight < 0) return;
         // Single-activation rule: a blink select cancels any in-flight center
         // dwell FIRST so the same fixation can't fire twice (once by the
@@ -726,7 +749,7 @@ function wireGaze() {
         if (!state.gazeOn || state.lock || state.editMode) return;
         if (state.mode === 'directional') return;
         const now = performance.now();
-        const uiBlocked = !els.settingsModal.hidden || !els.editModal.hidden;
+        const uiBlocked = anyModalOpen();
         // Settling frames (the engine's self-zero window) are not selection
         // material: the bias is about to lock and shift the map, so a dwell
         // started mid-settle could land on the wrong tile. The dot still
@@ -1225,8 +1248,6 @@ function wireEdit() {
             }, 3000);
         }
     });
-
-    wireBoardNew();
 }
 
 /** Reset-button label for the board being edited. */
@@ -1254,19 +1275,52 @@ function addTile() {
     openEditor(state.tiles.length - 1);
 }
 
+/** Open the "New board from a list" modal with cleared fields. */
+function openBoardNewModal() {
+    if (!els.boardNewModal) return;
+    els.boardNewName.value = '';
+    els.boardNewList.value = '';
+    els.boardNewModal.hidden = false;
+    els.boardNewName.focus();
+}
+
+// ── ➕ New: add a tile to this board / create a new board ──────
+
+function wireNew() {
+    if (!els.newBtn || !els.newChooser) return;
+    els.newBtn.addEventListener('click', () => {
+        if (state.lock) return; // a calibration flow owns the screen
+        els.settingsModal.hidden = true;
+        els.editModal.hidden = true;
+        // The generated My-boards list can't take tiles
+        els.newTileOpt.hidden = currentBoardId() === '__myboards';
+        els.newChooser.hidden = false;
+    });
+    els.newTileOpt.addEventListener('click', () => {
+        els.newChooser.hidden = true;
+        if (!state.editMode) enterEditMode();
+        addTile();
+    });
+    if (els.newBoardOpt) {
+        els.newBoardOpt.addEventListener('click', () => {
+            els.newChooser.hidden = true;
+            openBoardNewModal();
+        });
+    }
+    if (els.newChooserCancel) {
+        els.newChooserCancel.addEventListener('click', () => {
+            els.newChooser.hidden = true;
+        });
+    }
+    wireBoardNew();
+}
+
 /**
  * New board from a pasted list — one word per line, optional icon after a
  * pipe ("shark | 🦈"). Creates a custom board listed under My boards.
+ * Opened from the ➕ New chooser.
  */
 function wireBoardNew() {
-    if (!els.boardNewOpen) return;
-    els.boardNewOpen.addEventListener('click', () => {
-        if (!els.boardNewModal) return;
-        els.boardNewName.value = '';
-        els.boardNewList.value = '';
-        els.boardNewModal.hidden = false;
-        els.boardNewName.focus();
-    });
     if (els.boardNewCancel) {
         els.boardNewCancel.addEventListener('click', () => {
             els.boardNewModal.hidden = true;
