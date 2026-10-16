@@ -467,7 +467,7 @@
             line-height: 1.5;
         }
     </style>
-  <script type="module" crossorigin src="/will/assets/scripts-3GbpgH1y.js"></script>
+  <script type="module" crossorigin src="/will/assets/scripts-DStwZods.js"></script>
   <link rel="stylesheet" crossorigin href="/will/assets/scripts-CPWlz4fN.css">
   <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-Cu3oya-3.css">
 </head>
@@ -499,7 +499,13 @@
                         <span class="label">Timing</span>
                         <div class="pill-group" id="timingPills" role="group" aria-label="Timing">
                             <button class="pill-btn" data-timing="manual" type="button">Manual</button>
-                            <button class="pill-btn" data-timing="pace" type="button">Pace (2–5 s)</button>
+                            <button class="pill-btn" data-timing="pace" type="button">Auto advance</button>
+                        </div>
+                        <div id="paceRow" style="display:none;">
+                            <div class="range-row">
+                                <input type="range" id="paceSlider" min="1000" max="10000" step="500" aria-label="Auto advance interval">
+                                <span id="paceVal" class="range-val">3s</span>
+                            </div>
                         </div>
                     </div>
                     <div class="group">
@@ -587,8 +593,7 @@
                     </div>
 
                     <div class="group">
-                        <span class="label">Pace tuning</span>
-                        <div class="range-row">pace interval slider · 2–5 s</div>
+                        <span class="label">Timing extras</span>
                         <div class="range-row">blank gap slider · 150–400 ms</div>
                         <div class="toggle-row">countdown beep before each change</div>
                         <div class="toggle-row">skip 3-2-1 countdown</div>
