@@ -102,7 +102,6 @@ class ColorSwitcherApp {
     this.lpTimer = null;         // long-press timer
     this.lpFired = false;
     this.leavePending = false;   // hub-exit confirm open
-    this.wizSwipe = null;        // wizard swipe start point
     this.padPrev = {};           // gamepad edge state
     this.indicatorTimers = new Map();
     this.wakeLock = null;
@@ -123,14 +122,9 @@ class ColorSwitcherApp {
     this.customColorInput = $('#customColorInput');
     this.customLabelInput = $('#customLabelInput');
     this.setupMsg = $('#setupMsg');
-    this.wizNextBtn = $('#wizNextBtn');
-    this.wizBackBtn = $('#wizBackBtn');
-    this.wizCount = $('#wizCount');
-    this.wizDots = $('#wizDots');
+    this.startBtn = $('#startBtn');
     this.customRow = $('#customRow');
     this.summaryLine = $('#summaryLine');
-    this.steps = Array.from(document.querySelectorAll('#setupScreen .step'));
-    this.step = 0;
     this.statsGrid = $('#statsGrid');
     this.perColorList = $('#perColorList');
     this.summaryText = $('#summaryText');
@@ -155,7 +149,6 @@ class ColorSwitcherApp {
     this.passesPills = $('#passesPills');
     this.backBtn = $('#csBackBtn');
     this.leaveMenu = $('#leaveMenu');
-    this.wizBody = $('.wiz-body');
 
     // Bind once
     this._onKeyDown = this._onKeyDown.bind(this);
@@ -163,9 +156,6 @@ class ColorSwitcherApp {
     this._onPointerUpRun = this._onPointerUpRun.bind(this);
     this._loop = this._loop.bind(this);
     this._onVisibility = this._onVisibility.bind(this);
-    this._onWizDown = this._onWizDown.bind(this);
-    this._onWizUp = this._onWizUp.bind(this);
-    this._onWizCancel = this._onWizCancel.bind(this);
   }
 
   // ── Config ────────────────────────────────────────────────
@@ -226,7 +216,6 @@ class ColorSwitcherApp {
     this.loadConfig();
     this.applyConfigToUI();
     this.bindSetupEvents();
-    this.goStep(0);
 
     // Global input listeners (routed by state)
     document.addEventListener('keydown', this._onKeyDown);
@@ -247,9 +236,6 @@ class ColorSwitcherApp {
     });
     $('#leaveCancelBtn').addEventListener('click', () => this.closeLeaveMenu());
     $('#leaveConfirmBtn').addEventListener('click', () => this.confirmHubExit());
-    this.wizBody.addEventListener('pointerdown', this._onWizDown);
-    this.wizBody.addEventListener('pointerup', this._onWizUp);
-    this.wizBody.addEventListener('pointercancel', this._onWizCancel);
 
     requestAnimationFrame(this._loop);
   }
@@ -263,8 +249,8 @@ class ColorSwitcherApp {
       this.markPill(btn, btn.dataset.order === this.cfg.order);
     }
     this.sequenceSection.style.display = this.cfg.order === 'sequence' ? '' : 'none';
-    // Toggles
-    $('#speakToggle').checked = this.cfg.speakNames;
+    // Speak toggle
+    this.syncSpeakBtn();
     // Length
     for (const btn of this.endPills.querySelectorAll('.pill-btn')) {
       this.markPill(btn, btn.dataset.end === this.cfg.endMode);
@@ -291,6 +277,14 @@ class ColorSwitcherApp {
   markPill(btn, on) {
     btn.classList.toggle('active', on);
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+
+  syncSpeakBtn() {
+    const btn = $('#speakBtn');
+    const on = this.cfg.speakNames;
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.setAttribute('aria-label', on ? 'Mute color names' : 'Unmute color names');
   }
 
   syncLengthRows() {
@@ -442,21 +436,7 @@ class ColorSwitcherApp {
   afterConfigChange() {
     this.saveConfig();
     this.applyConfigToUI();
-    this.refreshStepState();
-  }
-
-  // ── Wizard (setup steps) ──────────────────────────────────
-
-  goStep(n) {
-    const count = this.steps.length;
-    if (!count) return;
-    this.step = Math.max(0, Math.min(n, count - 1));
-    this.steps.forEach((el, i) => el.classList.toggle('active', i === this.step));
-    this.wizCount.textContent = `${this.step + 1}/${count}`;
-    Array.from(this.wizDots.children).forEach((d, i) => d.classList.toggle('active', i <= this.step));
-    this.wizBackBtn.style.visibility = this.step === 0 ? 'hidden' : '';
-    this.wizNextBtn.textContent = this.step === count - 1 ? 'Start' : 'Next';
-    this.refreshStepState();
+    this.refreshSetupState();
   }
 
   drillMsg(active) {
@@ -475,15 +455,10 @@ class ColorSwitcherApp {
     return this.drillMsg(active);
   }
 
-  refreshStepState() {
-    let msg = '';
-    if (this.step === 0) {
-      if (!this.activeColors().length) msg = 'Select at least one color in play.';
-    } else {
-      msg = this.finalMsg();
-    }
+  refreshSetupState() {
+    const msg = this.finalMsg();
     this.setupMsg.textContent = msg;
-    this.wizNextBtn.disabled = !!msg;
+    this.startBtn.disabled = !!msg;
   }
 
   updateSummaryLine() {
@@ -504,7 +479,7 @@ class ColorSwitcherApp {
   validate() {
     const msg = this.finalMsg();
     this.setupMsg.textContent = msg;
-    this.wizNextBtn.disabled = !!msg;
+    this.startBtn.disabled = !!msg;
     return !msg;
   }
 
@@ -553,24 +528,18 @@ class ColorSwitcherApp {
       this.customLabelInput.value = '';
       this.afterConfigChange();
     });
-    const bindToggle = (id, key) => {
-      $(id).addEventListener('change', (e) => {
-        this.cfg[key] = e.target.checked;
-        this.saveConfig();
-      });
-    };
-    bindToggle('#speakToggle', 'speakNames');
-
-    this.wizNextBtn.addEventListener('click', () => {
-      if (this.step === this.steps.length - 1) this.startSession();
-      else this.goStep(this.step + 1);
+    $('#speakBtn').addEventListener('click', () => {
+      this.cfg.speakNames = !this.cfg.speakNames;
+      this.saveConfig();
+      this.syncSpeakBtn();
     });
-    this.wizBackBtn.addEventListener('click', () => this.goStep(this.step - 1));
+
+    this.startBtn.addEventListener('click', () => this.startSession());
     $('#resetBtn').addEventListener('click', () => {
       this.cfg = deepCopy(DEFAULT_CONFIG);
       this.saveConfig();
       this.applyConfigToUI();
-      this.goStep(0);
+      this.refreshSetupState();
     });
 
     // Pause menu
@@ -656,28 +625,6 @@ class ColorSwitcherApp {
     } else if (document.visibilityState === 'visible' && this.state === 'running') {
       this.acquireWakeLock();
     }
-  }
-
-  _onWizDown(e) {
-    if (e.target.closest('input, button, .custom-row, .stepper, .range-row')) return;
-    this.wizSwipe = { x: e.clientX, y: e.clientY };
-  }
-
-  _onWizUp(e) {
-    if (!this.wizSwipe) return;
-    const dx = e.clientX - this.wizSwipe.x;
-    const dy = e.clientY - this.wizSwipe.y;
-    this.wizSwipe = null;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    if (dx < 0) {
-      if (this.step < this.steps.length - 1 && !this.wizNextBtn.disabled) this.goStep(this.step + 1);
-    } else if (this.step > 0) {
-      this.goStep(this.step - 1);
-    }
-  }
-
-  _onWizCancel() {
-    this.wizSwipe = null;
   }
 
   requestHubExit() {
@@ -1018,7 +965,7 @@ class ColorSwitcherApp {
     this.runScreen.classList.remove('active');
     this.resultsScreen.classList.remove('active');
     this.setupScreen.classList.add('active');
-    this.goStep(0);
+    this.refreshSetupState();
   }
 
   // ── Results ───────────────────────────────────────────────
