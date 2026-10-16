@@ -2,7 +2,7 @@
  * Color Switcher — full-screen color pacer for dot/cone drills (experimental tool).
  *
  * Behaviour: the screen floods with one color = "go to that dot"; any input
- * (tap, any key / Bluetooth clicker, gamepad button, optional media remote)
+ * (tap, any key / Bluetooth clicker, gamepad button)
  * advances to the next color. Manual or Pace timing × Random or Sequence order.
  *
  * No dependencies. No network. No Firebase — storage is the last-used settings only.
@@ -38,12 +38,7 @@ const DEFAULT_CONFIG = {
   timing: 'manual',        // 'manual' | 'pace'
   order: 'random',         // 'random' | 'sequence'
   sequence: [],            // hex strings (must be in play)
-  showName: true,
   speakNames: false,
-  beeps: false,
-  remote: false,
-  hud: false,
-  showTime: false,         // running time in the HUD
   endMode: 'open',         // 'open' | 'time' | 'reps' | 'either'
   endMs: 60000,            // time limit (used by 'time'/'either')
   endReps: 20,             // rep target (used by 'reps'/'either')
@@ -63,16 +58,6 @@ function median(arr) {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
-function mean(arr) {
-  return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
-}
-
-function sd(arr) {
-  if (arr.length < 2) return null;
-  const m = mean(arr);
-  return Math.sqrt(arr.reduce((acc, v) => acc + (v - m) ** 2, 0) / (arr.length - 1));
-}
-
 function formatSecs(ms) {
   if (ms == null) return '—';
   return (ms / 1000).toFixed(1) + 's';
@@ -87,37 +72,6 @@ function formatDuration(ms) {
 
 function deepCopy(obj) {
   return JSON.parse(JSON.stringify(obj));
-}
-
-/** Minimal silent (8-bit PCM) WAV data-URI for keeping a media session alive. */
-let silentWavCache = null;
-function silentWavDataUri(seconds = 1, sampleRate = 8000) {
-  if (silentWavCache) return silentWavCache;
-  const dataSize = Math.floor(seconds * sampleRate);
-  const buffer = new ArrayBuffer(44 + dataSize);
-  const view = new DataView(buffer);
-  const writeStr = (off, s) => {
-    for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i));
-  };
-  writeStr(0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeStr(8, 'WAVE');
-  writeStr(12, 'fmt ');
-  view.setUint32(16, 16, true);          // fmt chunk size
-  view.setUint16(20, 1, true);           // PCM
-  view.setUint16(22, 1, true);           // mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate, true);  // byte rate (8-bit mono)
-  view.setUint16(32, 1, true);           // block align
-  view.setUint16(34, 8, true);           // bits per sample
-  writeStr(36, 'data');
-  view.setUint32(40, dataSize, true);
-  const bytes = new Uint8Array(buffer);
-  for (let i = 44; i < bytes.length; i++) bytes[i] = 128; // 8-bit silence
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  silentWavCache = 'data:audio/wav;base64,' + btoa(binary);
-  return silentWavCache;
 }
 
 // ── App ─────────────────────────────────────────────────────
@@ -145,14 +99,12 @@ class ColorSwitcherApp {
     this.timeLimitEndAt = 0;     // wall-clock end for time limits
     this.timeLimitTotalMs = 0;   // configured limit (ring denominator)
     this.endReason = '';         // 'manual' | 'time' | 'reps' | 'sequence'
-    this.previewTimer = null;
-    this.previewIdx = 0;
     this.lpTimer = null;         // long-press timer
     this.lpFired = false;
+    this.leavePending = false;   // hub-exit confirm open
+    this.wizSwipe = null;        // wizard swipe start point
     this.padPrev = {};           // gamepad edge state
     this.indicatorTimers = new Map();
-    this.audioCtx = null;
-    this.silentAudio = null;
     this.wakeLock = null;
 
     // DOM refs
@@ -201,7 +153,9 @@ class ColorSwitcherApp {
     this.repsVal = $('#repsVal');
     this.passesRow = $('#passesRow');
     this.passesPills = $('#passesPills');
-    this.previewBtn = $('#previewBtn');
+    this.backBtn = $('#csBackBtn');
+    this.leaveMenu = $('#leaveMenu');
+    this.wizBody = $('.wiz-body');
 
     // Bind once
     this._onKeyDown = this._onKeyDown.bind(this);
@@ -209,6 +163,9 @@ class ColorSwitcherApp {
     this._onPointerUpRun = this._onPointerUpRun.bind(this);
     this._loop = this._loop.bind(this);
     this._onVisibility = this._onVisibility.bind(this);
+    this._onWizDown = this._onWizDown.bind(this);
+    this._onWizUp = this._onWizUp.bind(this);
+    this._onWizCancel = this._onWizCancel.bind(this);
   }
 
   // ── Config ────────────────────────────────────────────────
@@ -228,7 +185,7 @@ class ColorSwitcherApp {
       if (typeof saved.endMs === 'number' && saved.endMs >= 15000 && saved.endMs <= 1800000) merged.endMs = saved.endMs;
       if (typeof saved.endReps === 'number' && saved.endReps >= 1 && saved.endReps <= 200) merged.endReps = saved.endReps;
       if ([0, 1, 2, 3].includes(saved.passes)) merged.passes = saved.passes;
-      for (const k of ['showName', 'speakNames', 'beeps', 'remote', 'hud', 'showTime']) {
+      for (const k of ['speakNames']) {
         if (typeof saved[k] === 'boolean') merged[k] = saved[k];
       }
       this.cfg = merged;
@@ -284,6 +241,16 @@ class ColorSwitcherApp {
     this.runScreen.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('visibilitychange', this._onVisibility);
 
+    this.backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.requestHubExit();
+    });
+    $('#leaveCancelBtn').addEventListener('click', () => this.closeLeaveMenu());
+    $('#leaveConfirmBtn').addEventListener('click', () => this.confirmHubExit());
+    this.wizBody.addEventListener('pointerdown', this._onWizDown);
+    this.wizBody.addEventListener('pointerup', this._onWizUp);
+    this.wizBody.addEventListener('pointercancel', this._onWizCancel);
+
     requestAnimationFrame(this._loop);
   }
 
@@ -297,12 +264,7 @@ class ColorSwitcherApp {
     }
     this.sequenceSection.style.display = this.cfg.order === 'sequence' ? '' : 'none';
     // Toggles
-    $('#showNameToggle').checked = this.cfg.showName;
     $('#speakToggle').checked = this.cfg.speakNames;
-    $('#beepToggle').checked = this.cfg.beeps;
-    $('#remoteToggle').checked = this.cfg.remote;
-    $('#hudToggle').checked = this.cfg.hud;
-    $('#showTimeToggle').checked = this.cfg.showTime;
     // Length
     for (const btn of this.endPills.querySelectorAll('.pill-btn')) {
       this.markPill(btn, btn.dataset.end === this.cfg.endMode);
@@ -388,7 +350,7 @@ class ColorSwitcherApp {
   chipEl(hex, label, on, removable) {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'chip' + (on ? ' on' : '');
+    chip.className = 'chip' + (on ? ' on' : '') + (removable ? ' removable' : '');
     const dot = document.createElement('span');
     dot.className = 'dot';
     dot.style.background = hex;
@@ -452,18 +414,22 @@ class ColorSwitcherApp {
     this.cfg.sequence.forEach((hex, idx) => {
       const color = active.get(hex);
       if (!color) return; // sanitized elsewhere; skip for safety
+      if (idx > 0) {
+        const arrow = document.createElement('span');
+        arrow.className = 'seq-arrow';
+        arrow.textContent = '›';
+        arrow.setAttribute('aria-hidden', 'true');
+        this.sequenceList.appendChild(arrow);
+      }
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'seq-chip';
+      chip.setAttribute('aria-label', `Remove ${this.displayName(color)} from sequence`);
       const dot = document.createElement('span');
       dot.className = 'dot';
       dot.style.background = hex;
       chip.appendChild(dot);
       chip.appendChild(document.createTextNode(this.displayName(color)));
-      const x = document.createElement('span');
-      x.className = 'x';
-      x.textContent = '✕';
-      chip.appendChild(x);
       chip.addEventListener('click', () => {
         this.cfg.sequence.splice(idx, 1);
         this.afterConfigChange();
@@ -513,8 +479,6 @@ class ColorSwitcherApp {
     let msg = '';
     if (this.step === 0) {
       if (!this.activeColors().length) msg = 'Select at least one color in play.';
-    } else if (this.step === 1) {
-      msg = this.drillMsg(this.activeColors());
     } else {
       msg = this.finalMsg();
     }
@@ -595,12 +559,7 @@ class ColorSwitcherApp {
         this.saveConfig();
       });
     };
-    bindToggle('#showNameToggle', 'showName');
     bindToggle('#speakToggle', 'speakNames');
-    bindToggle('#beepToggle', 'beeps');
-    bindToggle('#remoteToggle', 'remote');
-    bindToggle('#hudToggle', 'hud');
-    bindToggle('#showTimeToggle', 'showTime');
 
     this.wizNextBtn.addEventListener('click', () => {
       if (this.step === this.steps.length - 1) this.startSession();
@@ -620,9 +579,8 @@ class ColorSwitcherApp {
     $('#endBtn').addEventListener('click', () => this.endSession('manual'));
     $('#settingsBtn').addEventListener('click', () => this.exitSession());
 
-    // Run screen end + preview
+    // Run screen end
     this.endRunBtn.addEventListener('click', () => this.endSession('manual'));
-    this.previewBtn.addEventListener('click', () => this.startPreview());
 
     // Results
     $('#copyBtn').addEventListener('click', () => this.copySummary());
@@ -640,20 +598,21 @@ class ColorSwitcherApp {
   // ── Global inputs ─────────────────────────────────────────
 
   _onKeyDown(e) {
+    if (this.leavePending) {
+      if (e.key === 'Escape') this.closeLeaveMenu();
+      return;
+    }
     if (this.state === 'running') {
       if (e.key === 'Escape') { this.openPause(); return; }
       this.advance('key', e);
     } else if (this.state === 'paused') {
       if (e.key === 'Escape') this.resume();
-    } else if (this.state === 'preview') {
-      this.stopPreview();
     } else if (this.state === 'setup') {
       this.flashIndicator(this.indKey);
     }
   }
 
   _onPointerDownRun(e) {
-    if (this.state === 'preview') { this.stopPreview(); return; }
     if (this.state !== 'running') return;
     if (e.target.closest('#endRunBtn')) return;
     this.lpFired = false;
@@ -699,6 +658,58 @@ class ColorSwitcherApp {
     }
   }
 
+  _onWizDown(e) {
+    if (e.target.closest('input, button, .custom-row, .stepper, .range-row')) return;
+    this.wizSwipe = { x: e.clientX, y: e.clientY };
+  }
+
+  _onWizUp(e) {
+    if (!this.wizSwipe) return;
+    const dx = e.clientX - this.wizSwipe.x;
+    const dy = e.clientY - this.wizSwipe.y;
+    this.wizSwipe = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0) {
+      if (this.step < this.steps.length - 1 && !this.wizNextBtn.disabled) this.goStep(this.step + 1);
+    } else if (this.step > 0) {
+      this.goStep(this.step - 1);
+    }
+  }
+
+  _onWizCancel() {
+    this.wizSwipe = null;
+  }
+
+  requestHubExit() {
+    const live = this.state === 'running' || this.state === 'countdown' || this.state === 'paused';
+    if (live) {
+      this.leavePending = true;
+      this.leaveMenu.classList.add('active');
+      const cancel = $('#leaveCancelBtn');
+      if (cancel) cancel.focus();
+      return;
+    }
+    this.goHub();
+  }
+
+  closeLeaveMenu() {
+    this.leavePending = false;
+    this.leaveMenu.classList.remove('active');
+  }
+
+  confirmHubExit() {
+    this.leavePending = false;
+    this.leaveMenu.classList.remove('active');
+    this.clearTimers();
+    this.stopLimitTimer();
+    this.releaseWakeLock();
+    this.goHub();
+  }
+
+  goHub() {
+    location.href = (this.backBtn.getAttribute && this.backBtn.getAttribute('href')) || '/will/';
+  }
+
   // ── Session lifecycle ─────────────────────────────────────
 
   async startSession() {
@@ -706,13 +717,10 @@ class ColorSwitcherApp {
 
     this.setupScreen.classList.remove('active');
     this.resultsScreen.classList.remove('active');
-    this.runScreen.classList.remove('preview');
     this.runScreen.classList.add('active');
     this.pauseMenu.classList.remove('active');
 
     this.resetSession();
-    this.initAudio();                       // inside user gesture (Start click)
-    if (this.cfg.remote) this.enableRemote();
     await this.acquireWakeLock();
 
     this.state = 'countdown';
@@ -782,7 +790,6 @@ class ColorSwitcherApp {
     this.currentTOn = performance.now();
     this.awaiting = true;
     this.renderFlood(stim);
-    if (this.cfg.beeps) this.beep();
     if (this.cfg.speakNames) this.speak(stim.name);
     this.updateHud();
     if (this.cfg.timing === 'pace') this.schedulePace();
@@ -796,8 +803,7 @@ class ColorSwitcherApp {
 
   renderFlood(color) {
     this.runScreen.style.background = color.hex;
-    const showName = this.cfg.showName && color.name;
-    this.nameOverlay.textContent = showName ? color.name : '';
+    this.nameOverlay.textContent = color.name || '';
   }
 
   schedulePace() {
@@ -830,13 +836,11 @@ class ColorSwitcherApp {
     if (timed) {
       this.timeLimitTotalMs = this.cfg.endMs;
       this.timeLimitEndAt = performance.now() + this.cfg.endMs;
-      this.timerRingWrap.style.display = '';
-      this.updateTimerDisplay();
     }
-    if (timed || this.cfg.showTime) {
-      clearInterval(this.timerId);
-      this.timerId = setInterval(() => this.tickTimer(), 200);
-    }
+    this.timerRingWrap.style.display = '';
+    this.updateTimerDisplay();
+    clearInterval(this.timerId);
+    this.timerId = setInterval(() => this.tickTimer(), 200);
   }
 
   elapsedMs() {
@@ -845,21 +849,23 @@ class ColorSwitcherApp {
   }
 
   updateTimerDisplay() {
-    if (!this.timeLimitEndAt) return;
-    const total = this.timeLimitTotalMs || this.cfg.endMs;
-    const left = Math.max(0, this.timeLimitEndAt - performance.now());
-    const elapsed = Math.min(total, Math.max(0, total - left));
-    this.timerEl.textContent = `${formatDuration(elapsed)}/${formatDuration(total)}`;
-    this.ringProgress.style.strokeDashoffset = String(RING_CIRC * (1 - elapsed / total));
+    if (this.timeLimitEndAt) {
+      const total = this.timeLimitTotalMs || this.cfg.endMs;
+      const left = Math.max(0, this.timeLimitEndAt - performance.now());
+      const elapsed = Math.min(total, Math.max(0, total - left));
+      this.timerEl.textContent = `${formatDuration(elapsed)}/${formatDuration(total)}`;
+      this.ringProgress.style.display = '';
+      this.ringProgress.style.strokeDashoffset = String(RING_CIRC * (1 - elapsed / total));
+    } else {
+      this.timerEl.textContent = formatDuration(this.elapsedMs());
+      this.ringProgress.style.display = 'none';
+    }
   }
 
   tickTimer() {
     if (this.state !== 'running') return;
-    if (this.timeLimitEndAt) {
-      this.updateTimerDisplay();
-      if (performance.now() >= this.timeLimitEndAt) { this.endSession('time'); return; }
-    }
-    if (this.cfg.showTime) this.updateHud();
+    this.updateTimerDisplay();
+    if (this.timeLimitEndAt && performance.now() >= this.timeLimitEndAt) this.endSession('time');
   }
 
   stopLimitTimer() {
@@ -868,6 +874,7 @@ class ColorSwitcherApp {
   }
 
   advance(source, evt) {
+    if (this.leavePending) return;
     if (this.state !== 'running' || !this.awaiting) return;
     if (evt && evt.repeat) return;
     const now = performance.now();
@@ -913,7 +920,7 @@ class ColorSwitcherApp {
 
   flashAck() {
     this.runScreen.classList.add('ack');
-    setTimeout(() => this.runScreen.classList.remove('ack'), 90);
+    setTimeout(() => this.runScreen.classList.remove('ack'), 70);
   }
 
   updateHud() {
@@ -923,63 +930,12 @@ class ColorSwitcherApp {
     }
     const reps = this.attempts.filter(a => a.kind === 'rep');
     const repsLimited = this.cfg.endMode === 'reps' || this.cfg.endMode === 'either';
-    if (!this.cfg.hud && !repsLimited && !this.cfg.showTime) {
-      this.hudEl.style.display = 'none';
-      return;
-    }
-    let text = repsLimited ? `R${reps.length}/${this.cfg.endReps}` : (this.cfg.hud ? `R${reps.length}` : '');
-    if (this.cfg.timing === 'manual' && reps.length && (this.cfg.hud || repsLimited)) {
+    let text = repsLimited ? `R${reps.length}/${this.cfg.endReps}` : `R${reps.length}`;
+    if (this.cfg.timing === 'manual' && reps.length) {
       text += ` · ${formatSecs(reps[reps.length - 1].dt)}`;
-    }
-    if (this.cfg.showTime) {
-      const t = this.timeLabel();
-      text = text ? `${text} · ${t}` : t;
     }
     this.hudEl.textContent = text;
     this.hudEl.style.display = '';
-  }
-
-  timeLabel() {
-    if (this.timeLimitEndAt) {
-      const total = this.timeLimitTotalMs;
-      const left = Math.max(0, this.timeLimitEndAt - performance.now());
-      return `${formatDuration(Math.min(total, total - left))}/${formatDuration(total)}`;
-    }
-    return formatDuration(this.elapsedMs());
-  }
-
-  // ── Color preview ─────────────────────────────────────────
-
-  startPreview() {
-    if (this.state !== 'setup') return;
-    if (!this.activeColors().length) return;
-    this.state = 'preview';
-    this.previewIdx = 0;
-    this.setupScreen.classList.remove('active');
-    this.runScreen.classList.add('active', 'preview');
-    this.hudEl.style.display = 'none';
-    this.countdownEl.style.display = 'none';
-    this.previewNext();
-  }
-
-  previewNext() {
-    if (this.state !== 'preview') return;
-    const colors = this.activeColors();
-    if (!colors.length) { this.stopPreview(); return; }
-    const color = colors[this.previewIdx % colors.length];
-    this.previewIdx++;
-    this.renderFlood(color);
-    this.previewTimer = setTimeout(() => this.previewNext(), 600);
-  }
-
-  stopPreview() {
-    if (this.state !== 'preview') return;
-    clearTimeout(this.previewTimer);
-    this.previewTimer = null;
-    this.runScreen.classList.remove('active', 'preview');
-    this.runScreen.style.background = '';
-    this.nameOverlay.textContent = '';
-    this.showSetup();
   }
 
   // ── Pause / end ───────────────────────────────────────────
@@ -1023,13 +979,12 @@ class ColorSwitcherApp {
     this.dismissPauseFocus();
     this.clearTimers();
     this.releaseWakeLock();
-    this.disableRemote();
     this.pauseMenu.classList.remove('active');
     this.startSession();
   }
 
   endSession(reason = 'manual') {
-    if (this.state === 'done' || this.state === 'preview') return;
+    if (this.state === 'done') return;
     this.dismissPauseFocus();
     this.endReason = reason;
     this.state = 'done';
@@ -1037,11 +992,10 @@ class ColorSwitcherApp {
     this.clearTimers();
     this.stopLimitTimer();
     this.pauseMenu.classList.remove('active');
-    this.runScreen.classList.remove('active', 'preview');
+    this.runScreen.classList.remove('active');
     this.runScreen.style.background = '';
     this.nameOverlay.textContent = '';
     this.releaseWakeLock();
-    this.disableRemote();
     this.showResults();
   }
 
@@ -1052,11 +1006,10 @@ class ColorSwitcherApp {
     this.clearTimers();
     this.stopLimitTimer();
     this.pauseMenu.classList.remove('active');
-    this.runScreen.classList.remove('active', 'preview');
+    this.runScreen.classList.remove('active');
     this.runScreen.style.background = '';
     this.nameOverlay.textContent = '';
     this.releaseWakeLock();
-    this.disableRemote();
     this.showSetup();
   }
 
@@ -1077,9 +1030,6 @@ class ColorSwitcherApp {
     const rate = times.length ? (times.length / (activeMs / 60000)) : 0;
     const med = median(times);
     const fast = times.length ? Math.min(...times) : null;
-    const s = sd(times);
-    const cv = (s != null && mean(times)) ? (s / mean(times)) * 100 : null;
-    const earlyCount = this.attempts.filter(a => a.kind === 'early').length;
 
     const stats = [
       { label: 'Reps', value: String(times.length) },
@@ -1087,8 +1037,6 @@ class ColorSwitcherApp {
       { label: 'Reps / min', value: times.length ? rate.toFixed(1) : '—' },
       { label: 'Median rep', value: formatSecs(med) },
       { label: 'Fastest', value: formatSecs(fast) },
-      { label: 'CV', value: cv == null ? '—' : cv.toFixed(0) + '%' },
-      { label: 'Early inputs', value: String(earlyCount) },
     ];
     if (this.cfg.timing === 'pace' && this.acks.length) {
       stats.push({ label: 'Acks (median)', value: formatSecs(median(this.acks)) });
@@ -1148,11 +1096,11 @@ class ColorSwitcherApp {
     // Copy summary
     const mode = this.cfg.timing === 'manual' ? 'Manual' : 'Pace';
     const order = this.cfg.order === 'random' ? 'Random' : 'Sequence';
-    const reasonMap = { manual: 'manual end', time: 'time limit', reps: 'rep target', sequence: 'sequence complete' };
     const lines = [
-      `Color Switcher — ${mode} · ${order} · ${active.length} colors`,
-      `Ended by: ${reasonMap[this.endReason] || 'manual end'}`,
-      `${times.length} reps in ${formatDuration(activeMs)}${times.length ? ` (${rate.toFixed(1)} reps/min)` : ''}`,
+      `Color Switcher · ${mode} · ${order} · ${active.length} colors · ${formatDuration(activeMs)}`,
+      times.length
+        ? `${times.length} reps · ${rate.toFixed(1)}/min · median ${formatSecs(med)} · fastest ${formatSecs(fast)}`
+        : 'No reps recorded',
     ];
     if (times.length) {
       const perColor = active
@@ -1160,10 +1108,8 @@ class ColorSwitcherApp {
         .filter(([, l]) => l && l.length)
         .map(([c, l]) => `${this.displayName(c)} ${formatSecs(median(l))}`)
         .join(' · ');
-      lines.push(`Median rep ${formatSecs(med)} · fastest ${formatSecs(fast)}${cv == null ? '' : ` · CV ${cv.toFixed(0)}%`}`);
       if (perColor) lines.push(`Per color: ${perColor}`);
     }
-    lines.push(`Early inputs: ${earlyCount}`);
     if (this.cfg.timing === 'pace' && this.acks.length) {
       lines.push(`Acks: ${this.acks.length} · median ${formatSecs(median(this.acks))}`);
     }
@@ -1198,35 +1144,6 @@ class ColorSwitcherApp {
 
   // ── Audio ─────────────────────────────────────────────────
 
-  initAudio() {
-    try {
-      if (!this.audioCtx) {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (Ctx) this.audioCtx = new Ctx();
-      }
-      if (this.audioCtx && this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume().catch(() => {});
-      }
-    } catch (e) { /* audio unavailable */ }
-  }
-
-  beep() {
-    if (!this.audioCtx) return;
-    try {
-      const t = this.audioCtx.currentTime;
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
-      osc.connect(gain).connect(this.audioCtx.destination);
-      osc.start(t);
-      osc.stop(t + 0.1);
-    } catch (e) { /* ignore */ }
-  }
-
   speak(name) {
     if (!name || name.startsWith('#')) return;
     if (!('speechSynthesis' in window)) return;
@@ -1236,44 +1153,6 @@ class ColorSwitcherApp {
       u.rate = 0.95;
       speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
-  }
-
-  // ── Remote (MediaSession) ─────────────────────────────────
-
-  enableRemote() {
-    if (!('mediaSession' in navigator)) return;
-    try {
-      this.silentAudio = new Audio(silentWavDataUri());
-      this.silentAudio.loop = true;
-      this.silentAudio.play().catch(() => {});
-      if (window.MediaMetadata) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: 'Color Switcher',
-          artist: 'Clinic drill',
-        });
-      }
-      const set = (action, handler) => {
-        try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) { /* unsupported */ }
-      };
-      set('play', () => { if (this.state === 'paused') this.resume(); });
-      set('pause', () => this.openPause());
-      set('nexttrack', () => { if (this.state === 'running' && this.awaiting) this.advance('remote'); });
-    } catch (e) { /* ignore */ }
-  }
-
-  disableRemote() {
-    if ('mediaSession' in navigator) {
-      try {
-        for (const a of ['play', 'pause', 'nexttrack']) {
-          navigator.mediaSession.setActionHandler(a, null);
-        }
-        navigator.mediaSession.metadata = null;
-      } catch (e) { /* ignore */ }
-    }
-    if (this.silentAudio) {
-      try { this.silentAudio.pause(); this.silentAudio.src = ''; } catch (e) { /* ignore */ }
-      this.silentAudio = null;
-    }
   }
 
   // ── Wake lock ─────────────────────────────────────────────

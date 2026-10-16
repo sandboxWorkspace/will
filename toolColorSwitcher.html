@@ -131,7 +131,7 @@
         /* ══ SETUP SCREEN (wizard) ══ */
         #setupScreen { overflow: hidden; }
         .wiz-head {
-            width: 100%; max-width: 560px; margin: 0 auto;
+            width: 100%; max-width: 640px; margin: 0 auto;
             display: flex; align-items: center; justify-content: space-between;
             padding: var(--space-m) var(--space-m) 0;
         }
@@ -147,12 +147,12 @@
         .wiz-dots .dot.active { background: var(--primary-color); transform: scale(1.25); }
         .wiz-body {
             flex: 1; min-height: 0; overflow-y: auto;
-            width: 100%; max-width: 560px; margin: 0 auto;
-            padding: var(--space-s) var(--space-m) var(--space-s);
+            width: 100%; max-width: 640px; margin: 0 auto;
+            padding: var(--space-m) var(--space-m) var(--space-l);
             display: flex; flex-direction: column;
         }
         .wiz-foot {
-            width: 100%; max-width: 560px; margin: 0 auto;
+            width: 100%; max-width: 640px; margin: 0 auto;
             display: flex; flex-direction: column; gap: var(--space-s);
             padding: var(--space-s) var(--space-m) calc(var(--space-s) + env(safe-area-inset-bottom));
         }
@@ -165,10 +165,11 @@
             from { opacity: 0; transform: translateX(14px); }
             to { opacity: 1; transform: none; }
         }
-        .step-title { margin: 0; font-size: var(--font-m); font-weight: 700; text-align: center; }
-        .step-q { font-size: var(--font-s); color: var(--text-subtle); margin: 2px 0 var(--space-m); text-align: center; }
-        .group { width: 100%; max-width: 440px; margin-left: auto; margin-right: auto; }
+
+        .group { width: 100%; max-width: 520px; margin-left: auto; margin-right: auto; }
         .group + .group { margin-top: var(--space-l); }
+        .step[data-step="1"] { padding-top: var(--space-s); }
+        .step[data-step="1"] .group + .group { margin-top: calc(var(--space-l) + var(--space-s)); }
         .group .label { margin-bottom: var(--space-xs); text-align: center; }
         .summary-line {
             text-align: center; font-size: var(--font-s); color: var(--text-subtle);
@@ -176,7 +177,7 @@
         }
         .add-chip { border-style: dashed; color: var(--text-subtle); }
         .wrap {
-            width: 100%; max-width: 560px;
+            width: 100%; max-width: 640px;
             padding: 0 var(--space-m) calc(var(--space-l) + env(safe-area-inset-bottom));
             display: flex; flex-direction: column; gap: var(--space-m);
         }
@@ -197,10 +198,11 @@
 
         /* ── Color chips ── */
         .chips { display: flex; flex-wrap: wrap; gap: var(--space-s); justify-content: center; }
+        .chip { position: relative; }
         .chip {
-            display: inline-flex; align-items: center; gap: 8px;
-            min-height: var(--touch-min);
-            padding: 6px 14px 6px 10px;
+            display: inline-flex; align-items: center; gap: 10px;
+            min-height: 48px;
+            padding: 8px 16px 8px 12px;
             border: 1.5px solid var(--border);
             border-radius: 999px;
             background: var(--surface);
@@ -211,7 +213,7 @@
             user-select: none;
         }
         .chip .dot {
-            width: 16px; height: 16px; border-radius: 50%;
+            width: 18px; height: 18px; border-radius: 50%;
             border: 1px solid rgba(0,0,0,0.25);
             flex-shrink: 0;
         }
@@ -266,17 +268,17 @@
         }
 
         /* ── Sequence editor ── */
-        .seq-list { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-s); justify-content: center; }
+        .seq-list { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-s); justify-content: center; align-items: center; }
         .seq-chip {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 10px 8px 12px; border-radius: 999px;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px 8px 14px; border-radius: 999px;
             border: 1.5px solid var(--border-light);
             background: var(--surface); color: var(--text);
             font-size: var(--font-s); cursor: pointer;
-            min-height: 40px; user-select: none;
+            min-height: 44px; user-select: none;
         }
-        .seq-chip .dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); }
-        .seq-chip .x { color: var(--text-subtle); font-size: 0.85rem; }
+        .seq-chip .dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); }
+        .seq-arrow { color: var(--text-subtle); font-size: var(--font-m); font-weight: 700; }
         .seq-empty { font-size: var(--font-s); color: var(--text-subtle); font-style: italic; margin-top: var(--space-s); }
         .loop-badge {
             display: inline-block; margin-left: var(--space-s);
@@ -307,7 +309,7 @@
         .toggle-row + .toggle-row { border-top: 1px solid var(--border); }
         .toggle-text { display: flex; flex-direction: column; gap: 2px; }
         .toggle-name { font-size: var(--font-s); color: var(--text); }
-        .toggle-note { font-size: var(--font-xs); color: var(--text-subtle); }
+
 
         /* ── Buttons ── */
         .btn {
@@ -342,6 +344,7 @@
             touch-action: none; user-select: none;
             overscroll-behavior: none;
             background: var(--blank);
+            transition: background-color 110ms ease-out, box-shadow 90ms ease-out;
             display: none;
             align-items: center; justify-content: center;
             -webkit-touch-callout: none;
@@ -353,13 +356,7 @@
             text-align: center; padding: 0 var(--space-m);
             line-height: 1.05; pointer-events: none;
             color: #fff;
-            /* Heavy em-scaled outline: keeps white legible on any flood color */
-            text-shadow:
-                -0.045em -0.045em 0 #000, 0.045em -0.045em 0 #000,
-                -0.045em  0.045em 0 #000, 0.045em  0.045em 0 #000,
-                0 -0.05em 0 #000, 0 0.05em 0 #000,
-                -0.05em 0 0 #000, 0.05em 0 0 #000,
-                0 0.05em 0.12em rgba(0,0,0,0.45);
+            text-shadow: 0 2px 14px rgba(0,0,0,0.35);
         }
         #countdown {
             position: absolute; inset: 0;
@@ -375,7 +372,7 @@
             padding: 6px 10px; border-radius: 8px;
             pointer-events: none;
         }
-        #runScreen.ack { box-shadow: inset 0 0 0 8px rgba(255,255,255,0.35); }
+        #runScreen.ack { box-shadow: inset 0 0 0 8px rgba(255,255,255,0.12); }
         #endRunBtn {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right));
@@ -411,25 +408,14 @@
             font-variant-numeric: tabular-nums;
         }
         .stepper button:disabled { opacity: 0.35; }
-        #previewHint {
-            position: absolute;
-            bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.6); color: #fff;
-            font-size: var(--font-s); padding: 8px 14px; border-radius: 8px;
-            pointer-events: none; white-space: nowrap; display: none;
-        }
-        #runScreen.preview #previewHint { display: block; }
-        #runScreen.preview #endRunBtn,
-        #runScreen.preview #timerRingWrap,
-        #runScreen.preview #hud { display: none !important; }
 
-        /* ══ PAUSE MENU ══ */
-        #pauseMenu {
+        /* ══ MENUS ══ */
+        #pauseMenu, #leaveMenu {
             position: fixed; inset: 0; z-index: 50;
             display: none; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.55); padding: var(--space-l);
         }
-        #pauseMenu.active { display: flex; }
+        #pauseMenu.active, #leaveMenu.active { display: flex; }
         .menu-card {
             width: 100%; max-width: 320px;
             background: var(--card-bg); border-radius: 16px;
@@ -504,7 +490,9 @@
     <main id="colorSwitcher">
         <!-- TOP BAR -->
         <div id="csTopBar">
-            <a id="csBackBtn" href="/will/" aria-label="Back to the hub">←</a>
+            <a id="csBackBtn" href="/will/" aria-label="Back to hub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+            </a>
             <h1 class="cs-title">Color Switcher</h1>
             <label class="switch theme-switch">
                 <input type="checkbox" id="themeToggleInput" aria-label="Toggle dark theme">
@@ -515,37 +503,50 @@
         <!-- ══ SETUP (wizard) ══ -->
         <div id="setupScreen" class="screen active">
             <div class="wiz-head">
-                <span id="wizCount" class="wiz-count">1/3</span>
+                <span id="wizCount" class="wiz-count">1/2</span>
                 <div class="wiz-dots" id="wizDots" aria-hidden="true">
-                    <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+                    <span class="dot active"></span><span class="dot"></span>
                 </div>
             </div>
             <div class="wiz-body">
 
                 <!-- Step 1: Colors -->
                 <section class="step active" data-step="0">
-                    <h2 class="step-title">Colors</h2>
-                    <p class="step-q">Which dots are on the floor?</p>
                     <div id="paletteChips" class="chips"></div>
                     <div id="customRow" class="custom-row">
                         <input type="color" id="customColorInput" value="#8B5CF6" aria-label="Custom color">
                         <input type="text" id="customLabelInput" placeholder="Label (optional, ≤12)" maxlength="12" autocomplete="off" aria-label="Custom color label">
                         <button id="addCustomBtn" class="btn btn-ghost" type="button">Add</button>
                     </div>
-                    <p class="hint">Tap to toggle a color. Random order needs 2+ · Sequence needs 1+.</p>
+                    <div class="card group" style="margin-top: var(--space-l);">
+                        <div class="toggle-row">
+                            <span class="toggle-text">
+                                <span class="toggle-name" id="speakLabel">Speak color name</span>
+                            </span>
+                            <label class="switch"><input type="checkbox" id="speakToggle" aria-labelledby="speakLabel"><span class="slider round"></span></label>
+                        </div>
+                    </div>
+                    <div class="group">
+                        <span class="label">Test inputs</span>
+                        <div class="indicators">
+                            <span class="ind" id="indTap">Tap / Click</span>
+                            <span class="ind" id="indKey">Key / Clicker</span>
+                            <span class="ind" id="indPad">Gamepad</span>
+                        </div>
+                    </div>
+                    <div class="summary-line" id="summaryLine"></div>
+                    <button id="resetBtn" class="link-btn" type="button" style="display:block; margin:0 auto;">↺ Reset</button>
+                    <p class="mvp-note">Hold to pause · ✕ ends · Experimental</p>
                 </section>
 
                 <!-- Step 2: Drill -->
                 <section class="step" data-step="1">
-                    <h2 class="step-title">Drill</h2>
-                    <p class="step-q">How does the drill run?</p>
                     <div class="group">
                         <span class="label">Timing</span>
                         <div class="pill-group" id="timingPills" role="group" aria-label="Timing">
-                            <button class="pill-btn" data-timing="manual" type="button">Manual advance</button>
+                            <button class="pill-btn" data-timing="manual" type="button">Manual</button>
                             <button class="pill-btn" data-timing="pace" type="button">Pace (2–5 s)</button>
                         </div>
-                        <p class="hint">Manual: you advance on tap/clicker. Pace: colors change on their own.</p>
                     </div>
                     <div class="group">
                         <span class="label">Order</span>
@@ -557,7 +558,7 @@
                             <span class="label" style="margin-bottom: var(--space-xs);">Sequence</span>
                             <div id="sequenceAdd" class="chips"></div>
                             <div id="sequenceList" class="seq-list"></div>
-                            <div id="sequenceEmpty" class="seq-empty">Tap a color above to add it to the sequence.</div>
+                            <div id="sequenceEmpty" class="seq-empty">Tap to add</div>
                         </div>
                     </div>
                     <div class="group">
@@ -600,74 +601,7 @@
                                 <button class="pill-btn" data-passes="0" type="button">∞</button>
                             </div>
                         </div>
-                        <p class="hint">Open needs a manual end (✕ on the run screen). Time/Reps auto-end and show progress.</p>
                     </div>
-                </section>
-
-                <!-- Step 3: Go -->
-                <section class="step" data-step="2">
-                    <h2 class="step-title">Go</h2>
-                    <p class="step-q">Options and pre-flight check.</p>
-                    <div class="card group">
-                        <span class="label">Display</span>
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="showNameLabel">Show color name</span>
-                                <span class="toggle-note">Large text over the color</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="showNameToggle" aria-labelledby="showNameLabel"><span class="slider round"></span></label>
-                        </div>
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="hudLabel">Rep HUD</span>
-                                <span class="toggle-note">Tiny counter in the corner</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="hudToggle" aria-labelledby="hudLabel"><span class="slider round"></span></label>
-                        </div>
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="showTimeLabel">Show running time</span>
-                                <span class="toggle-note">Elapsed time in the HUD</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="showTimeToggle" aria-labelledby="showTimeLabel"><span class="slider round"></span></label>
-                        </div>
-                    </div>
-                    <div class="card group">
-                        <span class="label">Audio &amp; remote</span>
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="speakLabel">Speak color name</span>
-                                <span class="toggle-note">Voice says each color</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="speakToggle" aria-labelledby="speakLabel"><span class="slider round"></span></label>
-                        </div>
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="beepLabel">Beeps</span>
-                                <span class="toggle-note">⚠ may pause other audio apps</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="beepToggle" aria-labelledby="beepLabel"><span class="slider round"></span></label>
-                        </div>
-                        <div class="toggle-row">
-                            <span class="toggle-text">
-                                <span class="toggle-name" id="remoteLabel">Remote (Watch / AirPods)</span>
-                                <span class="toggle-note">⚠ pauses other audio · experimental</span>
-                            </span>
-                            <label class="switch"><input type="checkbox" id="remoteToggle" aria-labelledby="remoteLabel"><span class="slider round"></span></label>
-                        </div>
-                    </div>
-                    <div class="group">
-                        <span class="label">Test inputs — tap or press</span>
-                        <div class="indicators">
-                            <span class="ind" id="indTap">Tap / Click</span>
-                            <span class="ind" id="indKey">Key / Clicker</span>
-                            <span class="ind" id="indPad">Gamepad</span>
-                        </div>
-                        <button id="previewBtn" class="btn btn-ghost" type="button" style="width:100%; margin-top: var(--space-s);">Preview colors</button>
-                    </div>
-                    <div class="summary-line" id="summaryLine"></div>
-                    <button id="resetBtn" class="link-btn" type="button" style="display:block; margin:0 auto;">Reset settings</button>
-                    <p class="mvp-note">✕ ends the session · hold screen 600&nbsp;ms to pause. Experimental tool.</p>
                 </section>
 
             </div>
@@ -694,7 +628,6 @@
                 </svg>
                 <div id="timer">0:00/0:00</div>
             </div>
-            <div id="previewHint">Tap anywhere to stop preview</div>
         </div>
 
         <!-- ══ PAUSE MENU ══ -->
@@ -710,6 +643,17 @@
             </div>
         </div>
 
+        <!-- ══ LEAVE CONFIRM ══ -->
+        <div id="leaveMenu" role="dialog" aria-modal="true" aria-labelledby="leaveTitle">
+            <div class="menu-card">
+                <h2 id="leaveTitle">Leave drill?</h2>
+                <div class="btn-row">
+                    <button id="leaveCancelBtn" class="btn btn-primary" type="button">Keep drilling</button>
+                    <button id="leaveConfirmBtn" class="btn btn-ghost" type="button">Leave</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ══ RESULTS ══ -->
         <div id="resultsScreen" class="screen">
             <div class="wrap">
@@ -717,7 +661,7 @@
                 <div id="statsGrid" class="stat-grid"></div>
                 <div id="perColorList" class="card"></div>
                 <div class="card">
-                    <span class="label">Copy-ready summary</span>
+                    <span class="label">Copy summary</span>
                     <textarea id="summaryText" readonly></textarea>
                     <div class="btn-row" style="margin-top: var(--space-s);">
                         <button id="copyBtn" class="btn" type="button">Copy</button>
@@ -725,8 +669,8 @@
                     </div>
                 </div>
                 <div class="btn-row">
-                    <button id="playAgainBtn" class="btn btn-primary" type="button">Play Again</button>
-                    <button id="backSetupBtn" class="btn btn-ghost" type="button">Back to Setup</button>
+                    <button id="playAgainBtn" class="btn btn-primary" type="button">▶ Go again</button>
+                    <button id="backSetupBtn" class="btn btn-ghost" type="button">⚙ Reconfigure</button>
                 </div>
             </div>
         </div>
