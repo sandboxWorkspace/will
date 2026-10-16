@@ -55,6 +55,15 @@ const NEAR_PAD = 140;
 // Recent-prediction window the dwell-anchor refinement takes its median from
 const PRED_RING = 10;
 
+// Captions strip: expiring history of speech + system notices (initial
+// values — tune from use). Speech captions are tap-to-repeat; a repeat
+// refreshes the entry instead of duplicating it. Nothing is stored.
+const CAPTION_MAX = 3;
+const CAPTION_TTL_SPEECH_MS = 15000;
+const CAPTION_TTL_NOTICE_MS = 6000;
+const CAPTION_FADE_MS = 600;
+const CAPTION_TICK_MS = 500;
+
 // Phase-1 selection-timing tunables (INITIAL defaults — Phase 3 tunes them
 // per device/user from the diagnostics; they are not validated settings):
 //   HYS_MS    120 — hover switches need a stable new target this long.
@@ -104,6 +113,7 @@ const state = {
     lastSample: null, // latest gaze sample (freshness/settling gate for anchors)
     lastSampleAt: 0,
     predRing: [], // recent signal bundles — median behind the dwell anchor
+    messages: [], // captions strip entries: { html, speech, expiresAt }
     settings: {
         mode: 'auto',
         dwellMs: 800,
@@ -120,7 +130,8 @@ const BACK_TILE = { id: '__back', label: 'Back', icon: '⬅', go: '__back' };
 const MY_BOARDS_TILE = { id: '__myboards', label: 'My boards', icon: '📋', go: '__myboards' };
 
 const els = {};
-let lastSaidEl, statusBarEl, gazeDotEl, root;
+let captionsEl, statusBarEl, gazeDotEl, root;
+let captionTicker = null;
 
 // Dwell/hover state machine for the cursor modes (auto/head) — owns re-arm,
 // dropout grace, reacquisition gating, and hover hysteresis. Directional
@@ -138,13 +149,12 @@ const dwellCtl = createDwellController({
  */
 export async function initBoard() {
     root = document.getElementById('aac-board');
-    lastSaidEl = document.getElementById('last-said');
+    captionsEl = document.getElementById('captions');
     statusBarEl = document.getElementById('gaze-status');
     gazeDotEl = document.getElementById('gaze-dot');
-    if (!root || !lastSaidEl) return;
+    if (!root || !captionsEl) return;
     Object.assign(els, {
         gazeToggle: document.getElementById('gaze-toggle'),
-        calibrate: document.getElementById('calibrate-btn'),
         editToggle: document.getElementById('edit-toggle'),
         settings: document.getElementById('settings-btn'),
         status: statusBarEl,
@@ -174,6 +184,8 @@ export async function initBoard() {
         calibStatus: document.getElementById('calib-status'),
         setEmoji: document.getElementById('set-emoji'),
         setCols: document.getElementById('set-cols'),
+        setEdit: document.getElementById('set-edit'),
+        setRecalib: document.getElementById('set-recalib'),
         boardNewOpen: document.getElementById('boardnew-open'),
         boardNewModal: document.getElementById('boardnew-modal'),
         boardNewName: document.getElementById('boardnew-name'),
@@ -211,7 +223,7 @@ export async function initBoard() {
     wirePad();
     updateModePill();
     updatePadVisibility();
-    updateFeedback('Tap a tile to speak it aloud.');
+    updateFeedback('Tap a tile to speak it aloud.', { ttl: 10000 });
 }
 
 // Calibration fits from retired pre-persistence engines are dead weight in
@@ -299,7 +311,7 @@ window.addEventListener('resize', () => {
     if (Math.abs(fitAspect - nowAspect) / fitAspect < 0.15) return;
     if (rotateHintTimer) clearTimeout(rotateHintTimer);
     rotateHintTimer = setTimeout(() => {
-        updateFeedback('Screen turned — tap Calibrate to re-fit for accuracy.');
+        updateFeedback('Screen turned — recalibrate in Settings to re-fit for accuracy.');
     }, 900);
 });
 
@@ -531,6 +543,20 @@ const tileEls = () => Array.from(root.querySelectorAll('.aac-tile'));
 // ── Touch / keyboard ────────────────────────────────────────
 
 function wireTouchAndKeys() {
+    // Captions: tap a SPEECH caption to repeat it (refreshes to the front
+    // with a new TTL — a repeat, not a duplicate entry).
+    captionsEl.addEventListener('click', (event) => {
+        const el = event.target.closest('.aac-caption-speech');
+        if (!el) return;
+        const m = state.messages[Number(el.dataset.mindex)];
+        if (!m || !m.speech) return;
+        speech.speak(m.speech);
+        const now = performance.now();
+        state.messages = state.messages.filter((x) => x !== m);
+        state.messages.unshift({ ...m, expiresAt: now + CAPTION_TTL_SPEECH_MS });
+        renderCaptions(true);
+    });
+
     root.addEventListener('click', (event) => {
         const tileEl = event.target.closest('.aac-tile');
         if (!tileEl) return;
@@ -587,8 +613,9 @@ function activate(index) {
         navigate(tile.go);
         return;
     }
-    speech.speak(tile.speech || tile.label);
-    updateFeedback(`Said: <strong>${escapeHtml(tile.speech || tile.label)}</strong>`);
+    const phrase = tile.speech || tile.label;
+    speech.speak(phrase);
+    pushMessage(escapeHtml(phrase), { speech: phrase, ttl: CAPTION_TTL_SPEECH_MS });
     const el = tileEls()[index];
     if (el) {
         el.classList.add('just-spoken');
@@ -596,8 +623,58 @@ function activate(index) {
     }
 }
 
-function updateFeedback(html) {
-    lastSaidEl.innerHTML = html;
+// ── Captions strip: expiring speech + notices ────────────────
+
+/**
+ * Add an entry to the captions strip. Speech entries (speech != null) are
+ * tap-to-repeat; notices (default) are plain text. Both expire — the strip
+ * is fully self-clearing and nothing is stored.
+ */
+function pushMessage(html, { speech = null, ttl = CAPTION_TTL_NOTICE_MS } = {}) {
+    const now = performance.now();
+    state.messages.unshift({ html, speech, expiresAt: now + ttl });
+    if (state.messages.length > CAPTION_MAX) state.messages.length = CAPTION_MAX;
+    renderCaptions(true);
+    if (captionTicker) return;
+    captionTicker = setInterval(() => renderCaptions(false), CAPTION_TICK_MS);
+}
+
+function renderCaptions(rebuild) {
+    if (!captionsEl) return;
+    const now = performance.now();
+    const alive = state.messages.filter((m) => m.expiresAt > now);
+    if (alive.length !== state.messages.length) rebuild = true;
+    state.messages = alive;
+    if (!state.messages.length) {
+        captionsEl.innerHTML = '';
+        if (captionTicker) {
+            clearInterval(captionTicker);
+            captionTicker = null;
+        }
+        applyGridCols(); // board reclaims the strip's space
+        return;
+    }
+    if (rebuild) {
+        captionsEl.innerHTML = state.messages
+            .map(
+                (m, i) =>
+                    (m.speech
+                        ? `<button type="button" class="aac-caption aac-caption-speech`
+                        : `<div class="aac-caption`) +
+                    `${i === 0 ? ' aac-caption-new' : ''}"${m.speech ? ` data-mindex="${i}"` : ''}>${m.html}</${m.speech ? 'button' : 'div'}>`
+            )
+            .join('');
+        applyGridCols(); // board height changed with the strip
+    }
+    captionsEl.querySelectorAll('.aac-caption').forEach((el, i) => {
+        const m = state.messages[i];
+        el.classList.toggle('dying', Boolean(m && m.expiresAt - now < CAPTION_FADE_MS));
+    });
+}
+
+/** System feedback == an expiring caption notice (kept as updateFeedback for call-site clarity). */
+function updateFeedback(html, opts) {
+    pushMessage(html, opts);
 }
 
 // ── Gaze: engine lifecycle + mode management ───────────────
@@ -613,17 +690,8 @@ function wireGaze() {
         await enterPreferredMode();
     });
 
-    els.calibrate.addEventListener('click', async () => {
-        speech.prime();
-        if (!(await ensureEngine())) return;
-        // Recalibrate the kind the Settings mode resolves to
-        const kind = state.settings.mode === 'head' ? 'head' : 'gaze';
-        launchCalibration(
-            kind,
-            () => activateMode(kind === 'head' ? 'head' : 'auto'),
-            () => {}
-        );
-    });
+    // (Calibrate lives in Settings → Calibration → Recalibrate; first Gaze
+    // start still auto-runs the guided flow when no saved fit exists.)
 
     document.addEventListener('aac:gaze-dir', (event) => {
         if (!state.gazeOn || state.mode !== 'directional' || state.lock) return;
@@ -740,7 +808,7 @@ async function enterPreferredMode() {
 function fallbackToDirectional() {
     activateMode('directional');
     updateFeedback(
-        'Calibration not completed — using Directional gaze (no calibration needed). Tap Calibrate anytime to set up the cursor.'
+        'Calibration not completed — using Directional gaze (no calibration needed). Recalibrate anytime in Settings to set up the cursor.'
     );
 }
 
@@ -1011,25 +1079,38 @@ function clearDwellBars() {
 
 let editIndex = -1;
 
+/**
+ * Edit mode entry/exit. Entry lives in Settings → Board → "✏️ Edit this
+ * board"; exit is the Done editing button in the edit toolbar.
+ */
+function enterEditMode() {
+    if (state.editMode) return;
+    state.editMode = true;
+    stopGaze();
+    els.editTools.hidden = false;
+    updateEditResetLabel();
+    cancelDwell();
+    dwellCtl.reset();
+    setHoverVisual(-1, true);
+    updatePadVisibility();
+    renderBoard(); // blank-cell Add placeholders appear
+    updateFeedback('Editing: tap a tile to change it. Boards save on this device.');
+}
+
+function exitEditMode() {
+    if (!state.editMode) return;
+    state.editMode = false;
+    els.editTools.hidden = true;
+    cancelDwell();
+    dwellCtl.reset();
+    setHoverVisual(-1, true);
+    updatePadVisibility();
+    renderBoard();
+    updateFeedback('Done editing — tap a tile to speak it aloud.', { ttl: 8000 });
+}
+
 function wireEdit() {
-    els.editToggle.addEventListener('click', () => {
-        state.editMode = !state.editMode;
-        if (state.editMode) stopGaze();
-        els.editToggle.textContent = state.editMode ? 'Done editing' : 'Edit';
-        els.editToggle.setAttribute('aria-pressed', String(state.editMode));
-        els.editTools.hidden = !state.editMode;
-        updateEditResetLabel();
-        cancelDwell();
-        dwellCtl.reset();
-        setHoverVisual(-1, true);
-        updatePadVisibility();
-        renderBoard(); // placeholders appear/disappear with edit mode
-        updateFeedback(
-            state.editMode
-                ? 'Editing: tap a tile to change it. Boards save on this device.'
-                : 'Tap a tile to speak it aloud.'
-        );
-    });
+    els.editToggle.addEventListener('click', exitEditMode);
 
     els.editAdd.addEventListener('click', addTile);
 
@@ -1330,6 +1411,30 @@ function wireSettings() {
     els.setClose.addEventListener('click', () => {
         els.settingsModal.hidden = true;
     });
+
+    // Unified panel: board-editing + recalibrate launchers (the former
+    // top-row Calibrate and Edit buttons live here now)
+    if (els.setEdit) {
+        els.setEdit.addEventListener('click', () => {
+            els.settingsModal.hidden = true;
+            enterEditMode();
+        });
+    }
+
+    if (els.setRecalib) {
+        els.setRecalib.addEventListener('click', async () => {
+            speech.prime();
+            els.settingsModal.hidden = true; // modal would cover the dots
+            if (!(await ensureEngine())) return;
+            // Recalibrate the kind the Settings mode resolves to
+            const kind = state.settings.mode === 'head' ? 'head' : 'gaze';
+            launchCalibration(
+                kind,
+                () => activateMode(kind === 'head' ? 'head' : 'auto'),
+                () => {}
+            );
+        });
+    }
 
     els.setMode.addEventListener('change', async () => {
         state.settings.mode = els.setMode.value;

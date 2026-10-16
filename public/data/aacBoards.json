@@ -29,9 +29,76 @@
         { "id": "thanks", "label": "Thank you", "icon": "🙏", "speech": "Thank you" },
         { "id": "hi",     "label": "Hi",        "icon": "👋", "speech": "Hi" },
         { "id": "bye",    "label": "Bye",       "icon": "👋", "speech": "Bye" },
-        { "id": "one",    "label": "One",       "icon": "1️⃣", "speech": "One" },
-        { "id": "two",    "label": "Two",       "icon": "2️⃣", "speech": "Two" },
-        { "id": "three",  "label": "Three",     "icon": "3️⃣", "speech": "Three" }
+        { "id": "go-numbers", "label": "Numbers", "icon": "🔢", "go": "numbers" }
+      ]
+    },
+    "numbers": {
+      "name": "Numbers",
+      "icon": "🔢",
+      "tiles": [
+        { "id": "zero",  "label": "Zero",  "icon": "0️⃣", "speech": "Zero" },
+        { "id": "one",   "label": "One",   "icon": "1️⃣", "speech": "One" },
+        { "id": "two",   "label": "Two",   "icon": "2️⃣", "speech": "Two" },
+        { "id": "three", "label": "Three", "icon": "3️⃣", "speech": "Three" },
+        { "id": "four",  "label": "Four",  "icon": "4️⃣", "speech": "Four" },
+        { "id": "five",  "label": "Five",  "icon": "5️⃣", "speech": "Five" },
+        { "id": "six",   "label": "Six",   "icon": "6️⃣", "speech": "Six" },
+        { "id": "seven", "label": "Seven", "icon": "7️⃣", "speech": "Seven" },
+        { "id": "eight", "label": "Eight", "icon": "8️⃣", "speech": "Eight" },
+        { "id": "nine",  "label": "Nine",  "icon": "9️⃣", "speech": "Nine" },
+        { "id": "ten",   "label": "Ten",   "icon": "🔟", "speech": "Ten" }
+      ]
+    },
+    "common": {
+      "name": "Common",
+      "icon": "⏰",
+      "tiles": [
+        { "id": "wait",     "label": "Wait",         "icon": "⏳", "speech": "Wait, please" },
+        { "id": "done",     "label": "Done",         "icon": "✅", "speech": "All done" },
+        { "id": "again",    "label": "Again",        "icon": "🔁", "speech": "Again, please" },
+        { "id": "stop",     "label": "Stop",         "icon": "🛑", "speech": "Stop, please" },
+        { "id": "now",      "label": "Now",         "icon": "⏰", "speech": "Now, please" },
+        { "id": "later",    "label": "Later",        "icon": "🕐", "speech": "Later" },
+        { "id": "today",    "label": "Today",       "icon": "📅", "speech": "Today" },
+        { "id": "tomorrow", "label": "Tomorrow",    "speech": "Tomorrow" },
+        { "id": "sorry",    "label": "Sorry",       "icon": "🙇", "speech": "I'm sorry" },
+        { "id": "maybe",    "label": "Maybe",       "icon": "🤔", "speech": "Maybe" },
+        { "id": "morning",  "label": "Good morning", "icon": "🌅", "speech": "Good morning" },
+        { "id": "night",    "label": "Good night",  "icon": "🌙", "speech": "Good night" }
+      ]
+    },
+    "people": {
+      "name": "People",
+      "icon": "👪",
+      "tiles": [
+        { "id": "me",       "label": "Me",       "icon": "🙂", "speech": "Me" },
+        { "id": "mom",      "label": "Mom",      "icon": "👩", "speech": "Mom" },
+        { "id": "dad",      "label": "Dad",      "icon": "👨", "speech": "Dad" },
+        { "id": "grandma",  "label": "Grandma",  "icon": "👵", "speech": "Grandma" },
+        { "id": "grandpa",  "label": "Grandpa",  "icon": "👴", "speech": "Grandpa" },
+        { "id": "sister",   "label": "Sister",   "icon": "👧", "speech": "Sister" },
+        { "id": "brother",  "label": "Brother",   "icon": "👦", "speech": "Brother" },
+        { "id": "baby",     "label": "Baby",     "icon": "👶", "speech": "Baby" },
+        { "id": "family",   "label": "Family",   "icon": "👪", "speech": "Family" },
+        { "id": "friend",   "label": "Friend",    "speech": "Friend" },
+        { "id": "doctor",   "label": "Doctor",    "speech": "Doctor" },
+        { "id": "nurse",    "label": "Nurse",     "speech": "Nurse" }
+      ]
+    },
+    "places": {
+      "name": "Places",
+      "icon": "🏠",
+      "tiles": [
+        { "id": "home",      "label": "Home",      "icon": "🏠", "speech": "Home" },
+        { "id": "bathroom",  "label": "Bathroom",  "icon": "🚽", "speech": "Bathroom, please" },
+        { "id": "bed",       "label": "Bed",       "icon": "🛏️", "speech": "Bed" },
+        { "id": "car",       "label": "Car",       "icon": "🚗", "speech": "Car" },
+        { "id": "outside",   "label": "Outside",   "icon": "🌳", "speech": "Outside" },
+        { "id": "wheelchair","label": "Wheelchair","icon": "♿", "speech": "Wheelchair" },
+        { "id": "therapy",   "label": "Therapy",   "icon": "🏥", "speech": "Therapy" },
+        { "id": "store",     "label": "Store",     "icon": "🏪", "speech": "Store" },
+        { "id": "park",      "label": "Park",      "icon": "🏞", "speech": "Park" },
+        { "id": "kitchen",   "label": "Kitchen",   "speech": "Kitchen" }
       ]
     },
     "animals": {
@@ -99,10 +166,13 @@
       "name": "More boards",
       "icon": "➕",
       "tiles": [
-        { "id": "go-feelings",   "label": "Feelings",    "icon": "😊", "go": "feelings" },
+        { "id": "go-feelings",   "label": "Feelings",     "icon": "😊", "go": "feelings" },
         { "id": "go-food",       "label": "Food & Drink", "icon": "🍎", "go": "food" },
-        { "id": "go-body",       "label": "Body",        "icon": "👤", "go": "body" },
-        { "id": "go-activities", "label": "Activities",  "icon": "🎮", "go": "activities" }
+        { "id": "go-body",       "label": "Body",         "icon": "👤", "go": "body" },
+        { "id": "go-activities", "label": "Activities",   "icon": "🎮", "go": "activities" },
+        { "id": "go-common",     "label": "Common",       "icon": "⏰", "go": "common" },
+        { "id": "go-people",     "label": "People",       "icon": "👪", "go": "people" },
+        { "id": "go-places",      "label": "Places",       "icon": "🏠", "go": "places" }
       ]
     },
     "feelings": {
@@ -114,16 +184,16 @@
         { "id": "mad",    "label": "Mad",    "icon": "😠", "speech": "Mad" },
         { "id": "scared", "label": "Scared", "icon": "😨", "speech": "Scared" },
         { "id": "tired",  "label": "Tired",  "icon": "😴", "speech": "Tired" },
-        { "id": "hurt",   "label": "Hurt",    "icon": "🤕", "speech": "Hurt" },
-        { "id": "love",   "label": "Love",    "icon": "❤️", "speech": "Love" }
+        { "id": "hurt",   "label": "Hurt",   "icon": "🤕", "speech": "Hurt" },
+        { "id": "love",   "label": "Love",   "icon": "❤️", "speech": "Love" }
       ]
     },
     "food": {
       "name": "Food & Drink",
       "icon": "🍎",
       "tiles": [
-        { "id": "hungry",  "label": "Hungry",  "speech": "Hungry" },
-        { "id": "thirsty", "label": "Thirsty", "icon": "💧", "speech": "Thirsty" },
+        { "id": "hungry",  "label": "Hungry",  "speech": "I'm hungry" },
+        { "id": "thirsty", "label": "Thirsty", "icon": "💧", "speech": "I'm thirsty" },
         { "id": "water",   "label": "Water",   "icon": "💧", "speech": "Water, please" },
         { "id": "juice",   "label": "Juice",   "icon": "🥤", "speech": "Juice, please" },
         { "id": "coffee",  "label": "Coffee",  "icon": "☕", "speech": "Coffee, please" },
