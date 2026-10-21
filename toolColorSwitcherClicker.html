@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="dark light">
+    <script>(function(){try{var t=localStorage.getItem('hubTheme');var l=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=(t==='dark'||t==='light')?t:l}catch(e){document.documentElement.dataset.theme='dark'}})();</script>
+    <meta name="description" content="Color Switcher Clicker — use this phone as a tap pad for a Color Switcher drill running on another device.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="robots" content="noindex">
+    <title>Color Switcher Clicker | Will Clinic Hub</title>
+
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/will/assets/logo.png">
+
+    <style>
+        html, body { height: 100%; }
+        body {
+            margin: 0; padding: 0;
+            min-height: 100vh; min-height: 100dvh;
+            overflow: hidden;
+            background: var(--background-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #clicker {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+        }
+        .stage {
+            flex: 1; min-height: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 14px;
+            padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+            text-align: center;
+        }
+        .stage h1 { margin: 0; font-size: 1.25rem; }
+        .hint { font-size: 0.9rem; color: var(--text-subtle); line-height: 1.45; max-width: 34ch; margin: 0; }
+        .big-btn {
+            width: 100%; max-width: 420px; min-height: 56px;
+            border: none; border-radius: 14px;
+            background: var(--primary-color); color: #fff;
+            font-size: 1.05rem; font-weight: 700;
+            cursor: pointer; font-family: inherit;
+        }
+        .big-btn:active { opacity: 0.85; }
+        .pin-input {
+            width: min(70vw, 220px); min-height: 58px;
+            text-align: center; font-size: 1.6rem; font-weight: 700;
+            letter-spacing: 0.35em; font-variant-numeric: tabular-nums;
+            border: 1.5px solid var(--border-color); border-radius: 14px;
+            background: transparent; color: var(--text-primary);
+            font-family: inherit; padding: 0 10px;
+        }
+        #tapBtn {
+            width: 100%; height: 100%;
+            border: none; border-radius: 0;
+            background: var(--primary-color); color: #fff;
+            font-size: clamp(2rem, 12vw, 4rem); font-weight: 800;
+            letter-spacing: 0.2em; cursor: pointer; font-family: inherit;
+            touch-action: manipulation; user-select: none;
+            transition: filter 90ms ease-out;
+        }
+        #tapBtn.sent { filter: brightness(1.7); }
+        #tapStage { position: relative; gap: 0; padding: 0; }
+        #tapStatus {
+            position: absolute; left: 0; right: 0;
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            pointer-events: none; color: rgba(255,255,255,0.85);
+        }
+        #clickerLeaveBtn {
+            position: absolute; z-index: 2;
+            top: calc(10px + env(safe-area-inset-top)); right: 12px;
+            padding: 10px 16px; border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(0,0,0,0.25); color: #fff;
+            font-family: inherit; font-size: 0.9rem; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+  <script type="module" crossorigin src="/will/assets/scripts-DI0pIXhf.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-OSQTniAM.css">
+</head>
+<body>
+    <main id="clicker">
+        <div id="joinStage" class="stage">
+            <h1>Color Switcher Clicker</h1>
+            <p class="hint" id="clickerStatus">Scan the QR code on the drill device, or enter its PIN.</p>
+            <input id="clickerPinInput" class="pin-input" type="text" inputmode="numeric"
+                   pattern="[0-9]*" maxlength="4" autocomplete="off"
+                   placeholder="PIN" aria-label="Drill PIN">
+            <button id="clickerJoinBtn" class="big-btn" type="button">Connect</button>
+        </div>
+
+        <div id="tapStage" class="stage" style="display:none;">
+            <button id="tapBtn" type="button" aria-label="Send tap to the drill">TAP</button>
+            <p class="hint" id="tapStatus">Connected</p>
+            <button id="clickerLeaveBtn" type="button">Disconnect</button>
+        </div>
+    </main>
+
+</body>
+</html>
