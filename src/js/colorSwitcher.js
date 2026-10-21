@@ -2,12 +2,15 @@
  * Color Switcher — full-screen color pacer for dot/cone drills (experimental tool).
  *
  * Behaviour: the screen floods with one color = "go to that dot"; any input
- * (tap, any key / Bluetooth clicker, gamepad button)
+ * (tap, any key / Bluetooth clicker, gamepad button, paired remote clicker)
  * advances to the next color. Manual or auto-advance timing × Random or Sequence order.
  * Auto mode: colors advance every paceMs; each full color presentation counts as one
  * rep (enforces rep targets); taps are acknowledgements and never stall the pace chain.
+ * ⏸ pauses, ✕ ends; mute (spoken color names) lives on the run screen.
  *
- * No dependencies. No network. No Firebase — storage is the last-used settings only.
+ * No dependencies. No network. No Firebase — storage is settings and session
+ * history in localStorage only. Remote clicker pairing is a separate
+ * optional module (colorSwitcherRemote.js) that hooks into advance('remote').
  * Loaded lazily from src/scripts.js when #colorSwitcher is present.
  */
 
@@ -28,10 +31,16 @@ const PRESETS = [
 
 const DEBOUNCE_MS = 200;   // ignore inputs this soon after an advance
 const EARLY_MS = 300;      // advance sooner than this = flagged "early"
-const LONGPRESS_MS = 600;  // hold this long on the run screen = pause menu
 const LS_KEY = 'colorSwitcher.config.v1';
+const LS_HISTORY_KEY = 'cs-history-v1'; // recent sessions (local only)
+const HISTORY_MAX = 20;
 const GAP_MS = [150, 400];    // blank beat between colors
 const RING_CIRC = 2 * Math.PI * 40; // timer ring circumference (r = 40 in the SVG)
+
+// Value ranges — sliders keep their coarse ranges; typed entry may go wider.
+const TIME_MIN = 15000, TIME_MAX = 3600000;   // 15 s – 60 min
+const PACE_MIN = 500, PACE_MAX = 60000;       // 0.5 s – 60 s
+const REPS_MAX = 999;
 
 const DEFAULT_CONFIG = {
   presets: Object.fromEntries(PRESETS.map(p => [p.hex, p.on])),
@@ -101,8 +110,6 @@ class ColorSwitcherApp {
     this.timeLimitEndAt = 0;     // wall-clock end for time limits
     this.timeLimitTotalMs = 0;   // configured limit (ring denominator)
     this.endReason = '';         // 'manual' | 'time' | 'reps' | 'sequence'
-    this.lpTimer = null;         // long-press timer
-    this.lpFired = false;
     this.leavePending = false;   // hub-exit confirm open
     this.padPrev = {};           // gamepad edge state
     this.indicatorTimers = new Map();
@@ -134,6 +141,11 @@ class ColorSwitcherApp {
     this.indKey = $('#indKey');
     this.indPad = $('#indPad');
     this.endRunBtn = $('#endRunBtn');
+    this.pauseRunBtn = $('#pauseRunBtn');
+    this.repChart = $('#repChart');
+    this.chartCard = $('#chartCard');
+    this.chartNote = $('#chartNote');
+    this.historyList = $('#historyList');
     this.timerEl = $('#timer');
     this.timerRingWrap = $('#timerRingWrap');
     this.ringProgress = $('#ringProgress');
@@ -157,7 +169,6 @@ class ColorSwitcherApp {
 
     // Bind once
     this._onKeyDown = this._onKeyDown.bind(this);
-    this._onPointerDownRun = this._onPointerDownRun.bind(this);
     this._onPointerUpRun = this._onPointerUpRun.bind(this);
     this._loop = this._loop.bind(this);
     this._onVisibility = this._onVisibility.bind(this);
@@ -165,26 +176,30 @@ class ColorSwitcherApp {
 
   // ── Config ────────────────────────────────────────────────
 
+  sanitizeConfig(saved) {
+    const merged = deepCopy(DEFAULT_CONFIG);
+    if (!saved || typeof saved !== 'object') return merged;
+    if (saved.presets && typeof saved.presets === 'object') merged.presets = { ...merged.presets, ...saved.presets };
+    if (Array.isArray(saved.custom)) merged.custom = saved.custom.filter(c => c && typeof c.hex === 'string');
+    if (saved.timing === 'pace' || saved.timing === 'manual') merged.timing = saved.timing;
+    if (saved.order === 'sequence' || saved.order === 'random') merged.order = saved.order;
+    if (Array.isArray(saved.sequence)) merged.sequence = saved.sequence.filter(h => typeof h === 'string');
+    if (['open', 'time', 'reps', 'either'].includes(saved.endMode)) merged.endMode = saved.endMode;
+    if (typeof saved.endMs === 'number' && saved.endMs >= TIME_MIN && saved.endMs <= TIME_MAX) merged.endMs = saved.endMs;
+    if (typeof saved.paceMs === 'number' && saved.paceMs >= PACE_MIN && saved.paceMs <= PACE_MAX) merged.paceMs = saved.paceMs;
+    if (typeof saved.endReps === 'number' && saved.endReps >= 1 && saved.endReps <= REPS_MAX) merged.endReps = saved.endReps;
+    if ([0, 1, 2, 3].includes(saved.passes)) merged.passes = saved.passes;
+    for (const k of ['speakNames']) {
+      if (typeof saved[k] === 'boolean') merged[k] = saved[k];
+    }
+    return merged;
+  }
+
   loadConfig() {
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (!raw) return;
-      const saved = JSON.parse(raw);
-      const merged = deepCopy(DEFAULT_CONFIG);
-      if (saved.presets && typeof saved.presets === 'object') merged.presets = { ...merged.presets, ...saved.presets };
-      if (Array.isArray(saved.custom)) merged.custom = saved.custom.filter(c => c && typeof c.hex === 'string');
-      if (saved.timing === 'pace' || saved.timing === 'manual') merged.timing = saved.timing;
-      if (saved.order === 'sequence' || saved.order === 'random') merged.order = saved.order;
-      if (Array.isArray(saved.sequence)) merged.sequence = saved.sequence.filter(h => typeof h === 'string');
-      if (['open', 'time', 'reps', 'either'].includes(saved.endMode)) merged.endMode = saved.endMode;
-      if (typeof saved.endMs === 'number' && saved.endMs >= 15000 && saved.endMs <= 1800000) merged.endMs = saved.endMs;
-      if (typeof saved.paceMs === 'number' && saved.paceMs >= 1000 && saved.paceMs <= 10000) merged.paceMs = saved.paceMs;
-      if (typeof saved.endReps === 'number' && saved.endReps >= 1 && saved.endReps <= 200) merged.endReps = saved.endReps;
-      if ([0, 1, 2, 3].includes(saved.passes)) merged.passes = saved.passes;
-      for (const k of ['speakNames']) {
-        if (typeof saved[k] === 'boolean') merged[k] = saved[k];
-      }
-      this.cfg = merged;
+      this.cfg = this.sanitizeConfig(JSON.parse(raw));
     } catch (e) {
       console.warn('ColorSwitcher: failed to load config', e);
     }
@@ -220,8 +235,10 @@ class ColorSwitcherApp {
 
   init() {
     this.loadConfig();
+    try { localStorage.removeItem('cs-sets-v1'); } catch (e) { /* ignore */ }
     this.applyConfigToUI();
     this.bindSetupEvents();
+    this.renderHistory();
 
     // Global input listeners (routed by state)
     document.addEventListener('keydown', this._onKeyDown);
@@ -230,9 +247,7 @@ class ColorSwitcherApp {
       if (e.target.closest('button, input, label, a')) return;
       this.flashIndicator(this.indTap);
     });
-    this.runScreen.addEventListener('pointerdown', this._onPointerDownRun);
     this.runScreen.addEventListener('pointerup', this._onPointerUpRun);
-    this.runScreen.addEventListener('pointercancel', () => clearTimeout(this.lpTimer));
     this.runScreen.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('visibilitychange', this._onVisibility);
 
@@ -267,13 +282,13 @@ class ColorSwitcherApp {
     for (const btn of this.passesPills.querySelectorAll('.pill-btn')) {
       this.markPill(btn, Number(btn.dataset.passes) === this.cfg.passes);
     }
-    this.timeSlider.value = String(this.cfg.endMs);
+    this.syncSlider(this.timeSlider, this.cfg.endMs);
     this.timeSlider.setAttribute('aria-valuetext', formatDuration(this.cfg.endMs));
     this.timeVal.textContent = formatDuration(this.cfg.endMs);
-    this.paceSlider.value = String(this.cfg.paceMs);
+    this.syncSlider(this.paceSlider, this.cfg.paceMs);
     this.paceSlider.setAttribute('aria-valuetext', `${this.paceLabel()} interval`);
     this.paceVal.textContent = this.paceLabel();
-    this.repsSlider.value = String(this.cfg.endReps);
+    this.syncSlider(this.repsSlider, this.cfg.endReps);
     this.repsSlider.setAttribute('aria-valuetext', `${this.cfg.endReps} reps`);
     this.repsVal.textContent = String(this.cfg.endReps);
     this.syncStepperBounds();
@@ -306,13 +321,28 @@ class ColorSwitcherApp {
 
   paceLabel() {
     const s = this.cfg.paceMs / 1000;
-    return `${Number.isInteger(s) ? s : s.toFixed(1)}s`;
+    return `${parseFloat(s.toFixed(2))}s`;
   }
 
-  setPaceMs(ms, persist = true) {
-    const clamped = Math.min(10000, Math.max(1000, Math.round(ms)));
-    this.cfg.paceMs = Math.round(clamped / 500) * 500;
-    this.paceSlider.value = String(this.cfg.paceMs);
+  /** Pins a slider at its own edge when the value lives beyond its range. */
+  syncSlider(slider, value) {
+    const readBound = (raw) => {
+      if (raw === undefined || raw === null || raw === '') return null;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    };
+    const min = readBound(slider.min);
+    const max = readBound(slider.max);
+    let v = value;
+    if (min !== null) v = Math.max(min, v);
+    if (max !== null) v = Math.min(max, v);
+    slider.value = String(v);
+  }
+
+  setPaceMs(ms, persist = true, snap = true) {
+    const clamped = Math.min(PACE_MAX, Math.max(PACE_MIN, Math.round(ms)));
+    this.cfg.paceMs = snap ? Math.round(clamped / 500) * 500 : clamped;
+    this.syncSlider(this.paceSlider, this.cfg.paceMs);
     this.paceSlider.setAttribute('aria-valuetext', `${this.paceLabel()} interval`);
     this.paceVal.textContent = this.paceLabel();
     this.updateSummaryLine();
@@ -321,13 +351,13 @@ class ColorSwitcherApp {
 
   syncStepperBounds() {
     this.repsMinus.disabled = this.cfg.endReps <= 1;
-    this.repsPlus.disabled = this.cfg.endReps >= 200;
+    this.repsPlus.disabled = this.cfg.endReps >= REPS_MAX;
   }
 
-  setTimeMs(ms, persist = true) {
-    const clamped = Math.min(1800000, Math.max(15000, Math.round(ms)));
-    this.cfg.endMs = Math.round(clamped / 15000) * 15000;
-    this.timeSlider.value = String(this.cfg.endMs);
+  setTimeMs(ms, persist = true, snap = true) {
+    const clamped = Math.min(TIME_MAX, Math.max(TIME_MIN, Math.round(ms)));
+    this.cfg.endMs = snap ? Math.round(clamped / 15000) * 15000 : clamped;
+    this.syncSlider(this.timeSlider, this.cfg.endMs);
     this.timeSlider.setAttribute('aria-valuetext', formatDuration(this.cfg.endMs));
     this.timeVal.textContent = formatDuration(this.cfg.endMs);
     for (const btn of this.timePills.querySelectorAll('.pill-btn')) {
@@ -338,8 +368,8 @@ class ColorSwitcherApp {
   }
 
   setReps(n, persist = true) {
-    this.cfg.endReps = Math.min(200, Math.max(1, Math.round(n)));
-    this.repsSlider.value = String(this.cfg.endReps);
+    this.cfg.endReps = Math.min(REPS_MAX, Math.max(1, Math.round(n)));
+    this.syncSlider(this.repsSlider, this.cfg.endReps);
     this.repsSlider.setAttribute('aria-valuetext', `${this.cfg.endReps} reps`);
     this.repsVal.textContent = String(this.cfg.endReps);
     this.syncStepperBounds();
@@ -560,6 +590,9 @@ class ColorSwitcherApp {
       this.saveConfig();
       this.syncSpeakBtn();
     });
+    this.pauseRunBtn.addEventListener('click', () => this.openPause());
+
+    this.bindEditableValues();
 
     this.startBtn.addEventListener('click', () => this.startSession());
     $('#resetBtn').addEventListener('click', () => {
@@ -608,22 +641,9 @@ class ColorSwitcherApp {
     }
   }
 
-  _onPointerDownRun(e) {
-    if (this.state !== 'running') return;
-    if (e.target.closest('#endRunBtn')) return;
-    this.lpFired = false;
-    clearTimeout(this.lpTimer);
-    this.lpTimer = setTimeout(() => {
-      this.lpFired = true;
-      this.openPause();
-    }, LONGPRESS_MS);
-  }
-
   _onPointerUpRun(e) {
-    clearTimeout(this.lpTimer);
     if (this.state !== 'running') return;
-    if (e.target.closest('#endRunBtn')) return;
-    if (this.lpFired) { this.lpFired = false; return; }
+    if (e.target.closest && (e.target.closest('#runControls') || e.target.closest('#speakBtn'))) return;
     this.advance('tap');
   }
 
@@ -978,6 +998,7 @@ class ColorSwitcherApp {
     this.runScreen.style.background = '';
     this.nameOverlay.textContent = '';
     this.releaseWakeLock();
+    this.recordHistory();
     this.showResults();
   }
 
@@ -1005,24 +1026,27 @@ class ColorSwitcherApp {
 
   // ── Results ───────────────────────────────────────────────
 
-  showResults() {
-    const reps = this.attempts.filter(a => a.kind === 'rep');
-    const times = reps.map(a => a.dt);
-    const activeMs = Math.max(1, (this.endAt || performance.now()) - this.startAt - this.pausedTotal);
-    const rate = times.length ? (times.length / (activeMs / 60000)) : 0;
-    const med = median(times);
-    const fast = times.length ? Math.min(...times) : null;
+  statsFor(times, activeMs) {
+    const n = times.length;
+    const avg = n ? times.reduce((s, d) => s + d, 0) / n : null;
+    return {
+      n,
+      avg,
+      fast: n ? Math.min(...times) : null,
+      slow: n ? Math.max(...times) : null,
+      rate: n ? n / (activeMs / 60000) : 0,
+    };
+  }
 
+  renderStatGrid(times, activeMs) {
+    const s = this.statsFor(times, activeMs);
     const stats = [
-      { label: 'Reps', value: String(times.length) },
+      { label: 'Reps', value: String(s.n) },
       { label: 'Duration', value: formatDuration(activeMs) },
-      { label: 'Reps / min', value: times.length ? rate.toFixed(1) : '—' },
-      { label: 'Median rep', value: formatSecs(med) },
-      { label: 'Fastest', value: formatSecs(fast) },
+      { label: 'Avg rep', value: formatSecs(s.avg) },
+      { label: 'Fastest', value: formatSecs(s.fast) },
+      { label: 'Slowest', value: formatSecs(s.slow) },
     ];
-    if (this.cfg.timing === 'pace' && this.acks.length) {
-      stats.push({ label: 'Acks (median)', value: formatSecs(median(this.acks)) });
-    }
     this.statsGrid.innerHTML = '';
     for (const st of stats) {
       const div = document.createElement('div');
@@ -1034,6 +1058,40 @@ class ColorSwitcherApp {
       div.appendChild(num);
       this.statsGrid.appendChild(div);
     }
+  }
+
+  renderRepChart(times) {
+    const shown = times.slice(-30);
+    this.chartCard.style.display = shown.length ? '' : 'none';
+    if (!shown.length) return;
+    const W = 300, baseY = 62, maxBar = 52;
+    const max = Math.max(...shown);
+    const bw = W / shown.length;
+    let bars = '';
+    shown.forEach((dt, i) => {
+      const h = Math.max(2, Math.round((dt / max) * maxBar));
+      const x = (i * bw + 1).toFixed(2);
+      const w = Math.max(1.5, bw - 2).toFixed(2);
+      bars += `<rect class="bar" x="${x}" y="${baseY - h}" width="${w}" height="${h}" rx="1.5"></rect>`;
+    });
+    this.repChart.innerHTML =
+      `<svg viewBox="0 0 ${W} ${baseY + 16}" role="img" aria-label="Rep durations, ${shown.length} bars">` +
+      `<line class="axis" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"></line>` +
+      bars +
+      `<text class="lbl" x="0" y="${baseY + 12}">fastest ${formatSecs(Math.min(...shown))}</text>` +
+      `<text class="lbl" x="${W}" y="${baseY + 12}" text-anchor="end">slowest ${formatSecs(Math.max(...shown))}</text>` +
+      `</svg>`;
+    this.chartNote.textContent = times.length > 30 ? `last 30 of ${times.length}` : '';
+  }
+
+  showResults() {
+    const reps = this.attempts.filter(a => a.kind === 'rep');
+    const times = reps.map(a => a.dt);
+    const activeMs = Math.max(1, (this.endAt || performance.now()) - this.startAt - this.pausedTotal);
+    const s = this.statsFor(times, activeMs);
+
+    this.renderStatGrid(times, activeMs);
+    this.renderRepChart(times);
 
     // Per-color medians (palette order)
     const active = this.activeColors();
@@ -1081,7 +1139,7 @@ class ColorSwitcherApp {
     const lines = [
       `Color Switcher · ${mode} · ${order} · ${active.length} colors · ${formatDuration(activeMs)}`,
       times.length
-        ? `${times.length} reps · ${rate.toFixed(1)}/min · median ${formatSecs(med)} · fastest ${formatSecs(fast)}`
+        ? `${s.n} reps · avg ${formatSecs(s.avg)} · fastest ${formatSecs(s.fast)} · slowest ${formatSecs(s.slow)}`
         : 'No reps recorded',
     ];
     if (times.length) {
@@ -1091,9 +1149,6 @@ class ColorSwitcherApp {
         .map(([c, l]) => `${this.displayName(c)} ${formatSecs(median(l))}`)
         .join(' · ');
       if (perColor) lines.push(`Per color: ${perColor}`);
-    }
-    if (this.cfg.timing === 'pace' && this.acks.length) {
-      lines.push(`Acks: ${this.acks.length} · median ${formatSecs(median(this.acks))}`);
     }
     this.summaryText.value = lines.join('\n');
 
@@ -1122,6 +1177,150 @@ class ColorSwitcherApp {
   selectSummary() {
     this.summaryText.focus();
     this.summaryText.select();
+  }
+
+  // ── Session history (localStorage only) ──────
+
+  readStore(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  writeStore(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private mode */ }
+  }
+
+  historyRecords() {
+    const data = this.readStore(LS_HISTORY_KEY);
+    if (!data || !Array.isArray(data.records)) return [];
+    return data.records.filter(r => r && typeof r === 'object' && typeof r.reps === 'number');
+  }
+
+  recordHistory() {
+    const times = this.attempts.filter(a => a.kind === 'rep').map(a => a.dt);
+    if (!times.length) return; // skip empty/aborted sessions
+    const activeMs = Math.max(1, (this.endAt || performance.now()) - this.startAt - this.pausedTotal);
+    const avg = times.reduce((s, d) => s + d, 0) / times.length;
+    const records = this.historyRecords();
+    records.unshift({
+      at: Date.now(),
+      timing: this.cfg.timing,
+      paceMs: this.cfg.paceMs,
+      order: this.cfg.order,
+      colors: this.activeColors().length,
+      reps: times.length,
+      durMs: Math.round(activeMs),
+      avg: Math.round(avg),
+      fast: Math.round(Math.min(...times)),
+      slow: Math.round(Math.max(...times)),
+    });
+    this.writeStore(LS_HISTORY_KEY, { v: 1, records: records.slice(0, HISTORY_MAX) });
+    this.renderHistory();
+  }
+
+  renderHistory() {
+    const records = this.historyRecords();
+    this.historyList.innerHTML = '';
+    if (!records.length) {
+      const p = document.createElement('p');
+      p.className = 'history-empty';
+      p.textContent = 'No sessions recorded yet.';
+      this.historyList.appendChild(p);
+      return;
+    }
+    for (const r of records) {
+      const row = document.createElement('div');
+      row.className = 'history-row';
+      const date = document.createElement('span');
+      date.className = 'h-date';
+      date.textContent = new Date(r.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      const main = document.createElement('span');
+      main.className = 'h-main';
+      const mode = r.timing === 'manual' ? 'Manual' : 'Auto';
+      main.textContent = `${mode} · ${r.order === 'sequence' ? 'Seq' : 'Rnd'} · ${r.colors}c`;
+      const metric = document.createElement('span');
+      metric.className = 'h-metric';
+      metric.textContent = `${r.reps} reps · avg ${formatSecs(r.avg)}`;
+      row.appendChild(date);
+      row.appendChild(main);
+      row.appendChild(metric);
+      this.historyList.appendChild(row);
+    }
+  }
+
+  // ── Typed value entry ─────────────────────────────────────
+
+  /**
+   * Makes a value span tap-to-edit: opens an inline number input, commits on
+   * Enter/blur, cancels on Escape. Ranges are wider than the sliders'.
+   */
+  makeEditable(el, opts) {
+    if (!el) return;
+    el.classList.add('val-editable');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', `Edit ${opts.name}`);
+
+    const open = () => {
+      if (el._editing) return;
+      el._editing = true;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'val-edit';
+      input.inputMode = 'decimal';
+      input.min = String(opts.inputMin);
+      input.max = String(opts.inputMax);
+      input.step = String(opts.step || 1);
+      input.value = String(opts.toInput(opts.current()));
+      input.setAttribute('aria-label', `${opts.name} value`);
+      el.textContent = '';
+      el.appendChild(input);
+      if (input.focus) input.focus();
+      if (input.select) input.select();
+      let done = false;
+      const finish = (ok) => {
+        if (done) return;
+        done = true;
+        const n = parseFloat(input.value);
+        el._editing = false;
+        if (ok && Number.isFinite(n)) opts.commit(n);
+        else el.textContent = String(opts.toInput(opts.current()));
+      };
+      input.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') { finish(true); }
+        else if (e.key === 'Escape') { finish(false); }
+      });
+      input.addEventListener('blur', () => finish(true));
+    };
+
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    });
+  }
+
+  bindEditableValues() {
+    this.makeEditable(this.timeVal, {
+      name: 'time limit', inputMin: 0.25, inputMax: 60, step: 0.25,
+      current: () => this.cfg.endMs,
+      toInput: (ms) => parseFloat((ms / 60000).toFixed(3)),
+      commit: (minutes) => this.setTimeMs(Math.round(minutes * 60000), true, false),
+    });
+    this.makeEditable(this.paceVal, {
+      name: 'auto-advance interval', inputMin: 0.5, inputMax: 60, step: 0.1,
+      current: () => this.cfg.paceMs,
+      toInput: (ms) => parseFloat((ms / 1000).toFixed(2)),
+      commit: (secs) => this.setPaceMs(Math.round(secs * 1000), true, false),
+    });
+    this.makeEditable(this.repsVal, {
+      name: 'rep target', inputMin: 1, inputMax: REPS_MAX, step: 1,
+      current: () => this.cfg.endReps,
+      toInput: (n) => n,
+      commit: (n) => this.setReps(n, true),
+    });
   }
 
   // ── Audio ─────────────────────────────────────────────────

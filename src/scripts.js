@@ -19,10 +19,22 @@ async function initializeApp() {
     return;
   }
 
-  // Color Switcher (standalone tool — no Firebase)
+  // Color Switcher Clicker — remote tap pad (standalone, Firebase room relay)
+  if (document.getElementById('clicker')) {
+    const { initClicker } = await import('./js/colorSwitcherClicker.js');
+    initClicker();
+    return;
+  }
+
+  // Color Switcher (core is standalone/local; the optional remote add-on uses Firebase)
   if (document.getElementById('colorSwitcher')) {
     const { initColorSwitcher } = await import('./js/colorSwitcher.js');
-    initColorSwitcher();
+    const app = initColorSwitcher();
+    // Optional add-on: remote clicker pairing. Never blocks the drill if it fails.
+    try {
+      const { initRemoteClicker } = await import('./js/colorSwitcherRemote.js');
+      initRemoteClicker(app);
+    } catch (e) { /* optional add-on */ }
     return;
   }
 

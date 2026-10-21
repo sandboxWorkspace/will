@@ -154,6 +154,7 @@
 
         .group { width: 100%; max-width: 520px; margin-left: auto; margin-right: auto; }
         .group + .group { margin-top: calc(var(--space-l) + var(--space-s)); }
+        .custom-row + .group { margin-top: var(--space-m); }
         .group .label { margin-bottom: var(--space-xs); text-align: center; }
         .summary-line {
             text-align: center; font-size: var(--font-s); color: var(--text-subtle);
@@ -363,14 +364,26 @@
             pointer-events: none;
         }
         #runScreen.ack { box-shadow: inset 0 0 0 8px rgba(255,255,255,0.12); }
-        #endRunBtn {
+        #runControls {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right));
-            min-height: var(--touch-min);
-            padding: 0 14px; border-radius: 999px;
-            border: none; background: rgba(0,0,0,0.6); color: #fff;
-            font-size: var(--font-s); font-weight: 600; cursor: pointer;
+            display: flex; gap: 8px; z-index: 2;
         }
+        .run-btn {
+            min-width: var(--touch-min); min-height: var(--touch-min);
+            padding: 0; border-radius: 999px;
+            border: none; background: rgba(0,0,0,0.6); color: #fff;
+            font-size: 1.05rem; line-height: 1; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .run-btn:active { background: rgba(0,0,0,0.8); }
+        #runScreen .run-mute {
+            position: absolute;
+            bottom: calc(14px + env(safe-area-inset-bottom)); right: calc(14px + env(safe-area-inset-right));
+            margin: 0; width: var(--touch-min); height: var(--touch-min);
+            background: rgba(0,0,0,0.6); border: none; color: #fff; z-index: 2;
+        }
+        #runScreen .run-mute.on { color: var(--accent); border-color: transparent; }
         #timerRingWrap {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
@@ -481,6 +494,90 @@
             padding: var(--space-s); font-size: var(--font-s); font-family: ui-monospace, Menlo, Consolas, monospace;
             line-height: 1.5;
         }
+
+        /* ── Typed value entry ── */
+        .val-editable {
+            cursor: pointer;
+            border-bottom: 1px dashed var(--border-light);
+            border-radius: 4px;
+        }
+        .val-editable:active { color: var(--accent); }
+        input.val-edit {
+            width: 72px; min-height: 40px;
+            border: 1.5px solid var(--accent); border-radius: 8px;
+            background: var(--surface); color: var(--text);
+            font-size: var(--font-l); font-weight: 800; text-align: center;
+            font-variant-numeric: tabular-nums; padding: 0 6px;
+        }
+
+        /* ── Details dropdown ── */
+        .details-box { width: 100%; }
+        .details-box summary {
+            cursor: pointer; list-style: none;
+            display: flex; align-items: center; gap: 8px;
+            font-size: var(--font-xs); font-weight: 700;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--text-subtle);
+            padding: var(--space-s) 0; min-height: var(--touch-min);
+            user-select: none;
+        }
+        .details-box summary::-webkit-details-marker { display: none; }
+        .details-box summary::before {
+            content: '▸'; font-size: 0.9rem; transition: transform 0.15s;
+        }
+        .details-box[open] summary::before { transform: rotate(90deg); }
+        .details-box summary:hover { color: var(--text); }
+        .details-box > .card { margin-top: var(--space-s); }
+
+        /* ── Rep chart ── */
+        .rep-chart { width: 100%; }
+        .rep-chart svg { display: block; width: 100%; height: auto; }
+        .rep-chart .bar { fill: var(--accent); }
+        .rep-chart .axis { stroke: var(--border); stroke-width: 1; }
+        .rep-chart .lbl {
+            fill: var(--text-subtle); font-size: 9px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ── History / remote ── */
+        .history-list { padding: 2px 0; }
+        .history-row {
+            display: flex; justify-content: space-between; gap: var(--space-s);
+            font-size: var(--font-s); padding: 8px 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .history-row + .history-row { border-top: 1px solid var(--border); }
+        .history-row .h-date { color: var(--text-subtle); min-width: 52px; }
+        .history-row .h-main { flex: 1; }
+        .history-row .h-metric { color: var(--text); font-weight: 600; }
+        .history-empty { font-size: var(--font-s); color: var(--text-subtle); font-style: italic; padding: var(--space-s) 0; }
+
+        /* ── Remote pairing ── */
+        #remoteMenu {
+            position: fixed; inset: 0; z-index: 60;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55); padding: var(--space-l);
+            overflow-y: auto;
+        }
+        #remoteMenu.active { display: flex; }
+        #remoteQrWrap {
+            display: flex; align-items: center; justify-content: center;
+            background: #fff; border-radius: 12px; padding: 10px;
+        }
+        #remoteQrWrap img, #remoteQrWrap canvas { width: min(62vw, 260px); height: auto; display: block; }
+        .remote-pin {
+            text-align: center; font-size: var(--font-s); color: var(--text-subtle);
+            letter-spacing: 0.06em; margin: 0;
+        }
+        .remote-pin strong {
+            font-size: var(--font-l); color: var(--accent);
+            font-variant-numeric: tabular-nums; letter-spacing: 0.2em;
+        }
+        .remote-url {
+            margin: 0; text-align: center; word-break: break-all;
+            font-size: var(--font-xs); color: var(--text-subtle);
+            user-select: all; -webkit-user-select: all;
+        }
     </style>
 </head>
 <body>
@@ -574,10 +671,15 @@
                             </div>
                         </div>
                     </div>
-                    <button id="speakBtn" class="icon-btn" type="button" aria-pressed="false" aria-label="Unmute color names">
-                        <svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
-                        <svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/></svg>
-                    </button>
+                    <details id="historyBox" class="details-box">
+                        <summary>Recent sessions</summary>
+                        <div id="historyList" class="history-list"></div>
+                    </details>
+                    <div class="group" id="remoteGroup" style="display:none;">
+                        <span class="label">Remote clicker</span>
+                        <button id="remotePairBtn" class="btn btn-ghost" type="button" style="width:100%;">Pair a second device…</button>
+                        <p class="hint" id="remoteStatus">Use another phone as a big tap pad — works over the internet, no accounts.</p>
+                    </div>
                     <div class="group">
                         <span class="label">Test inputs</span>
                         <div class="indicators">
@@ -588,7 +690,7 @@
                     </div>
                     <div class="summary-line" id="summaryLine"></div>
                     <button id="resetBtn" class="link-btn" type="button" style="display:block; margin:0 auto;">↺ Reset</button>
-                    <p class="mvp-note">Hold to pause · ✕ ends · Experimental</p>
+                    <p class="mvp-note">Tap to advance · ⏸ pauses · ✕ ends · Experimental</p>
                 </section>
 
                 <!--
@@ -612,22 +714,14 @@
                     </div>
 
                     <div class="group">
-                        <span class="label">Saved color sets</span>
-                        <div class="chips">save palette + sequence as a named set · load / delete sets</div>
-                    </div>
-
-                    <div class="group">
                         <span class="label">Feedback</span>
-                        <div class="toggle-row">vibrate on color change (Android)</div>
-                        <div class="toggle-row">pause chip on run screen (one-tap pause)</div>
                         <div class="toggle-row">dual-color trials (two colors per stimulus)</div>
                     </div>
 
                     <div class="group">
                         <span class="label">History &amp; export</span>
-                        <div class="toggle-row">recent sessions list (last 10)</div>
-                        <div class="toggle-row">CSV export / share sheet</div>
                         <div class="toggle-row">reaction-time baseline chart across sessions</div>
+                        <div class="toggle-row">CSV export / share sheet (skipped for v1 — local only)</div>
                     </div>
 
                     <div class="group">
@@ -648,7 +742,14 @@
             <div id="nameOverlay"></div>
             <div id="countdown" style="display:none;"></div>
             <div id="hud" style="display:none;"></div>
-            <button id="endRunBtn" type="button">✕ End</button>
+            <div id="runControls">
+                <button id="pauseRunBtn" class="run-btn" type="button" aria-label="Pause drill">⏸</button>
+                <button id="endRunBtn" class="run-btn" type="button" aria-label="End drill">✕</button>
+            </div>
+            <button id="speakBtn" class="icon-btn run-mute" type="button" aria-pressed="false" aria-label="Unmute color names">
+                <svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                <svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/></svg>
+            </button>
             <div id="timerRingWrap" style="display:none;">
                 <svg id="timerRing" viewBox="0 0 100 100" aria-hidden="true">
                     <circle class="ring-disc" cx="50" cy="50" r="49"></circle>
@@ -672,6 +773,18 @@
             </div>
         </div>
 
+        <!-- ══ REMOTE PAIR (host side) ══ -->
+        <div id="remoteMenu" role="dialog" aria-modal="true" aria-labelledby="remoteTitle">
+            <div class="menu-card">
+                <h2 id="remoteTitle">Remote clicker</h2>
+                <div id="remoteQrWrap"><img id="remoteQr" alt="Pairing QR code"></div>
+                <p class="remote-pin">PIN <strong id="remotePin">····</strong></p>
+                <p class="remote-url" id="remoteUrl"></p>
+                <p id="remoteMenuStatus" class="hint">Preparing…</p>
+                <button id="remoteCancelBtn" class="btn btn-ghost" type="button">Cancel</button>
+            </div>
+        </div>
+
         <!-- ══ LEAVE CONFIRM ══ -->
         <div id="leaveMenu" role="dialog" aria-modal="true" aria-labelledby="leaveTitle">
             <div class="menu-card">
@@ -688,15 +801,22 @@
             <div class="wrap">
                 <h1>Session Summary</h1>
                 <div id="statsGrid" class="stat-grid"></div>
-                <div id="perColorList" class="card"></div>
-                <div class="card">
-                    <span class="label">Copy summary</span>
-                    <textarea id="summaryText" readonly></textarea>
-                    <div class="btn-row" style="margin-top: var(--space-s);">
-                        <button id="copyBtn" class="btn" type="button">Copy</button>
-                        <span id="copyStatus" role="status" class="visually-hidden"></span>
-                    </div>
+                <div id="chartCard" class="card">
+                    <span class="label">Rep times <span id="chartNote" class="loop-badge"></span></span>
+                    <div id="repChart" class="rep-chart"></div>
                 </div>
+                <details id="detailsBox" class="details-box">
+                    <summary>Details</summary>
+                    <div id="perColorList" class="card"></div>
+                    <div class="card">
+                        <span class="label">Copy summary</span>
+                        <textarea id="summaryText" readonly></textarea>
+                        <div class="btn-row" style="margin-top: var(--space-s);">
+                            <button id="copyBtn" class="btn" type="button">Copy</button>
+                            <span id="copyStatus" role="status" class="visually-hidden"></span>
+                        </div>
+                    </div>
+                </details>
                 <div class="btn-row actions">
                     <button id="playAgainBtn" class="btn btn-primary" type="button">▶ Go again</button>
                     <button id="backSetupBtn" class="btn btn-ghost" type="button">⚙ Reconfigure</button>
