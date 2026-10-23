@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="dark light">
     <script>(function(){try{var t=localStorage.getItem('hubTheme');var l=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=(t==='dark'||t==='light')?t:l}catch(e){document.documentElement.dataset.theme='dark'}})();</script>
-    <meta name="description" content="Color Switcher Clicker — use this phone as a tap pad for a Color Switcher drill running on another device.">
+    <meta name="description" content="Color Switcher Remote — use this phone as a full-screen tap pad for a drill running on another device.">
     <meta name="application-name" content="Will Clinic Hub">
     <meta name="robots" content="noindex">
-    <title>Color Switcher Clicker | Will Clinic Hub</title>
+    <title>Color Switcher Remote | Will Clinic Hub</title>
 
     <link rel="stylesheet" href="/src/css/base.css">
     <link rel="icon" href="/assets/logo.png" type="image/png">
@@ -22,70 +22,133 @@
             overflow: hidden;
             background: var(--background-color);
             color: var(--text-primary);
+            font-family: var(--font-family);
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
         }
-        #clicker {
-            position: fixed; inset: 0;
-            display: flex; flex-direction: column;
-        }
-        .stage {
-            flex: 1; min-height: 0;
+        #clicker { position: fixed; inset: 0; }
+
+        /* ── Join ── */
+        #joinStage {
+            position: absolute; inset: 0;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             gap: 14px;
             padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
             text-align: center;
         }
-        .stage h1 { margin: 0; font-size: 1.25rem; }
-        .hint { font-size: 0.9rem; color: var(--text-subtle); line-height: 1.45; max-width: 34ch; margin: 0; }
+        #joinStage h1 { margin: 0; font-size: 1.4rem; }
+        .hint { font-size: 0.9rem; color: var(--text-subtle); line-height: 1.45; max-width: 36ch; margin: 0; }
         .big-btn {
-            width: 100%; max-width: 420px; min-height: 56px;
+            width: 100%; max-width: 560px; min-height: 60px;
             border: none; border-radius: 14px;
-            background: var(--primary-color); color: #fff;
-            font-size: 1.05rem; font-weight: 700;
+            background: var(--primary-color); color: var(--text-on-primary);
+            font-size: 1.08rem; font-weight: 700;
             cursor: pointer; font-family: inherit;
         }
         .big-btn:active { opacity: 0.85; }
         .pin-input {
-            width: min(70vw, 220px); min-height: 58px;
-            text-align: center; font-size: 1.6rem; font-weight: 700;
+            width: min(70vw, 240px); min-height: 60px;
+            text-align: center; font-size: 1.7rem; font-weight: 700;
             letter-spacing: 0.35em; font-variant-numeric: tabular-nums;
             border: 1.5px solid var(--border-color); border-radius: 14px;
             background: transparent; color: var(--text-primary);
             font-family: inherit; padding: 0 10px;
         }
-        #tapBtn {
-            width: 100%; height: 100%;
-            border: none; border-radius: 0;
-            background: var(--primary-color); color: #fff;
-            font-size: clamp(2rem, 12vw, 4rem); font-weight: 800;
-            letter-spacing: 0.2em; cursor: pointer; font-family: inherit;
-            touch-action: manipulation; user-select: none;
+
+        /* ── Connected: full-screen tap surface ── */
+        #tapSurface {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--primary-color);
+            color: var(--text-on-primary);
+            cursor: pointer;
+            touch-action: none;
+            overscroll-behavior: none;
+            user-select: none; -webkit-user-select: none;
+            -webkit-touch-callout: none;
             transition: filter 90ms ease-out;
         }
-        #tapBtn.sent { filter: brightness(1.7); }
-        #tapStage { position: relative; gap: 0; padding: 0; }
-        #tapStatus {
+        #tapSurface.sent { filter: brightness(1.6); }
+        #tapSurface.disabled { cursor: default; }
+        .tap-word {
+            font-size: clamp(4rem, 30vw, 13rem);
+            font-weight: 800; letter-spacing: 0.14em;
+            pointer-events: none;
+        }
+        .tap-hint {
             position: absolute; left: 0; right: 0;
-            bottom: calc(12px + env(safe-area-inset-bottom));
-            pointer-events: none; color: rgba(255,255,255,0.85);
+            bottom: calc(22px + env(safe-area-inset-bottom));
+            text-align: center; font-size: 0.85rem;
+            opacity: 0.85; pointer-events: none;
         }
+
+        #pauseBtn {
+            position: absolute; z-index: 7;
+            top: calc(10px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right));
+            width: 56px; height: 56px; padding: 0;
+            border: none; border-radius: 999px;
+            background: rgba(0, 0, 0, 0.6); color: #fff;
+            font-size: 1.5rem; line-height: 1; cursor: pointer;
+        }
+        #pauseBtn:active { background: rgba(0, 0, 0, 0.8); }
+        #pauseBtn:disabled { opacity: 0.5; }
+        #pauseBtn[hidden] { display: none; }
+
         #clickerLeaveBtn {
-            position: absolute; z-index: 2;
-            top: calc(10px + env(safe-area-inset-top)); right: 12px;
-            padding: 10px 16px; border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.35);
-            background: rgba(0,0,0,0.25); color: #fff;
-            font-family: inherit; font-size: 0.9rem; cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            position: absolute; z-index: 8;
+            top: calc(10px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
+            min-height: 44px; padding: 8px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 999px;
+            background: rgba(0, 0, 0, 0.35); color: #fff;
+            font-family: inherit; font-size: 0.85rem; cursor: pointer;
         }
+
+        /* ── Paused / waiting / ended ── */
+        #stateOverlay {
+            position: absolute; inset: 0; z-index: 6;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.55);
+            padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+        }
+        #stateOverlay[hidden] { display: none; }
+        .state-card {
+            width: 100%; max-width: 380px;
+            background: var(--card-bg); color: var(--text-primary);
+            border-radius: 18px; padding: 24px;
+            display: flex; flex-direction: column; gap: 12px;
+            text-align: center;
+            box-shadow: 0 10px 44px rgba(0, 0, 0, 0.4);
+        }
+        .state-card h2 { margin: 0; font-size: 1.45rem; }
+        .state-detail { margin: 0; min-height: 1.2em; font-size: 0.9rem; color: var(--text-secondary); }
+        .overlay-btn {
+            min-height: 60px; padding: 10px 16px;
+            border: 1.5px solid var(--border-color); border-radius: 14px;
+            background: var(--background-surface); color: var(--text-primary);
+            font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+        }
+        .overlay-btn:disabled { opacity: 0.5; cursor: default; }
+        .overlay-btn[hidden] { display: none; }
+        .overlay-btn.primary { background: var(--primary-color); border-color: transparent; color: var(--text-on-primary); }
+        .overlay-btn.danger { border-color: var(--error-border); color: var(--error-text); }
+
+        .toast {
+            position: fixed; left: 50%; transform: translateX(-50%);
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            z-index: 20; max-width: min(90vw, 420px);
+            padding: 10px 16px; border-radius: 999px;
+            background: var(--background-surface); border: 1px solid var(--border-color);
+            color: var(--text-primary); font-size: 0.85rem; text-align: center;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+        .toast[hidden] { display: none; }
     </style>
 </head>
-<body>
+<body data-no-theme-toggle>
     <main id="clicker">
-        <div id="joinStage" class="stage">
-            <h1>Color Switcher Clicker</h1>
+        <div id="joinStage">
+            <h1>Color Switcher Remote</h1>
             <p class="hint" id="clickerStatus">Scan the QR code on the drill device, or enter its PIN.</p>
             <input id="clickerPinInput" class="pin-input" type="text" inputmode="numeric"
                    pattern="[0-9]*" maxlength="4" autocomplete="off"
@@ -93,10 +156,25 @@
             <button id="clickerJoinBtn" class="big-btn" type="button">Connect</button>
         </div>
 
-        <div id="tapStage" class="stage" style="display:none;">
-            <button id="tapBtn" type="button" aria-label="Send tap to the drill">TAP</button>
-            <p class="hint" id="tapStatus">Connected</p>
+        <div id="connectedStage" style="display:none;">
+            <div id="tapSurface" role="button" tabindex="0" aria-label="Tap anywhere to advance the drill">
+                <span class="tap-word">TAP</span>
+                <span class="tap-hint" id="tapHint">Tap anywhere</span>
+            </div>
+
+            <button id="pauseBtn" type="button" aria-label="Pause drill">⏸</button>
             <button id="clickerLeaveBtn" type="button">Disconnect</button>
+
+            <div id="stateOverlay" hidden>
+                <div class="state-card">
+                    <h2 id="stateTitle">Waiting for the drill</h2>
+                    <p class="state-detail" id="stateDetail">It will start on the other phone.</p>
+                    <button id="resumeBtn" class="overlay-btn primary" type="button" hidden>Resume</button>
+                    <button id="endBtn" class="overlay-btn danger" type="button" hidden>End drill</button>
+                </div>
+            </div>
+
+            <div id="toast" class="toast" role="status" hidden></div>
         </div>
     </main>
 

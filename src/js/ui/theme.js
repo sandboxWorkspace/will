@@ -125,5 +125,9 @@ export function initTheme() {
         return;
     }
 
+    // Full-screen tools can opt out of the floating toggle (it would sit on
+    // top of their own corner controls).
+    if (document.body.hasAttribute('data-no-theme-toggle')) return;
+
     renderThemeToggle(document.body).classList.add('hub-theme-toggle');
 }
