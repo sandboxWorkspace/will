@@ -21,6 +21,7 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
         moursund: path.resolve(__dirname, 'moursund.html'),
         v2index: path.resolve(__dirname, 'v2index.html'),
+        clinicalCollabIdeas: path.resolve(__dirname, 'clinical-collab-ideas.html'),
         // Southeast
         seSupply: path.resolve(__dirname, 'southeast-requestSupply.html'),
         seMaintenance: path.resolve(__dirname, 'southeast-requestMaintenance.html'),

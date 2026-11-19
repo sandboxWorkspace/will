@@ -35,6 +35,13 @@ export const FORM_URLS = {
         requestDetails:   'entry.1582753521',
       },
     },
+    clinicalIdea: {
+      url: 'https://docs.google.com/forms/d/e/1FAIpQLScnnpjAGCmvD3kKv34kjEOWh5edKKNfp9cQhLamymbEY3JgQw/formResponse',
+      fields: {
+        submitterName: 'entry.1873077433',
+        idea:          'entry.1582753521',
+      },
+    },
   },
 
   moursund: {

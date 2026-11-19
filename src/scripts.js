@@ -38,6 +38,14 @@ async function initializeApp() {
     return;
   }
 
+  // Clinical Collab idea submission (standalone — Google Forms only, no Firebase)
+  if (document.getElementById('clinicalIdeaForm')) {
+    const { ClinicalIdeaRequestHandler } = await import('./js/requestClinicalIdea.js');
+    const handler = new ClinicalIdeaRequestHandler();
+    handler.initialize();
+    return;
+  }
+
   const hasDb = document.getElementById('schedule-table') ||
                 document.getElementById('maintenanceRequestForm') ||
                 document.getElementById('supplyRequestForm') ||

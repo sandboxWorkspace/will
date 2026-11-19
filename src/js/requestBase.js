@@ -2,25 +2,31 @@
  * BaseRequestHandler — shared logic for all request-type forms.
  *
  * Subclasses must set `this.formType` in their constructor
- * (one of 'maintenance', 'supply', 'wishlist') and override:
+ * (one of 'maintenance', 'supply', 'wishlist', 'clinicalIdea') and override:
  *   - getFormElements()         → populate this.form, inputs, etc.
  *   - getRecentListComponent()  → return a RecentItemsList instance
  *   - validateForm()            → return { valid, focusTarget, message }
  *   - saveRequest(data)         → call the appropriate dataManager method
  *   - buildFormSubmissionData() → map form values → field map for Google Form
  *   - onSuccess()               → extra logic after submit succeeds
+ *
+ * DataManager is optional so standalone forms can share this flow before
+ * persistence is added.
  */
 
 import { FORM_URLS, submitToGoogleForm } from './data/formConfig.js';
 
 export class BaseRequestHandler {
-  constructor(dataManager) {
-    if (!dataManager) {
-      throw new Error('DataManager instance is required.');
-    }
+  constructor(dataManager = null) {
     this.dataManager = dataManager;
     this.elementsReady = false;
     this.recentListComponent = null;
+
+    // Default submit/status copy; subclasses may override.
+    this.submitButtonText = 'Submit Request';
+    this.submittingButtonText = 'Submitting...';
+    this.pendingMessage = 'Submitting request...';
+    this.successMessage = 'Request submitted successfully!';
 
     // Populated by getFormElements()
     this.form = null;
@@ -125,7 +131,7 @@ export class BaseRequestHandler {
     if (!this.elementsReady) return;
 
     this.submitButton.disabled = true;
-    this.submitButton.textContent = 'Submitting...';
+    this.submitButton.textContent = this.submittingButtonText;
     this.clearStatus();
 
     // Validate
@@ -133,7 +139,7 @@ export class BaseRequestHandler {
     if (!validation.valid) {
       this.showStatus(validation.message, true);
       this.submitButton.disabled = false;
-      this.submitButton.textContent = 'Submit Request';
+      this.submitButton.textContent = this.submitButtonText;
       validation.focusTarget?.focus();
       return;
     }
@@ -147,11 +153,11 @@ export class BaseRequestHandler {
     // Let the subclass fill in the rest
     this.populateRequestData(requestData);
 
-    this.showStatus('Submitting request...', false);
+    this.showStatus(this.pendingMessage, false);
 
     try {
       await this.saveRequest(requestData);
-      this.showStatus('Request submitted successfully!', false);
+      this.showStatus(this.successMessage, false);
 
       // Google Forms submission (fire-and-forget)
       const formConfig = this.getFormConfig();
@@ -170,7 +176,7 @@ export class BaseRequestHandler {
       this.showStatus(`Submission failed: ${error.message || 'Please try again.'}`, true);
     } finally {
       this.submitButton.disabled = false;
-      this.submitButton.textContent = 'Submit Request';
+      this.submitButton.textContent = this.submitButtonText;
     }
   }
 
@@ -187,7 +193,7 @@ export class BaseRequestHandler {
   showStatus(message, isError = false) {
     if (!this.formStatus) return;
     this.formStatus.textContent = message;
-    this.formStatus.className = `form-status-message ${isError ? 'error' : 'success'}`;
+    this.formStatus.className = `form-status-message ${isError ? 'error' : 'success'} show`;
     this.formStatus.setAttribute('aria-live', isError ? 'assertive' : 'polite');
   }
 
