@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <script>(function(){try{var t=localStorage.getItem('hubTheme');var l=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=(t==='dark'||t==='light')?t:l}catch(e){document.documentElement.dataset.theme='dark'}})();</script>
+    <meta name="description" content="Share a Clinical Collab idea to improve clinic workflows, tools, or collaboration.">
+    <meta name="application-name" content="Will Clinic Hub">
+    <meta name="author" content="Will">
+    <meta property="og:title" content="Clinical Collab Ideas | Will Clinic Hub">
+    <meta property="og:description" content="Share an idea to improve clinic workflows, tools, or collaboration.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sandboxworkspace.github.io/will/clinical-collab-ideas.html">
+    <meta name="twitter:card" content="summary">
+    <link rel="canonical" href="https://sandboxworkspace.github.io/will/clinical-collab-ideas.html">
+    <title>Clinical Collab Ideas | Will Clinic Hub</title>
+
+
+    <link rel="icon" href="/will/assets/logo.png" type="image/png">
+    <link rel="manifest" href="/will/assets/manifest-jx2tHeoB.json">
+    <link rel="apple-touch-icon" href="/will/assets/logo.png">
+
+    <style>
+        .idea-section { width: 100%; max-width: 600px; margin: 0 auto; }
+        .idea-section h2 { margin-bottom: 1.5rem; }
+        .idea-hint {
+            margin-top: 0.4rem; color: var(--text-subtle);
+            font-size: 0.85em; text-align: left;
+        }
+    </style>
+  <script type="module" crossorigin src="/will/assets/scripts-CiLCO-Tq.js"></script>
+  <link rel="stylesheet" crossorigin href="/will/assets/scripts-OSQTniAM.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/responsive-B89cTtO6.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/scrollbar-Cu3oya-3.css">
+  <link rel="stylesheet" crossorigin href="/will/assets/forms-Cw21zwpd.css">
+</head>
+<body>
+    <header>
+        <a href="/will/">
+            <img src="/will/assets/logo.svg" alt="Primary Logo" class="logo">
+        </a>
+        <span class="location-badge">Southeast</span>
+    </header>
+
+    <main>
+        <section class="idea-section">
+            <h2>Clinical Collab Ideas</h2>
+
+            <form id="clinicalIdeaForm" class="styled-form">
+                <div class="form-group">
+                    <label for="ideaSubmitterName">Your Name</label>
+                    <input type="text" id="ideaSubmitterName" name="submitterName"
+                           placeholder="e.g. Alex Jordan" autocomplete="name"
+                           maxlength="80" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="ideaText">Your Idea</label>
+                    <textarea id="ideaText" name="idea" rows="6" maxlength="1000"
+                              placeholder="Describe the idea, who it helps, and who to contact — e.g., a vendor, department, or team"
+                              aria-describedby="ideaHint" required></textarea>
+                    <p class="idea-hint" id="ideaHint">Up to 1,000 characters.</p>
+                </div>
+
+                <button type="submit" class="button form-button submit-button">Send Idea</button>
+                <p id="ideaFormStatus" class="form-status-message" aria-live="polite"></p>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="button-container">
+            <a href="v2index.html" class="button purple-button">
+                <img src="/will/assets/experimentalicon.svg" alt="Experimental Icon" class="icon">
+                Experimental
+            </a>
+            <a href="mailto:Wilbert.Liu@memorialhermann.org" class="button pending-button">
+                Contact Me
+            </a>
+        </div>
+    </footer>
+
+</body>
+</html>
